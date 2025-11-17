@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PrimaryButton, SecondaryButton } from '@servicestack/react';
 import { PostsList } from '@/components/posts/PostsList';
@@ -351,6 +351,8 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <HomePageContent />
+    <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="flex justify-center items-center py-12"><div className="text-gray-600">Loading...</div></div></div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }
