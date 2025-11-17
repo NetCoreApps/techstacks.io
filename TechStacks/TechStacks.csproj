@@ -6,6 +6,7 @@
         <UserSecretsId>aspnet-TechStacks-7b2ab71a-0b50-423f-969d-e35a9402b1b5</UserSecretsId>
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
         <PublishProfile>DefaultContainer</PublishProfile>
+        <DefaultItemExcludes>$(DefaultItemExcludes);**/App_Data/**</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
         <Using Include="TechStacks" />
