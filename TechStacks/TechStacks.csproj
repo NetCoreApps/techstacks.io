@@ -9,6 +9,9 @@
         <DefaultItemExcludes>$(DefaultItemExcludes);**/App_Data/**</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
+        <ContainerLabel Include="service" Value="techstacks-io" />
+    </ItemGroup>
+    <ItemGroup>
         <Using Include="TechStacks" />
         <Using Include="TechStacks.ServiceModel" />
     </ItemGroup>
