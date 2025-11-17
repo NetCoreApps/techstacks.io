@@ -50,7 +50,7 @@ accessories:
   postgres:
     image: postgres
     host: 192.168.0.1
-    port: "5432:5432"
+    port: "5433:5432"
     env:
       clear:
         POSTGRES_USER: techstacks
