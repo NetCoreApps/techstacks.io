@@ -47,7 +47,7 @@ jobs:
           SERVICE_NAME=$(echo "${{ env.repository_name_lower }}" | tr '.' '-')
           sed -i "s/service: my-app/service: $SERVICE_NAME/g" config/deploy.yml
           sed -i "s#image: my-user/myapp#image: ${{ env.image_repository_name }}#g" config/deploy.yml
-          sed -i "s/- 192.168.0.1/- ${{ secrets.KAMAL_DEPLOY_IP }}/g" config/deploy.yml
+          sed -i "s/192.168.0.1/${{ secrets.KAMAL_DEPLOY_IP }}/g" config/deploy.yml
           sed -i "s/host: my-app.example.com/host: ${{ secrets.KAMAL_DEPLOY_HOST }}/g" config/deploy.yml
           sed -i "s/TechStacks/${{ env.repository_name }}/g" config/deploy.yml
 
