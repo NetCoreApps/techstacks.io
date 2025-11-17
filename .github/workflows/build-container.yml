@@ -55,12 +55,12 @@ jobs:
           KAMAL_DEPLOY_IP: ${{ secrets.KAMAL_DEPLOY_IP }}
         if: env.KAMAL_DEPLOY_IP != null
         run: |
-          sed -i 's#<ContainerLabel Include="service" Value="my-app" />#<ContainerLabel Include="service" Value="${{ env.repository_name_lower }}" />#g' MyApp/MyApp.csproj
+          sed -i 's#<ContainerLabel Include="service" Value="my-app" />#<ContainerLabel Include="service" Value="${{ env.repository_name_lower }}" />#g' TechStacks/TechStacks.csproj
 
       - name: Check for Client directory and package.json
         id: check_client
         run: |
-          if [ -d "MyApp.Client" ] && [ -f "MyApp.Client/package.json" ]; then
+          if [ -d "TechStacks.Client" ] && [ -f "TechStacks.Client/package.json" ]; then
             echo "client_exists=true" >> $GITHUB_OUTPUT
           else
             echo "client_exists=false" >> $GITHUB_OUTPUT

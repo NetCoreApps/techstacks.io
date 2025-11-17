@@ -1,6 +1,6 @@
-﻿[assembly: HostingStartup(typeof(MyApp.ConfigureCors))]
+﻿[assembly: HostingStartup(typeof(TechStacks.ConfigureCors))]
 
-namespace MyApp;
+namespace TechStacks;
 
 public class ConfigureCors : IHostingStartup
 {

@@ -19,7 +19,7 @@ function isDotnetInstalled() {
 }
 
 function runMigration() {
-  const myAppPath = join(__dirname, '..', 'MyApp')
+  const myAppPath = join(__dirname, '..', 'TechStacks')
 
   try {
     console.log('Running database migration...')
