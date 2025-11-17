@@ -1,8 +1,10 @@
 import EditPostClient from './EditPostClient';
 
+// For static export, generate a placeholder page
+// Actual content will be loaded client-side
 export async function generateStaticParams() {
-  // Return empty array - pages will be generated on-demand
-  return [];
+  // Return a placeholder - the actual routing happens client-side
+  return [{ id: '0', slug: '_placeholder' }];
 }
 
 export default async function EditPostPage({
