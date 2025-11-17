@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TechStacks.ServiceInterface\TechStacks.ServiceInterface.csproj" />
+    <ProjectReference Include="..\TechStacks.ServiceModel\TechStacks.ServiceModel.csproj" />
+    <PackageReference Include="NUnit" Version="3.14.*" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.1.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="Markdig" Version="0.43.*" />
+
+    <PackageReference Include="ServiceStack" Version="8.*" />
+    <PackageReference Include="ServiceStack.Server" Version="8.*" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="8.*" />
+    <PackageReference Include="ServiceStack.OrmLite.Sqlite.Data" Version="8.*" />
+    <PackageReference Include="ServiceStack.Kestrel" Version="8.*" />
+  </ItemGroup>
+</Project>

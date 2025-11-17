@@ -1,0 +1,83 @@
+@{
+    var path = ViewContext.HttpContext?.Request.Path.Value ?? "";
+}
+<header class="bg-gray-900 text-white sticky top-0 z-50 shadow-md">
+    <div class="container mx-auto">
+        <div class="flex items-center justify-between h-16 px-4">
+            <!-- Logo -->
+            <div class="flex items-center space-x-4">
+                <a href="/" class="text-2xl font-bold hover:text-gray-300">
+                    TechStacks
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center space-x-1">
+                <a href="/"
+                   class="px-4 py-2 rounded hover:bg-gray-800@(path == "/" ? " bg-gray-800" : "")"
+                   title="Home (1 or H)">
+                    Home
+                </a>
+                <a href="/top"
+                   class="px-4 py-2 rounded hover:bg-gray-800@(path == "/top" ? " bg-gray-800" : "")"
+                   title="Top Technologies (2)">
+                    Top
+                </a>
+                <a href="/stacks"
+                   class="px-4 py-2 rounded hover:bg-gray-800@(path.StartsWith("/stacks") ? " bg-gray-800" : "")"
+                   title="Technology Stacks (3)">
+                    Stacks
+                </a>
+                <a href="/tech"
+                   class="px-4 py-2 rounded hover:bg-gray-800@(path.StartsWith("/tech") ? " bg-gray-800" : "")"
+                   title="Technologies (4)">
+                    Technologies
+                </a>
+                @if (User.IsAuthenticated())
+                {
+                    <a href="/favorites"
+                       class="px-4 py-2 rounded hover:bg-gray-800@(path == "/favorites" ? " bg-gray-800" : "")"
+                       title="Favorites (5)">
+                        Favorites
+                    </a>
+                }
+            </nav>
+
+            <!-- User Section -->
+            <div class="flex items-center">
+                @if (User.IsAuthenticated())
+                {
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 hover:bg-gray-800 rounded px-2 py-1">
+                            <img src="@User.GetPicture()"
+                                 alt="@User.GetDisplayName()"
+                                 class="w-10 h-10 rounded-full">
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                            <div class="py-1">
+                                @if (User.GetUserId() != null)
+                                {
+                                    <a href="/users/@User.GetUserId()" class="block px-4 py-2 hover:bg-gray-700">
+                                        Profile
+                                    </a>
+                                }
+                                <a href="/Identity/Account/Manage" class="block px-4 py-2 hover:bg-gray-700">
+                                    Account
+                                </a>
+                                <a href="/auth/logout" class="block px-4 py-2 hover:bg-gray-700">
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a href="/signin" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded">
+                        Sign In
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</header>
