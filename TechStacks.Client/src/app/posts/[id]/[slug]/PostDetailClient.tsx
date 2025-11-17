@@ -397,6 +397,13 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
           </div>
 
           <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
+            {post.userProfileUrl && (
+              <img
+                src={post.userProfileUrl}
+                alt=""
+                className="size-6 rounded-full"
+              />
+            )}
             <span>submitted {formatDistanceToNow(new Date(post.created), { addSuffix: true })}</span>
             {post.technologyIds && post.technologyIds.length > 0 && (
               <>
