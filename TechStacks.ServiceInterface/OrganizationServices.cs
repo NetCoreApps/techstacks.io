@@ -97,7 +97,7 @@ public class OrganizationServices(IMarkdownProvider markdown, UserManager<Applic
             throw new ArgumentNullException(nameof(request.TechnologyId));
 
         var user = GetUser();
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
 
         var type = request.TechnologyId != null
             ? typeof(Technology)
@@ -230,7 +230,7 @@ public class OrganizationServices(IMarkdownProvider markdown, UserManager<Applic
         var org = request.ConvertTo<Organization>();
         var orgMember = new OrganizationMember
         {
-            UserId = user.GetUserId(),
+            UserId = user.GetRequiredUserId(),
             UserName = user.UserName,
             IsOwner = true
         };
@@ -613,7 +613,7 @@ public class OrganizationServices(IMarkdownProvider markdown, UserManager<Applic
             throw new ArgumentNullException(nameof(request.OrganizationId));
 
         var user = GetUser();
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
 
         var memberExists = Db.Exists<OrganizationMember>(x =>
             x.UserId == userId && x.OrganizationId == request.OrganizationId);

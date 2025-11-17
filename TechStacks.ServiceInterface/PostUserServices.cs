@@ -253,7 +253,7 @@ public class PostUserServices(IMarkdownProvider markdown) : PostServicesBase(mar
         var groupMember = AssertCanAnnotateOnOrganization(Db, post.OrganizationId, user, out var org);
         AssertCanAnnotatePost(post, user, groupMember);
 
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
         Db.Delete<PostCommentReport>(x => x.UserId == userId && x.PostCommentId == request.Id);
         var reportId = Db.Insert(new PostCommentReport
         {

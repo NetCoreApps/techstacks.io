@@ -293,7 +293,7 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
         var groupMember = AssertCanCommentToOrganization(Db, post.OrganizationId, user);
         AssertCanContributeToPost(post, user, groupMember);
 
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
         var comment = request.ConvertTo<PostComment>();
         comment.UserId = userId;
         comment.CreatedBy = user.UserName;

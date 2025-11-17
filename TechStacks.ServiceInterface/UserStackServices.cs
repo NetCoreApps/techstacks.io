@@ -175,7 +175,9 @@ public static class UserExtensions
 
     public static bool IsAdmin(this AuthUserSession session) => session.HasRole(RoleNames.Admin, null);
 
-    public static int GetUserId(this AuthUserSession session) => session?.UserAuthId?.ToInt()
+    public static int? GetUserId(this AuthUserSession session) => session?.UserAuthId?.ToInt();
+
+    public static int GetRequiredUserId(this AuthUserSession session) => session?.UserAuthId?.ToInt()
         ?? throw HttpError.Unauthorized("User is not authenticated");
 
     public static string? GetGitHubToken(this AuthUserSession session) => 

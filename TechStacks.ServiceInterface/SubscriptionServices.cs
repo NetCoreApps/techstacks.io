@@ -17,7 +17,7 @@ public class SubscriptionServices(IMarkdownProvider markdown) : PostServicesBase
             throw new ArgumentNullException(nameof(request.OrganizationId));
 
         var user = GetUser();
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
 
         AssertCanViewOrganization(Db, request.OrganizationId, user);
 
@@ -46,7 +46,7 @@ public class SubscriptionServices(IMarkdownProvider markdown) : PostServicesBase
             throw new ArgumentNullException(nameof(request.PostId));
 
         var user = GetUser();
-        var userId = user.GetUserId();
+        var userId = user.GetRequiredUserId();
 
         var post = AssertPost(request.PostId);
 
