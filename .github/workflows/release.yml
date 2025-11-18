@@ -14,8 +14,6 @@ on:
 
 env:
   DOCKER_BUILDKIT: 1
-  KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  KAMAL_REGISTRY_USERNAME: ${{ github.actor }}
   SERVICESTACK_LICENSE: ${{ secrets.SERVICESTACK_LICENSE }}
 
 jobs:
@@ -38,25 +36,13 @@ jobs:
             echo "HAS_MIGRATIONS=false" >> $GITHUB_ENV
           fi
 
-      # This step is for the deployment of the templates only, safe to delete
-      - name: Modify deploy.yml
-        env:
-          KAMAL_DEPLOY_IP: ${{ secrets.KAMAL_DEPLOY_IP }}
-        if: env.KAMAL_DEPLOY_IP != null
-        run: |
-          SERVICE_NAME=$(echo "${{ env.repository_name_lower }}" | tr '.' '-')
-          sed -i "s/service: my-app/service: $SERVICE_NAME/g" config/deploy.yml
-          sed -i "s#image: my-user/myapp#image: ${{ env.image_repository_name }}#g" config/deploy.yml
-          sed -i "s/192.168.0.1/${{ secrets.KAMAL_DEPLOY_IP }}/g" config/deploy.yml
-          sed -i "s/host: my-app.example.com/host: ${{ secrets.KAMAL_DEPLOY_HOST }}/g" config/deploy.yml
-          sed -i "s/TechStacks/${{ env.repository_name }}/g" config/deploy.yml
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ env.KAMAL_REGISTRY_USERNAME }}
-          password: ${{ env.KAMAL_REGISTRY_PASSWORD }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.9.0
@@ -115,7 +101,7 @@ jobs:
       - name: Deploy with Kamal
         run: |
           kamal lock release -v
-          kamal server exec --no-interactive 'echo "${{ env.KAMAL_REGISTRY_PASSWORD }}" | docker login ghcr.io -u ${{ env.KAMAL_REGISTRY_USERNAME }} --password-stdin'
+          kamal server exec --no-interactive 'echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin'
           kamal server exec --no-interactive 'docker pull ghcr.io/${{ env.image_repository_name }}:latest'
           kamal deploy -P --version latest
 

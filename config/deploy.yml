@@ -1,30 +1,42 @@
-# Name of your application. Used to uniquely configure containers.
-service: techstacks-io
+# Kamal deploy config for this repository. Uses environment variables:
+# - GITHUB_REPOSITORY (e.g. acme/example.org)   - included in GitHub Actions
+# - GITHUB_ACTOR (e.g. acme)                    - included in GitHub Actions
+# - GITHUB_TOKEN ($GITHUB_TOKEN)                - included in GitHub Actions
+# - KAMAL_DEPLOY_IP (e.g. 100.100.100.100)      - from GitHub Action Secret
+# - KAMAL_DEPLOY_HOST (e.g. example.org)        - from GitHub Action Secret
+# - POSTGRES_PASSWORD (e.g. random-password)    - from GitHub Action Secret
 
-# Name of the container image.
-image: ghcr.io/netcoreapps/techstacks.io
+# Using Environment variables allows re-use of this config for multiple apps.
+# Alternatively, they can be replaced with hard-coded values for 
+
+# Name of your application. Used to uniquely configure containers. (e.g. example-org)
+service: <%= ENV['GITHUB_REPOSITORY'].to_s.split('/').last.tr('.', '-') %>
+
+# Name of the container image. (e.g. ghcr.io/acne/example.org)
+image: ghcr.io/<%= ENV['GITHUB_REPOSITORY'].to_s.downcase %>
 
 # Required for use of ASP.NET Core with Kamal-Proxy.
 env:
   clear:
     ASPNETCORE_FORWARDEDHEADERS_ENABLED: true
+  # secrets from ./kamal/secrets
   secret:
     - SERVICESTACK_LICENSE
 
 # Deploy to these servers.
 servers:
-  # IP address of server, optionally use env variable.
+  # IP address of server to deploy to. (e.g. 100.100.100.100)
   web:
-    - 192.168.0.1
-#   - <%= ENV['KAMAL_DEPLOY_IP'] %>
-    - network: techstacks-io-network
+    hosts:
+     - <%= ENV['KAMAL_DEPLOY_IP'] %>
 
 # Enable SSL auto certification via Let's Encrypt (and allow for multiple apps on one server).
 # If using something like Cloudflare, it is recommended to set encryption mode
 # in Cloudflare's SSL/TLS setting to "Full" to enable end-to-end encryption.
 proxy:
   ssl: true
-  host: techstacks.io
+  # Hostname to proxy. (e.g. example.org)
+  host: <%= ENV['KAMAL_DEPLOY_HOST'] %>
   # kamal-proxy connects to your container over port 80, use `app_port` to specify a different port.
   app_port: 8080
 
@@ -33,32 +45,35 @@ registry:
   # Specify the registry server, if you're not using Docker Hub
   server: ghcr.io
   username:
-    - KAMAL_REGISTRY_USERNAME
+    - <%= ENV['GITHUB_ACTOR'] %>
 
   # Always use an access token rather than real password (pulled from .kamal/secrets).
   password:
-    - KAMAL_REGISTRY_PASSWORD
+    - <%= ENV['GITHUB_TOKEN'] %>
 
 # Configure builder setup.
 builder:
   arch: amd64
 
 volumes:
-  - "/opt/docker/techstacks.io/App_Data:/app/App_Data"
+  - "/opt/docker/<%= ENV['KAMAL_DEPLOY_HOST'] %>/App_Data:/app/App_Data"
 
 accessories:
   postgres:
     image: postgres
-    host: 192.168.0.1
-    network: techstacks-io-network
+    # IP address of server to deploy accessory to. (e.g. 100.100.100.100)
+    host: <%= ENV['KAMAL_DEPLOY_IP'] %>
+    port: "5433:5432"
     env:
       clear:
-        POSTGRES_USER: techstacks
-        POSTGRES_DB: techstacks
+        # Database username and database name (e.g. example/example)
+        POSTGRES_USER: <%= ENV['GITHUB_REPOSITORY'].to_s.split('/').last.tr('.', '-').split('-').first %>
+        POSTGRES_DB: <%= ENV['GITHUB_REPOSITORY'].to_s.split('/').last.tr('.', '-').split('-').first %>
         # Optional: only listens inside container
         PGDATA: /var/lib/postgresql/data
+      # secrets from ./kamal/secrets
       secret:
         - POSTGRES_PASSWORD
     directories:
-      - /opt/docker/techstacks.io/postgres:/var/lib/postgresql/data
-      - /opt/docker/techstacks.io/initdb.d:/docker-entrypoint-initdb.d
+      - /opt/docker/<%= ENV['KAMAL_DEPLOY_HOST'] %>/postgres:/var/lib/postgresql/data
+      - /opt/docker/<%= ENV['KAMAL_DEPLOY_HOST'] %>/initdb.d:/docker-entrypoint-initdb.d
