@@ -106,6 +106,7 @@ export function Header() {
                     {sessionInfo.userId && (
                       <Link
                         href={routes.user(sessionInfo.userId)}
+                        prefetch={false}
                         className="block px-4 py-2 hover:bg-gray-700"
                       >
                         Profile

@@ -205,6 +205,7 @@ function TechStacksContent() {
               <Link
                 key={stack.id}
                 href={routes.stack(stack.slug)}
+                prefetch={false}
                 className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
               >
                 {stack.screenshotUrl && (

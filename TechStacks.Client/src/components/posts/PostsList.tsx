@@ -180,6 +180,7 @@ export function PostsList({ posts }: PostsListProps) {
                     {post.commentsCount || 0
                       ? (<Link
                             href={routes.post(postId, post.slug)}
+                            prefetch={false}
                             className="hover:text-primary-600"
                             onClick={(e) => e.stopPropagation()}
                           >

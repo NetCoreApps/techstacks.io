@@ -102,6 +102,7 @@ export default function TechnologyDetailClient({ slug }: { slug: string }) {
                   <Link
                     key={stack.id}
                     href={routes.stack(stack.slug)}
+                    prefetch={false}
                     className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition"
                   >
                     <div className="flex items-center gap-3">

@@ -112,6 +112,7 @@ export default function TechStackDetailClient({ slug }: { slug: string }) {
                           <Link
                             key={tech.id}
                             href={routes.tech(tech.slug)}
+                            prefetch={false}
                             className="hover:opacity-80 transition-opacity"
                             title={tech.name}
                           >

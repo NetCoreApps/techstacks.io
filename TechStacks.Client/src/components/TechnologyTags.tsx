@@ -54,6 +54,7 @@ export function TechnologyTags({ technologyIds, className = '' }: TechnologyTags
         <Link
           key={tech.id}
           href={routes.tech(tech.slug)}
+          prefetch={false}
           className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
