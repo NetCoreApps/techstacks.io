@@ -6,8 +6,8 @@
 # - KAMAL_DEPLOY_HOST (e.g. example.org)        - from GitHub Action Secret
 # - POSTGRES_PASSWORD (e.g. random-password)    - from GitHub Action Secret
 
-# Using Environment variables allows re-use of this config for multiple apps.
-# Alternatively, they can be replaced with hard-coded values for 
+# Using environment variables keeps this configuration reusable across multiple apps.
+# For a simpler, app-specific setup, you can replace them with hard-coded values.
 
 # Name of your application. Used to uniquely configure containers. (e.g. example-org)
 service: <%= ENV['GITHUB_REPOSITORY'].to_s.split('/').last.tr('.', '-') %>
