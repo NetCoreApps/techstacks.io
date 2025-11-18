@@ -34,8 +34,9 @@ const nextConfig = {
         unoptimized: true
     },
 
-    // Add trailing slash for better static hosting compatibility
-    trailingSlash: true,
+    // Don't use trailingSlash - it causes issues with dynamic routes in static export
+    // The C# backend's MapFallbackToFile handles routing correctly without it
+    trailingSlash: false,
 
     env: {
         apiBaseUrl: API_URL
