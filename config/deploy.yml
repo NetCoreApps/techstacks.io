@@ -1,7 +1,7 @@
 # Kamal deploy config for this repository. Uses environment variables:
-# - GITHUB_REPOSITORY (e.g. acme/example.org)   - included in GitHub Actions
-# - GITHUB_ACTOR (e.g. acme)                    - included in GitHub Actions
-# - GITHUB_TOKEN ($GITHUB_TOKEN)                - included in GitHub Actions
+# - GITHUB_REPOSITORY (e.g. acme/example.org)   - from GitHub Action ${github.repository}
+# - KAMAL_REGISTRY_USERNAME (e.g. my-user)      - from GitHub Action ${github.actor}
+# - KAMAL_REGISTRY_PASSWORD ($GITHUB_TOKEN)     - from GitHub Action ${secrets.GITHUB_TOKEN}
 # - KAMAL_DEPLOY_IP (e.g. 100.100.100.100)      - from GitHub Action Secret
 # - KAMAL_DEPLOY_HOST (e.g. example.org)        - from GitHub Action Secret
 # - POSTGRES_PASSWORD (e.g. random-password)    - from GitHub Action Secret

@@ -297,3 +297,4 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 mise.toml
+.env
