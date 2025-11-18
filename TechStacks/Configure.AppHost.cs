@@ -16,16 +16,14 @@ namespace TechStacks;
 
 public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
 {
+    public static string Connection { get; set; } = default!; //from Program.cs
+
     public void Configure(IWebHostBuilder builder) => builder
         .ConfigureServices((context,services) => {
             // Configure ASP.NET Core IOC Dependencies
             services.AddSingleton<IMessageService>(c => new BackgroundMqService());
 
-            var dbFactory = new OrmLiteConnectionFactory(
-                context.Configuration.GetConnectionString("DefaultConnection")
-                    ?? throw new Exception("ConnectionStrings/DefaultConnection not found"),
-                PostgreSqlDialect.Provider);
-
+            var dbFactory = new OrmLiteConnectionFactory(Connection, PostgreSqlDialect.Provider);
             services.AddSingleton<IDbConnectionFactory>(dbFactory);
 
             services.RegisterValidators(typeof(AppHost).Assembly);
