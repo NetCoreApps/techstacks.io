@@ -49,7 +49,8 @@ volumes:
 accessories:
   postgres:
     image: postgres
-    host: 192.168.0.1    
+    host: 192.168.0.1
+    network: techstacks-io-network
     env:
       clear:
         POSTGRES_USER: techstacks
