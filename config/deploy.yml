@@ -43,6 +43,10 @@ registry:
 builder:
   arch: amd64
 
+# Docker options to enable host.docker.internal on Linux
+options:
+  add-host: "host.docker.internal:host-gateway"
+
 volumes:
   - "/opt/docker/techstacks.io/App_Data:/app/App_Data"
 
