@@ -43,11 +43,6 @@ services.AddAuthorization();
 
 // $ dotnet ef migrations add CreateIdentitySchema
 // $ dotnet ef database update
-AppHost.Connection = Environment.GetEnvironmentVariable("TECHSTACKS_DB") ??
-config.GetConnectionString("DefaultConnection")
-    ?? throw new Exception("ConnectionStrings/DefaultConnection not found");
-Console.WriteLine($"DB: {AppHost.Connection}");
-
 services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(AppHost.Connection, b => b.MigrationsAssembly(nameof(TechStacks))));
 

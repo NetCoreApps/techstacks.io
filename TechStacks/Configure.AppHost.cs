@@ -23,6 +23,11 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
             // Configure ASP.NET Core IOC Dependencies
             services.AddSingleton<IMessageService>(c => new BackgroundMqService());
 
+            Connection = Environment.GetEnvironmentVariable("TECHSTACKS_DB") ??
+            context.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new Exception("ConnectionStrings/DefaultConnection not found");
+            Console.WriteLine($"DB: {AppHost.Connection}");
+
             var dbFactory = new OrmLiteConnectionFactory(Connection, PostgreSqlDialect.Provider);
             services.AddSingleton<IDbConnectionFactory>(dbFactory);
 
