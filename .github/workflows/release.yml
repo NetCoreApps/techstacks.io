@@ -72,23 +72,28 @@ jobs:
         run: |
           kamal server bootstrap
 
+      - name: Ensure directories exist with correct permissions
+        run: |
+          echo "Creating directories with correct permissions"
+          kamal server exec "mkdir -p /opt/docker/${{ env.repository_name }}/App_Data /opt/docker/${{ env.repository_name }}/initdb.d /opt/docker/${{ env.repository_name }}/postgres"
+
+          echo "Setting app file permissions"
+          kamal server exec "chown -R 1654:1654 /opt/docker/${{ env.repository_name }}/App_Data /opt/docker/${{ env.repository_name }}/initdb.d"
+
+          echo "Setting postgres file permissions"
+          kamal server exec "chown -R 999:999 /opt/docker/${{ env.repository_name }}/postgres"
+
       - name: Check if first run and execute kamal app boot if necessary
         run: |
-          FIRST_RUN_FILE=".${{ env.repository_name }}"
+          FIRST_RUN_FILE="~/first-run/${{ env.repository_name }}"
           if ! kamal server exec -q "test -f $FIRST_RUN_FILE"; then
-            kamal server exec -q "touch $FIRST_RUN_FILE" || true
-
-            echo "Fix app file permissions"
-            kamal server exec "mkdir -p /opt/docker/${{ env.repository_name }}/App_Data /opt/docker/${{ env.repository_name }}/initdb.d /opt/docker/${{ env.repository_name }}/postgres && chown -R 1654:1654 /opt/docker/${{ env.repository_name }}"
-            
-            echo "Fix postgres file permissions"
-            kamal server exec "chown -R 999:999 /opt/docker/${{ env.repository_name }}/postgres"
+            kamal server exec -q "mkdir -p ~/first-run && touch $FIRST_RUN_FILE" || true
 
             if [ -n "${{env.INIT_DB_SQL}}" ]; then
               echo "Initializing DB with INIT_DB_SQL secret..."
               # Save the SQL content to a temporary file
               echo "${{ env.INIT_DB_SQL }}" > init-db.sql
-              cat init-db.sql | kamal server exec -i "cat > /opt/docker/${{ env.repository_name }}/initdb.d/${{ env.repository_name }}.sql" && rm init-db.sql || true              
+              cat init-db.sql | kamal server exec -i "cat > /opt/docker/${{ env.repository_name }}/initdb.d/${{ env.repository_name }}.sql" && rm init-db.sql || true
             fi
             # Start all kamal accessories
             kamal accessory boot all || true
@@ -97,11 +102,11 @@ jobs:
             kamal deploy -q -P --version latest || true
           else
             echo "Not first run, skipping kamal app boot"
-          fi          
+          fi
 
-      - name: Ensure file permissions
+      - name: Verify file permissions before deploy
         run: |
-          kamal server exec --no-interactive "mkdir -p /opt/docker/${{ env.repository_name }}/App_Data && chown -R 1654:1654 /opt/docker/${{ env.repository_name }}"
+          kamal server exec --no-interactive "chown -R 1654:1654 /opt/docker/${{ env.repository_name }}/App_Data /opt/docker/${{ env.repository_name }}/initdb.d && chown -R 999:999 /opt/docker/${{ env.repository_name }}/postgres"
 
       - name: Deploy with Kamal
         run: |
