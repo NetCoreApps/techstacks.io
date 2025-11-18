@@ -45,11 +45,11 @@ registry:
   # Specify the registry server, if you're not using Docker Hub
   server: ghcr.io
   username:
-    - <%= ENV['GITHUB_ACTOR'] %>
+    - KAMAL_REGISTRY_USERNAME
 
   # Always use an access token rather than real password (pulled from .kamal/secrets).
   password:
-    - <%= ENV['GITHUB_TOKEN'] %>
+    - KAMAL_REGISTRY_PASSWORD
 
 # Configure builder setup.
 builder:

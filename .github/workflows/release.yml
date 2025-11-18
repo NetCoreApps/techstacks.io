@@ -18,6 +18,8 @@ env:
   KAMAL_DEPLOY_IP: ${{ secrets.KAMAL_DEPLOY_IP }}
   KAMAL_DEPLOY_HOST: ${{ secrets.KAMAL_DEPLOY_HOST }}
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  KAMAL_REGISTRY_USERNAME: ${{ github.actor }}
+  KAMAL_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   release:
