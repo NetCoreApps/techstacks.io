@@ -43,9 +43,6 @@ registry:
 builder:
   arch: amd64
 
-# Docker network for container communication
-network: "techstacks-network"
-
 volumes:
   - "/opt/docker/techstacks.io/App_Data:/app/App_Data"
 
@@ -54,6 +51,8 @@ accessories:
     image: postgres
     host: 192.168.0.1
     port: "5433:5432"
+    options:
+      network: "kamal"
     env:
       clear:
         POSTGRES_USER: techstacks
