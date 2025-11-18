@@ -60,7 +60,7 @@ export default function TopPage() {
               <div className="text-center space-y-4">
                 <p className="text-lg">
                   Discover what technologies were used to create popular Websites and Apps, for example here's what{' '}
-                  <Link href={routes.stack('techstacks')} prefetch={false} className="text-primary-600 hover:underline font-semibold">
+                  <Link href={routes.stack('techstacks')} className="text-primary-600 hover:underline font-semibold">
                     TechStacks was created
                   </Link>{' '}
                   with.
@@ -102,7 +102,7 @@ export default function TopPage() {
                             <div className="text-xl font-semibold text-gray-500 min-w-[50px]">
                               <em>({tech.stacksCount})</em>
                             </div>
-                            <Link href={routes.tech(tech.slug)} prefetch={false} className="flex-1">
+                            <Link href={routes.tech(tech.slug)} className="flex-1">
                               {tech.logoUrl && (
                                 <img
                                   src={tech.logoUrl}
@@ -143,7 +143,6 @@ export default function TopPage() {
                     <div key={`top-${tech.slug || tech.id || index}`} className="text-lg">
                       <Link
                         href={routes.tech(tech.slug)}
-                        prefetch={false}
                         className="text-gray-900 hover:text-primary-600 font-medium"
                       >
                         <em className="text-gray-600">({tech.stacksCount})</em> {tech.name}

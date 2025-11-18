@@ -203,7 +203,6 @@ function TechnologiesContent() {
             <Link
               key={tech.id}
               href={routes.tech(tech.slug)}
-              prefetch={false}
               className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
             >
               <div className="flex items-start gap-4">

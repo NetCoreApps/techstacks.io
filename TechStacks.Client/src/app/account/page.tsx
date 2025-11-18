@@ -151,7 +151,6 @@ export default function AccountPage() {
                 <Link
                   key={stack.id}
                   href={routes.stack(stack.slug)}
-                  prefetch={false}
                   className="border border-gray-200 rounded-lg hover:shadow-lg transition-shadow overflow-hidden"
                 >
                   {stack.screenshotUrl && (
@@ -224,7 +223,6 @@ export default function AccountPage() {
                 <Link
                   key={stack.id}
                   href={routes.stack(stack.slug)}
-                  prefetch={false}
                   className="border border-gray-200 rounded-lg hover:shadow-lg transition-shadow overflow-hidden"
                 >
                   {stack.screenshotUrl && (
