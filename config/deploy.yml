@@ -43,25 +43,18 @@ registry:
 builder:
   arch: amd64
 
-# Docker options to enable host.docker.internal on Linux
-docker-options:
-  add-host:
-    - "host.docker.internal:host-gateway"
-
 volumes:
   - "/opt/docker/techstacks.io/App_Data:/app/App_Data"
 
 accessories:
   postgres:
     image: postgres
-    host: 192.168.0.1
-    port: "5433:5432"
     env:
       clear:
         POSTGRES_USER: techstacks
         POSTGRES_DB: techstacks
-        DB_HOST: 0.0.0.0
-        DB_PORT: 5432
+        # Optional: only listens inside container
+        PGDATA: /var/lib/postgresql/data
       secret:
         - POSTGRES_PASSWORD
     directories:
