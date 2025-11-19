@@ -17,6 +17,9 @@ RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore -p:Publi
 
 # 2. Build Next.js app
 FROM node:20-alpine AS next-build
+ARG KAMAL_DEPLOY_HOST
+ENV KAMAL_DEPLOY_HOST=${KAMAL_DEPLOY_HOST}
+
 WORKDIR /app/client
 
 COPY TechStacks.Client/package*.json ./
