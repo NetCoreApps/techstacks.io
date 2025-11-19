@@ -164,8 +164,6 @@ app.MapGet("/auth/github", (
     return TypedResults.Challenge(properties, ["GitHub"]);
 });
 
-app.MapGet("/up", () => Results.Ok("OK"));
-
 app.UseServiceStack(new AppHost(), options =>
 {
     options.MapEndpoints();
