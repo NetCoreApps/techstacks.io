@@ -3,11 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PrimaryButton, ErrorSummary, TextInput, MarkdownInput, SelectInput, FileInput, ConfirmDelete, CloseButton, SecondaryButton, Combobox } from '@servicestack/react';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
-import { ResponseStatus } from '@servicestack/client';
+import { ResponseStatus, toFormData } from '@servicestack/client';
+import { 
+  PrimaryButton, ErrorSummary, TextInput, MarkdownInput, SelectInput, FileInput, ConfirmDelete, 
+  CloseButton, SecondaryButton, Combobox, useClient, ApiStateContext 
+} from '@servicestack/react';
+import { CreatePost, UpdatePost } from '@/shared/dtos';
 
 interface PostFormProps {
   postId?: number;
@@ -19,6 +23,7 @@ const NEWS_CATEGORY_ID = 55;
 export function PostForm({ postId, onDone }: PostFormProps) {
   const router = useRouter();
   const isAuthenticated = useRequireAuth();
+  const client = useClient()
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ResponseStatus>();
   const [loadingPost, setLoadingPost] = useState(!!postId);
@@ -133,25 +138,27 @@ export function PostForm({ postId, onDone }: PostFormProps) {
         categoryId: NEWS_CATEGORY_ID,
       };
 
+      let api;
       if (postId) {
         // Update existing post
-        await gateway.updatePost({ ...postData, id: postId }, iconFile);
+        //await gateway.updatePost({ ...postData, id: postId }, iconFile);
+        const body = toFormData({ ...postData, id: postId, icon: iconFile });
+        api = await client.apiForm(new UpdatePost(), body);
       } else {
         // Create new post
-        await gateway.createPost(postData, iconFile);
+        //await gateway.createPost(postData, iconFile);
+        const body = toFormData({ ...postData, icon: iconFile });
+        api = await client.apiForm(new CreatePost(), body);
       }
 
-      if (onDone) {
-        onDone();
+      if (api.succeeded) {
+        if (onDone) {
+          onDone();
+        } else {
+          router.push('/');
+        }
       } else {
-        router.push('/');
-      }
-    } catch (err: any) {
-      console.error(`Failed to ${postId ? 'update' : 'create'} post:`, err);
-      if (err.responseStatus) {
-        setError(err.responseStatus);
-      } else {
-        setError({ message: err.message || 'Failed to create post' });
+        setError(api.error);
       }
     } finally {
       setLoading(false);
@@ -199,8 +206,8 @@ export function PostForm({ postId, onDone }: PostFormProps) {
   }
 
   return (
+    <ApiStateContext.Provider value={client}>
     <form onSubmit={handleSubmit}>
-      <ErrorSummary except={['type', 'title', 'url', 'content', 'technologyIds']} status={error} />
       <div className="relative shadow sm:overflow-hidden sm:rounded-md">
         {postId && (<CloseButton onClose={onDone} />)}
         <div className="space-y-6 py-6 px-4 sm:p-6 bg-white dark:bg-black">
@@ -208,7 +215,7 @@ export function PostForm({ postId, onDone }: PostFormProps) {
             {postId ? 'Edit Post' : 'Create New Post'}
           </h3>
           <fieldset>
-            <ErrorSummary except={['type', 'title', 'url', 'content', 'technologyIds']} className="mb-4" />
+            <ErrorSummary except={['type', 'title', 'url', 'content', 'technologyIds']} status={error} className="mb-4" />
             <div className="grid grid-cols-6 gap-6">
               <div className="col-span-3">
                 <SelectInput
@@ -292,5 +299,6 @@ export function PostForm({ postId, onDone }: PostFormProps) {
         </div>
       </div>
     </form>
+    </ApiStateContext.Provider>
   );
 }

@@ -4,11 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { TextInput, TextareaInput, SelectInput, CheckboxInput, ConfirmDelete, PrimaryButton } from '@servicestack/react';
+import {
+  TextInput, TextareaInput, SelectInput, CheckboxInput, ConfirmDelete, PrimaryButton,
+  useClient, ApiStateContext, ErrorSummary, CloseButton, SecondaryButton
+} from '@servicestack/react';
+import { ResponseStatus, toFormData } from '@servicestack/client';
 import { useRequireAuth } from '@/lib/hooks/useRequireAuth';
 import { useAppStore } from '@/lib/stores/useAppStore';
 import * as gateway from '@/lib/api/gateway';
 import routes from '@/lib/utils/routes';
+import { CreateTechnology, UpdateTechnology } from '@/shared/dtos';
 
 interface TechnologyFormProps {
   slug?: string;
@@ -18,9 +23,10 @@ interface TechnologyFormProps {
 export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
   const router = useRouter();
   const isAuthenticated = useRequireAuth();
+  const client = useClient();
   const { config } = useAppStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ResponseStatus>();
 
   const [formData, setFormData] = useState({
     id: 0 as number | undefined,
@@ -97,22 +103,26 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
+      let api;
       if (isUpdate) {
-        await gateway.updateTechnology(formData, logoFile || undefined);
+        const body = toFormData({ ...formData, logo: logoFile || undefined });
+        api = await client.apiForm(new UpdateTechnology(), body);
       } else {
-        await gateway.createTechnology(formData, logoFile || undefined);
+        const body = toFormData({ ...formData, logo: logoFile || undefined });
+        api = await client.apiForm(new CreateTechnology(), body);
       }
 
-      if (onDone) {
-        onDone();
+      if (api.succeeded) {
+        if (onDone) {
+          onDone();
+        } else {
+          router.push(routes.tech(formData.slug));
+        }
       } else {
-        router.push(routes.tech(formData.slug));
+        setError(api.error);
       }
-    } catch (err: any) {
-      setError(err.responseStatus?.message || err.message || 'Failed to save technology');
     } finally {
       setLoading(false);
     }
@@ -146,18 +156,16 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
   }
 
   return (
+    <ApiStateContext.Provider value={client}>
     <form onSubmit={handleSubmit}>
       <div className="shadow sm:overflow-hidden sm:rounded-md">
+        {slug && onDone && (<CloseButton onClose={onDone} />)}
         <div className="space-y-6 py-6 px-4 sm:p-6 bg-white dark:bg-black">
           <h2 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
             {isUpdate ? 'Edit Technology' : 'Add New Technology'}
           </h2>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-800">{error}</p>
-            </div>
-          )}
+          <fieldset>
+            <ErrorSummary except={['name', 'slug', 'vendorName', 'description', 'productUrl', 'tier']} status={error} className="mb-4" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -219,16 +227,18 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
             </div>
           </div>
 
-          <TextareaInput
-            id="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange('description')}
-            required
-            rows={6}
-            maxLength={1000}
-            help={`${formData.description.length}/1000`}
-          />
+          <div className="my-4">
+            <TextareaInput
+              id="description"
+              label="Description"
+              value={formData.description}
+              onChange={handleChange('description')}
+              required
+              rows={6}
+              maxLength={1000}
+              help={`${formData.description.length}/1000`}
+            />
+          </div>
 
           <TextInput
             id="productUrl"
@@ -244,31 +254,36 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
             id="vendorUrl"
             label="Vendor URL"
             type="url"
+            className="my-4"
             value={formData.vendorUrl}
             onChange={handleChange('vendorUrl')}
             maxLength={200}
           />
 
-          <CheckboxInput
-            id="isLocked"
-            label="Prevent others from editing this Technology?"
-            value={formData.isLocked as any}
-            onChange={handleChange('isLocked')}
-          />
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+            <CheckboxInput
+              id="isLocked"
+              label="Prevent others from editing this Technology?"
+              value={formData.isLocked as any}
+              onChange={handleChange('isLocked')}
+            />
+          </div>
+          </fieldset>
         </div>
 
           <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 text-right sm:px-6">
             <div className="flex justify-between space-x-3">
+              <div>
               {isUpdate && (
-                <div>
                   <ConfirmDelete onDelete={handleDelete} disabled={loading}>
                     Delete
                   </ConfirmDelete>
-                </div>
               )}
-              <div>
+              </div>
+              <div className="flex gap-4">
+                {onDone && <SecondaryButton onClick={onDone}>Cancel</SecondaryButton>}
                 <PrimaryButton type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : isUpdate ? 'Update' : 'Create'}
+                  {loading ? (isUpdate ? 'Updating...' : 'Creating...') : (isUpdate ? 'Update Technology' : 'Create Technology')}
                 </PrimaryButton>
               </div>
             </div>
@@ -276,5 +291,6 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
 
         </div>
     </form>
+    </ApiStateContext.Provider>
   );
 }
