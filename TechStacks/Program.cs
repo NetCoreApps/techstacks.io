@@ -25,10 +25,10 @@ services.AddAuthentication(options =>
     })
     .AddGitHub(options =>
     {
-        options.ClientId = Environment.GetEnvironmentVariable("GH_CLIENT_ID") 
+        options.ClientId = Environment.GetEnvironmentVariable("GH_CLIENT_ID")
             ?? config["oauth.github.ClientId"]
             ?? throw new Exception("oauth.github.ClientId not found");
-        options.ClientSecret = Environment.GetEnvironmentVariable("GH_CLIENT_SECRET") 
+        options.ClientSecret = Environment.GetEnvironmentVariable("GH_CLIENT_SECRET")
             ?? config["oauth.github.ClientSecret"]
             ?? throw new Exception("oauth.github.ClientSecret not found");
         options.Scope.Add("user:email");
@@ -93,7 +93,8 @@ services.AddSwaggerGen();
 builder.Services.AddServiceStack(typeof(TechnologyServices).Assembly);
 
 //https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-3.1
-services.Configure<ForwardedHeadersOptions>(options => {
+services.Configure<ForwardedHeadersOptions>(options =>
+{
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
 
@@ -114,7 +115,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
     // Redirect root requests to the Client App in development
-    app.MapGet("/", async (HttpContext ctx) => 
+    app.MapGet("/", async (HttpContext ctx) =>
         ctx.Response.Redirect("https://localhost:3000"));
 }
 
@@ -135,7 +136,8 @@ app.MapGet("/auth/github", (
     return TypedResults.Challenge(properties, ["GitHub"]);
 });
 
-app.UseServiceStack(new AppHost(), options => {
+app.UseServiceStack(new AppHost(), options =>
+{
     options.MapEndpoints();
 });
 
