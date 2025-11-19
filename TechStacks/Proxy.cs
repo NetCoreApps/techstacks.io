@@ -11,6 +11,7 @@ namespace TechStacks;
 
 public static class Proxy
 {
+    public const bool Verbose = true;
     public static string[] CacheFileExtensions = [
         ".js", 
         ".css", 
@@ -54,7 +55,7 @@ public static class Proxy
         return false;
     };
 
-    public static ConcurrentDictionary<string, (string mimeType, byte[] data)> Cache { get; } = new();
+    private static ConcurrentDictionary<string, (string mimeType, byte[] data, string? encoding)> Cache { get; } = new();
 
     public static bool TryStartNode(string workingDirectory, out Process process, string logPrefix="[node]")
     {
@@ -73,20 +74,23 @@ public static class Proxy
         };
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
-        process.OutputDataReceived += (s, e) => {
-            if (e.Data != null)
-            {
-                Console.Write(logPrefix + ":");
-                Console.WriteLine(e.Data);
-            }
-        };
-        process.ErrorDataReceived += (s, e) => {
-            if (e.Data != null)
-            {
-                Console.Write(logPrefix + " ERROR:");
-                Console.WriteLine(e.Data);
-            }
-        };
+        if (Verbose)
+        {
+            process.OutputDataReceived += (s, e) => {
+                if (e.Data != null)
+                {
+                    Console.Write(logPrefix + ":");
+                    Console.WriteLine(e.Data);
+                }
+            };
+            process.ErrorDataReceived += (s, e) => {
+                if (e.Data != null)
+                {
+                    Console.Write(logPrefix + " ERROR:");
+                    Console.WriteLine(e.Data);
+                }
+            };
+        }
         if (!process.Start())
         {
             return false;
@@ -110,29 +114,32 @@ public static class Proxy
         var request = context.Request;
 
         var cacheKey = request.Path.Value ?? string.Empty;
-        var shouldCache = ShouldCache(context);
-        if (shouldCache)
+
+        // Handle ?clear commands even if this request itself isn't cacheable
+        var qs = request.QueryString.Value ?? string.Empty;
+        if (qs.Contains("?clear"))
         {
-            // if contains ?clear, remove from cache
-            var qs = request.QueryString.Value ?? string.Empty;
-            if (qs.Contains("?clear"))
+            if (qs.Contains("?clear=all"))
             {
-                if (qs.Contains("?clear=all"))
-                {
-                    Cache.Clear();
-                }
-                else
-                {
-                    Cache.TryRemove(cacheKey, out _);
-                }
+                Cache.Clear();
             }
-            if (Cache.TryGetValue(cacheKey, out var cached))
+            else
             {
-                Console.WriteLine($"Cache hit: {cacheKey} |mimeType| {cached.mimeType} |size| {cached.data.Length}");
-                context.Response.ContentType = cached.mimeType;
-                await context.Response.Body.WriteAsync(cached.data, context.RequestAborted);
-                return;
+                Cache.TryRemove(cacheKey, out _);
             }
+        }
+
+        var shouldCache = ShouldCache(context);
+        if (shouldCache && Cache.TryGetValue(cacheKey, out var cached))
+        {
+            if (Verbose) Console.WriteLine($"Cache hit: {cacheKey} |mimeType| {cached.mimeType} |encoding| {cached.encoding} |size| {cached.data.Length}");
+            context.Response.ContentType = cached.mimeType;
+            if (!string.IsNullOrEmpty(cached.encoding))
+            {
+                context.Response.Headers["Content-Encoding"] = cached.encoding;
+            }
+            await context.Response.Body.WriteAsync(cached.data, context.RequestAborted);
+            return;
         }
 
         // Build relative URI (path + query)
@@ -194,10 +201,11 @@ public static class Proxy
                 var bytes = await response.Content.ReadAsByteArrayAsync();
                 if (bytes.Length > 0)
                 {
-                    var mimeType = response.Content.Headers.ContentType?.ToString() 
+                    var mimeType = response.Content.Headers.ContentType?.ToString()
                         ?? ServiceStack.MimeTypes.GetMimeType(cacheKey);
-                    Cache[cacheKey] = (mimeType, bytes);
-                    Console.WriteLine($"Cache miss: {cacheKey} |mimeType| {mimeType} |size| {bytes.Length}");
+                    var encoding = response.Content.Headers.ContentEncoding.FirstOrDefault();
+                    Cache[cacheKey] = (mimeType, bytes, encoding);
+                    if (Verbose) Console.WriteLine($"Cache miss: {cacheKey} |mimeType| {mimeType} |encoding| {encoding} |size| {bytes.Length}");
                     await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
                     return;
                 }
