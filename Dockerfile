@@ -10,8 +10,8 @@ COPY TechStacks ./TechStacks
 COPY TechStacks.ServiceInterface ./TechStacks.ServiceInterface
 COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 
-# Restore and publish
-RUN dotnet restore
+# Restore and publish only the API project (avoid solution projects not copied into the image)
+RUN dotnet restore TechStacks/TechStacks.csproj
 RUN dotnet publish TechStacks/TechStacks.csproj -c Release -o /app/api/publish
 
 # 2. Build Next.js app
