@@ -7,8 +7,8 @@ NEXT_PORT="${NEXT_PORT:-3000}"
 echo "Starting ASP.NET Core on ${ASPNETCORE_URLS}..."
 DOTNET_ENV_VARS=("ASPNETCORE_URLS=${ASPNETCORE_URLS}")
 
-# Start ASP.NET Core application
-ASPNETCORE_URLS="${ASPNETCORE_URLS}" dotnet /app/api/TechStacks.dll &
+# Start ASP.NET Core application with correct content root so appsettings.json is loaded
+ASPNETCORE_CONTENTROOT="/app/api" ASPNETCORE_URLS="${ASPNETCORE_URLS}" dotnet /app/api/TechStacks.dll &
 DOTNET_PID=$!
 
 echo "Starting Next.js on port ${NEXT_PORT}..."
