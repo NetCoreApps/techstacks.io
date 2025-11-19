@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "node server.js",
     "dtos": "npx get-dtos ts",
+    "generate-data": "node scripts/generate-static-data.mjs",
+    "prebuild:local": "npm run generate-data",
     "build": "next build && cp -r dist/* ../TechStacks/wwwroot/ && cp dist/_next/static/chunks/*.css ../TechStacks/wwwroot/css/app.css",
     "build:prod": "next build",
     "start": "next start",

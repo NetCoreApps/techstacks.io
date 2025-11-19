@@ -1,22 +1,13 @@
 import PostDetailClient from './PostDetailClient';
-import { JsonServiceClient } from '@servicestack/client';
-import * as dtos from '@/shared/dtos';
+import postsData from '@/data/posts.json';
 
-// Generate static pages for all posts
+// Generate static pages for all posts from static data
 export async function generateStaticParams() {
   try {
-    // Create a client with absolute URL for build-time fetching
-    const buildClient = new JsonServiceClient('https://techstacks.io');
-    const response = await buildClient.get(
-      new dtos.QueryPosts({
-        take: 1000,
-        orderBy: '-created',
-        fields: 'id,slug'
-      })
-    );
-    const posts = response.results || [];
+    // Read from static JSON data generated at build time
+    const posts = postsData.results || [];
 
-    console.log(`Generating ${posts.length} post pages`);
+    console.log(`Generating ${posts.length} post pages from static data (generated: ${postsData.generated})`);
 
     // Generate params for all posts
     return posts.map((post: any) => ({
@@ -24,8 +15,8 @@ export async function generateStaticParams() {
       slug: post.slug,
     }));
   } catch (error) {
-    console.error('Failed to fetch posts for static generation:', error);
-    // Fallback to placeholder if API is unavailable during build
+    console.error('Failed to load posts from static data:', error);
+    // Fallback to placeholder if data is unavailable
     return [{ id: '0', slug: '_placeholder' }];
   }
 }

@@ -1,24 +1,21 @@
 import TechnologyDetailClient from './TechnologyDetailClient';
-import { JsonServiceClient } from '@servicestack/client';
-import * as dtos from '@/shared/dtos';
+import techData from '@/data/tech.json';
 
-// Generate static pages for all technologies
+// Generate static pages for all technologies from static data
 export async function generateStaticParams() {
   try {
-    // Create a client with absolute URL for build-time fetching
-    const buildClient = new JsonServiceClient('https://techstacks.io');
-    const response = await buildClient.get(new dtos.GetAllTechnologies(), { include: 'total' });
-    const technologies = response.results || [];
+    // Read from static JSON data generated at build time
+    const technologies = techData.results || [];
 
-    console.log(`Generating ${technologies.length} technology pages`);
+    console.log(`Generating ${technologies.length} technology pages from static data (generated: ${techData.generated})`);
 
     // Generate params for all technologies
     return technologies.map((tech: any) => ({
       slug: tech.slug,
     }));
   } catch (error) {
-    console.error('Failed to fetch technologies for static generation:', error);
-    // Fallback to placeholder if API is unavailable during build
+    console.error('Failed to load technologies from static data:', error);
+    // Fallback to placeholder if data is unavailable
     return [{ slug: '_placeholder' }];
   }
 }

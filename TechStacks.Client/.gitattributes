@@ -1,0 +1,3 @@
+# Mark generated data files as generated for GitHub
+src/data/*.json linguist-generated=true
+
