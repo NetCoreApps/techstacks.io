@@ -1,5 +1,5 @@
 /* Options:
-Date: 2025-11-17 13:15:05
+Date: 2025-11-19 10:21:19
 Version: 8.101
 Tip: To override a DTO option, remove "//" prefix before updating
 BaseUrl: https://localhost:5001
@@ -136,10 +136,10 @@ export class Post
     public linkedToCount?: number;
     public score?: number;
     public rank?: number;
-    public labels: string[] = [];
-    public refUserIds: number[] = [];
-    public refLinks: string[] = [];
-    public muteUserIds: number[] = [];
+    public labels?: string[];
+    public refUserIds?: number[];
+    public refLinks?: string[];
+    public muteUserIds?: number[];
     public lastCommentDate?: string;
     public lastCommentId?: number;
     public lastCommentUserId?: number;
@@ -1713,7 +1713,7 @@ export class QueryPosts extends QueryDb_1<Post> implements IReturn<QueryResponse
     public types?: string[];
     public anyTechnologyIds?: number[];
     public is?: string[];
-    public createdBy?: string;
+    public userId?: number;
 
     public constructor(init?: Partial<QueryPosts>) { super(init); (Object as any).assign(this, init); }
     public getTypeName() { return 'QueryPosts'; }

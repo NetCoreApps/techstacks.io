@@ -15,7 +15,7 @@ public partial class QueryPosts : QueryDb<Post>
     public virtual HashSet<string>? Types { get; set; }
     public virtual HashSet<int>? AnyTechnologyIds { get; set; }
     public virtual string[]? Is { get; set; }
-        public virtual string? CreatedBy { get; set; }
+    public int? UserId { get; set; }
 }
 
 [Tag(Tags.AutoQuery), Tag(Tags.Posts)]

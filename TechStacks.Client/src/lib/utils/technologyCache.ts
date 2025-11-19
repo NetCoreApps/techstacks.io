@@ -14,6 +14,7 @@ interface PendingRequest {
 class TechnologyCache {
   private cache: Map<number, CacheEntry> = new Map();
   private pendingRequests: Map<string, PendingRequest> = new Map();
+  private fetchAllPromise: Promise<Technology[]> | null = null;
   private readonly TTL = 5 * 60 * 1000; // 5 minutes cache TTL
 
   /**
@@ -75,12 +76,41 @@ class TechnologyCache {
    */
   private async fetchAndCache(ids: number[]): Promise<Technology[]> {
     try {
-      const response = await gateway.queryTechnology({
-        ids: ids.join(','),
-        fields: 'id,name,slug'
-      });
+      // If no IDs requested, return empty
+      if (ids.length === 0) {
+        return [];
+      }
 
-      const technologies = response.results || [];
+      let technologies: Technology[];
+
+      // If cache is empty, fetch all technologies to populate the cache
+      if (this.cache.size === 0) {
+        // Check if there's already a fetch-all in progress
+        if (this.fetchAllPromise) {
+          await this.fetchAllPromise;
+          // After fetch-all completes, return the requested IDs from cache
+          return ids.map(id => this.cache.get(id)?.data).filter(Boolean) as Technology[];
+        }
+
+        // Start a new fetch-all request
+        this.fetchAllPromise = gateway.queryTechnology({
+          fields: 'id,name,slug'
+        }).then(res => res.results || []);
+
+        try {
+          technologies = await this.fetchAllPromise;
+        } finally {
+          this.fetchAllPromise = null;
+        }
+      } else {
+        // Otherwise, only fetch the missing IDs
+        const response = await gateway.queryTechnology({
+          ids: ids.join(','),
+          fields: 'id,name,slug'
+        });
+        technologies = response.results || [];
+      }
+
       const now = Date.now();
 
       // Cache each technology
@@ -93,7 +123,8 @@ class TechnologyCache {
         }
       }
 
-      return technologies;
+      // Return only the requested IDs
+      return ids.map(id => this.cache.get(id)?.data).filter(Boolean) as Technology[];
     } catch (err) {
       console.error('Failed to fetch technologies:', err);
       return [];
