@@ -30,11 +30,15 @@ public static class Proxy
 
     public static Func<HttpContext, bool> ShouldCache = context =>
     {
+        // Ignore if local
+        if (context.Request.Host.Value!.Contains("localhost"))
+            return false;
         // Ignore Cache-Control headers
         if (context.Request.Headers.TryGetValue("Cache-Control", out var cacheControlValues))
-        {
             return false;
-        }
+        // Ignore if has QueryString
+        if (context.Request.QueryString.HasValue)
+            return false;
 
         var path = context.Request.Path.Value ?? string.Empty;
         if (path.Length > 0)
@@ -104,13 +108,31 @@ public static class Proxy
     public static async Task HttpToNode(HttpContext context, HttpClient nextClient)
     {
         var request = context.Request;
+
         var cacheKey = request.Path.Value ?? string.Empty;
-        if (Cache.TryGetValue(cacheKey, out var cached))
+        var shouldCache = ShouldCache(context);
+        if (shouldCache)
         {
-            Console.WriteLine("Cache hit: " + cacheKey);
-            context.Response.ContentType = cached.mimeType;
-            await context.Response.Body.WriteAsync(cached.data, context.RequestAborted);
-            return;
+            // if contains ?clear, remove from cache
+            var qs = request.QueryString.Value ?? string.Empty;
+            if (qs.Contains("?clear"))
+            {
+                if (qs.Contains("?clear=all"))
+                {
+                    Cache.Clear();
+                }
+                else
+                {
+                    Cache.TryRemove(cacheKey, out _);
+                }
+            }
+            if (Cache.TryGetValue(cacheKey, out var cached))
+            {
+                Console.WriteLine($"Cache hit: {cacheKey} |mimeType| {cached.mimeType} |size| {cached.data.Length}");
+                context.Response.ContentType = cached.mimeType;
+                await context.Response.Body.WriteAsync(cached.data, context.RequestAborted);
+                return;
+            }
         }
 
         // Build relative URI (path + query)
@@ -165,19 +187,24 @@ public static class Proxy
         // ASP.NET Core will set its own transfer-encoding
         context.Response.Headers.Remove("transfer-encoding");
 
-        if (context.Response.StatusCode == StatusCodes.Status200OK && ShouldCache(context))
+        if (context.Response.StatusCode == StatusCodes.Status200OK)
         {
-            var bytes = await response.Content.ReadAsByteArrayAsync();
-            var mimeType = response.Content.Headers.ContentType?.ToString() 
-                ?? ServiceStack.MimeTypes.GetMimeType(cacheKey);
-            Cache[cacheKey] = (mimeType, bytes);
-            Console.WriteLine("Cache miss: " + cacheKey + " |size| " + bytes.Length);
-            await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
+            if (shouldCache)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                if (bytes.Length > 0)
+                {
+                    var mimeType = response.Content.Headers.ContentType?.ToString() 
+                        ?? ServiceStack.MimeTypes.GetMimeType(cacheKey);
+                    Cache[cacheKey] = (mimeType, bytes);
+                    Console.WriteLine($"Cache miss: {cacheKey} |mimeType| {mimeType} |size| {bytes.Length}");
+                    await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
+                    return;
+                }
+            }
         }
-        else
-        {
-            await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
-        }
+
+        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
     }
 
     public static void MapNotFoundToNode(WebApplication app, HttpClient nextClient, string[] ignorePaths)
