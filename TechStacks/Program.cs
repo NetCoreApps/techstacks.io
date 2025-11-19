@@ -123,6 +123,22 @@ app.UseStaticFiles();
 app.UseCookiePolicy();
 app.UseCors();
 
+// Fallback for dynamic post routes without a static exported page.
+// If a specific post HTML exists, serve it; otherwise serve the generic
+// placeholder page that loads the post client-side from the API.
+app.MapGet("/posts/{id:long}/{slug}", (long id, string slug, IWebHostEnvironment env) =>
+{
+    var staticPostPath = Path.Combine(env.WebRootPath, "posts", id.ToString(), $"{slug}.html");
+    if (File.Exists(staticPostPath))
+        return Results.File(staticPostPath, "text/html; charset=utf-8");
+
+    var placeholderPath = Path.Combine(env.WebRootPath, "posts", "0", "_placeholder", "index.html");
+    if (File.Exists(placeholderPath))
+        return Results.File(placeholderPath, "text/html; charset=utf-8");
+
+    return Results.NotFound();
+});
+
 // GitHub OAuth endpoint
 app.MapGet("/auth/github", (
     HttpContext context,
