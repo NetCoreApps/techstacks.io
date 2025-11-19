@@ -6,7 +6,7 @@ import * as dtos from '@/shared/dtos';
 export async function generateStaticParams() {
   try {
     // Create a client with absolute URL for build-time fetching
-    const buildClient = new JsonServiceClient('https://react.techstacks.io');
+    const buildClient = new JsonServiceClient('https://techstacks.io');
     const response = await buildClient.get(new dtos.GetAllTechnologies(), { include: 'total' });
     const technologies = response.results || [];
 
