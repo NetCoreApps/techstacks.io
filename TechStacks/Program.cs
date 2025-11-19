@@ -126,18 +126,23 @@ app.UseCors();
 // Fallback for dynamic post routes without a static exported page.
 // If a specific post HTML exists, serve it; otherwise serve the generic
 // placeholder page that loads the post client-side from the API.
-app.MapGet("/posts/{id:long}/{slug}", (long id, string slug, IWebHostEnvironment env) =>
+var fallbackRoutes = new Dictionary<string, string>
 {
-    var staticPostPath = Path.Combine(env.WebRootPath, "posts", id.ToString(), $"{slug}.html");
-    if (File.Exists(staticPostPath))
-        return Results.File(staticPostPath, "text/html; charset=utf-8");
+    ["/posts/{id:long}/{slug}"] = "posts/0/_placeholder/index.html",
+    ["/tech/{slug}"] = "tech/_placeholder.html",
+    ["/stacks/{slug}"] = "stacks/_placeholder.html",
+};
+foreach (var route in fallbackRoutes)
+{
+    app.MapGet(route.Key, (HttpContext ctx, IWebHostEnvironment env) =>
+    {
+        var placeholderPath = Path.Combine(env.WebRootPath, route.Value);
+        if (File.Exists(placeholderPath))
+            return Results.File(placeholderPath, "text/html; charset=utf-8");
 
-    var placeholderPath = Path.Combine(env.WebRootPath, "posts", "0", "_placeholder", "index.html");
-    if (File.Exists(placeholderPath))
-        return Results.File(placeholderPath, "text/html; charset=utf-8");
-
-    return Results.NotFound();
-});
+        return Results.NotFound();
+    });
+}
 
 // GitHub OAuth endpoint
 app.MapGet("/auth/github", (
