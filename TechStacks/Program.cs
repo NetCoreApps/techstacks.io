@@ -164,6 +164,8 @@ app.MapGet("/auth/github", (
     return TypedResults.Challenge(properties, ["GitHub"]);
 });
 
+app.MapGet("/up", () => Results.Ok("OK"));
+
 app.UseServiceStack(new AppHost(), options =>
 {
     options.MapEndpoints();
@@ -199,7 +201,7 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine($"Failed to start Next.js dev server: {process.ExitCode}");
             return;
         }
-    
+
         process.Exited += (s, e) => {
             Console.WriteLine("[node] Exited: " + process.ExitCode);
             File.Delete(nextLockFile);
