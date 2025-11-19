@@ -12,7 +12,7 @@ COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 
 # Restore and publish only the API project (avoid solution projects not copied into the image)
 RUN dotnet restore TechStacks/TechStacks.csproj
-RUN dotnet publish TechStacks/TechStacks.csproj -c Release -o /app/api/publish
+RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore
 
 # 2. Build Next.js app
 FROM node:20-alpine AS next-build
@@ -38,7 +38,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy published .NET app
-COPY --from=dotnet-build /app/api/publish ./api
+COPY --from=dotnet-build /src/TechStacks/bin/Release/net10.0/publish ./api
 
 # Copy built Next.js app (including .next, node_modules, public, etc.)
 COPY --from=next-build /app/client ./client
