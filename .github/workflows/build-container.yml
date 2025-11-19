@@ -75,15 +75,10 @@ jobs:
         working-directory: ./TechStacks.Client
         run: npm install
 
-      # Generate static JSON data files for build-time SSG
-      # This fetches posts, technologies, and stacks from the API and saves them
-      # to src/data/*.json so the Next.js build doesn't need to call APIs
-      # - name: Generate static data
-      #   if: steps.check_client.outputs.client_exists == 'true'
-      #   working-directory: ./TechStacks.Client
-      #   env:
-      #     API_URL: https://react.techstacks.io
-      #   run: npm run generate-data
+      - name: Build client
+        if: steps.check_client.outputs.client_exists == 'true'
+        working-directory: ./TechStacks.Client
+        run: npm run build
 
       - name: Install x tool
         run: dotnet tool install -g x

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { PrimaryButton } from '@servicestack/react';
 import { useAuthorization } from '@/lib/hooks/useAuthorization';
@@ -11,7 +12,7 @@ import * as gateway from '@/lib/api/gateway';
 import { TechnologyTags } from '@/components/TechnologyTags';
 import { Avatar } from '@/components/ui/Avatar';
 
-export default function PostDetailClient({ id, slug }: { id: string; slug: string }) {
+export default function PostDetailClient() {
   const { canEditPost, canDeleteComment } = useAuthorization();
   const { sessionInfo, isAuthenticated } = useAppStore();
   const [post, setPost] = useState<any>(null);
@@ -26,10 +27,22 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
   const [downVotedCommentIds, setDownVotedCommentIds] = useState<number[]>([]);
   const [localCommentPoints, setLocalCommentPoints] = useState<Record<number, number>>({});
 
+  const pathname = usePathname();
+  const segments = pathname.split('/').filter(Boolean);
+  const idSegment = segments[1]; // /posts/{id}/{slug}
+  const slug = segments[2] ?? '';
+
+  const postId = idSegment ? parseInt(idSegment, 10) : NaN;
+
   useEffect(() => {
     const loadPost = async () => {
+      if (!postId || Number.isNaN(postId)) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const postId = parseInt(id);
         const response = await gateway.getPost(postId);
         setPost(response.post);
         setComments(response.comments || []);
@@ -53,7 +66,7 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
     };
 
     loadPost();
-  }, [id, isAuthenticated]);
+  }, [postId, isAuthenticated]);
 
   const handleCommentVote = async (commentId: number, weight: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -98,7 +111,7 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
         [commentId]: currentPoints + pointsDelta
       }));
 
-      await gateway.votePostComment(parseInt(id), commentId, newWeight);
+      await gateway.votePostComment(postId, commentId, newWeight);
     } catch (err) {
       console.error('Failed to vote on comment:', err);
     }
@@ -112,12 +125,12 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
     }
 
     try {
-      await gateway.createPostComment(parseInt(id), newComment, replyToId || undefined);
+      await gateway.createPostComment(postId, newComment, replyToId || undefined);
       setNewComment('');
       setReplyToId(null);
 
       // Reload post to get updated comments
-      const response = await gateway.getPost(parseInt(id));
+      const response = await gateway.getPost(postId);
       setComments(response.comments || []);
     } catch (err) {
       console.error('Failed to create comment:', err);
@@ -128,12 +141,12 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
     if (!editContent.trim()) return;
 
     try {
-      await gateway.updatePostComment(commentId, parseInt(id), editContent);
+      await gateway.updatePostComment(commentId, postId, editContent);
       setEditingCommentId(null);
       setEditContent('');
 
       // Reload comments
-      const response = await gateway.getPost(parseInt(id));
+      const response = await gateway.getPost(postId);
       setComments(response.comments || []);
     } catch (err) {
       console.error('Failed to update comment:', err);
@@ -146,10 +159,10 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
     }
 
     try {
-      await gateway.deletePostComment(commentId, parseInt(id));
+      await gateway.deletePostComment(commentId, postId);
 
       // Reload comments
-      const response = await gateway.getPost(parseInt(id));
+      const response = await gateway.getPost(postId);
       setComments(response.comments || []);
     } catch (err) {
       console.error('Failed to delete comment:', err);
@@ -388,7 +401,7 @@ export default function PostDetailClient({ id, slug }: { id: string; slug: strin
               )}
             </h1>
             {canEditPost(post) && (
-              <Link href={routes.postEdit(parseInt(id), slug)}>
+              <Link href={routes.postEdit(postId, slug)}>
                 <PrimaryButton className="ml-4">
                   Edit
                 </PrimaryButton>

@@ -128,7 +128,7 @@ app.UseCors();
 // placeholder page that loads the post client-side from the API.
 var fallbackRoutes = new Dictionary<string, string>
 {
-    ["/posts/{id:long}/{slug}"] = "posts/0/_placeholder/index.html",
+    ["/posts/{id:long}/{slug}"] = "posts/0/_placeholder.html",
     ["/tech/{slug}"] = "tech/_placeholder.html",
     ["/stacks/{slug}"] = "stacks/_placeholder.html",
 };

@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
 import { useAuth, PrimaryButton } from '@servicestack/react';
 import { useAppStore } from '@/lib/stores/useAppStore';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 
-export default function TechStackDetailClient({ slug }: { slug: string }) {
+export default function TechStackDetailClient() {
+  const pathname = usePathname();
+  const segments = pathname.split('/').filter(Boolean);
+  const slug = segments[1] ?? '';
   const [stack, setStack] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
