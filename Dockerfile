@@ -30,6 +30,9 @@ RUN npm run build:prod
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
+# Label required by Kamal, must match config/deploy.yml service (techstacks-io)
+LABEL service="techstacks-io"
+
 ARG SERVICESTACK_LICENSE
 
 # Install Node.js and bash for the entrypoint script
