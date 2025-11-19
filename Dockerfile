@@ -12,7 +12,8 @@ COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 
 # Restore and publish only the API project (avoid solution projects not copied into the image)
 RUN dotnet restore TechStacks/TechStacks.csproj
-RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore
+# Disable .NET's built-in containerization (PublishProfile=DefaultContainer) inside Docker
+RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore -p:PublishProfile=
 
 # 2. Build Next.js app
 FROM node:20-alpine AS next-build
