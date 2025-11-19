@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +11,47 @@ namespace TechStacks;
 
 public static class Proxy
 {
+    public static string[] CacheFileExtensions = [
+        ".js", 
+        ".css", 
+        ".ico", 
+        ".png", 
+        ".jpg", 
+        ".jpeg", 
+        ".gif", 
+        ".svg", 
+        ".woff", 
+        ".woff2", 
+        ".ttf", 
+        ".eot", 
+        ".otf", 
+        ".map"
+    ];
+
+    public static Func<HttpContext, bool> ShouldCache = context =>
+    {
+        // Ignore Cache-Control headers
+        if (context.Request.Headers.TryGetValue("Cache-Control", out var cacheControlValues))
+        {
+            return false;
+        }
+
+        var path = context.Request.Path.Value ?? string.Empty;
+        if (path.Length > 0)
+        {
+            foreach (var ext in CacheFileExtensions)
+            {
+                if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    public static ConcurrentDictionary<string, (string mimeType, byte[] data)> Cache { get; } = new();
+
     public static bool TryStartNode(string workingDirectory, out Process process, string logPrefix="[node]")
     {
         process = new Process 
@@ -62,6 +104,14 @@ public static class Proxy
     public static async Task HttpToNode(HttpContext context, HttpClient nextClient)
     {
         var request = context.Request;
+        var cacheKey = request.Path.Value ?? string.Empty;
+        if (Cache.TryGetValue(cacheKey, out var cached))
+        {
+            Console.WriteLine("Cache hit: " + cacheKey);
+            context.Response.ContentType = cached.mimeType;
+            await context.Response.Body.WriteAsync(cached.data, context.RequestAborted);
+            return;
+        }
 
         // Build relative URI (path + query)
         var path = request.Path.HasValue ? request.Path.Value : "/";
@@ -115,7 +165,19 @@ public static class Proxy
         // ASP.NET Core will set its own transfer-encoding
         context.Response.Headers.Remove("transfer-encoding");
 
-        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
+        if (context.Response.StatusCode == StatusCodes.Status200OK && ShouldCache(context))
+        {
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var mimeType = response.Content.Headers.ContentType?.ToString() 
+                ?? ServiceStack.MimeTypes.GetMimeType(cacheKey);
+            Cache[cacheKey] = (mimeType, bytes);
+            Console.WriteLine("Cache miss: " + cacheKey + " |size| " + bytes.Length);
+            await context.Response.Body.WriteAsync(bytes, context.RequestAborted);
+        }
+        else
+        {
+            await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
+        }
     }
 
     public static void MapNotFoundToNode(WebApplication app, HttpClient nextClient, string[] ignorePaths)

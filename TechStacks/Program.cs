@@ -147,7 +147,7 @@ Proxy.MapNotFoundToNode(app, nextClient, ignorePaths:[
     "/swagger",
 ]);
 
-//app.UseStaticFiles(); // All static assets are now served by Next.js
+app.UseStaticFiles(); // static assets are served by Next.js
 app.UseCookiePolicy();
 app.UseCors();
 
