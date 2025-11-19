@@ -226,7 +226,8 @@ export function PostForm({ postId, onDone }: PostFormProps) {
                 />
               </div>
               <div className="col-span-3">
-                <FileInput id="icon" value={formData.imageUrl} />
+                <FileInput id="icon" value={formData.imageUrl} 
+                  imageClass="block max-w-36 max-h-32 object-cover" />
               </div>
               <div className="col-span-6">
                 <TextInput
