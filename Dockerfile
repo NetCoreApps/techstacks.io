@@ -35,9 +35,11 @@ LABEL service="techstacks-io"
 
 ARG SERVICESTACK_LICENSE
 
-# Install Node.js and bash for the entrypoint script
+# Install Node.js >= 20.9 (Node 24.x LTS) and bash for the entrypoint script
 RUN apt-get update \
-    && apt-get install -y nodejs npm bash \
+    && apt-get install -y curl ca-certificates gnupg bash \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
