@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PrimaryButton, SecondaryButton } from '@servicestack/react';
+import { useAuth, PrimaryButton, SecondaryButton } from '@servicestack/react';
 import { PostsList } from '@/components/posts/PostsList';
 import { PostForm } from '@/components/forms/PostForm';
-import { useAuth } from '@/lib/hooks/useAuth';
 import * as gateway from '@/lib/api/gateway';
 import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 

@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth, PrimaryButton } from '@servicestack/react';
 import { useAppStore } from '@/lib/stores/useAppStore';
-import { PrimaryButton } from '@servicestack/react';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 
 export default function TechStackDetailClient({ slug }: { slug: string }) {

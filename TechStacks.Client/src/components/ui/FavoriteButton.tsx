@@ -1,7 +1,6 @@
 'use client';
 
-import { PrimaryButton } from '@servicestack/react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth, PrimaryButton } from '@servicestack/react';
 import { useAppStore } from '@/lib/stores/useAppStore';
 import routes from '@/lib/utils/routes';
 

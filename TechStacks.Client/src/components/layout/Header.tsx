@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@servicestack/react';
 import { appAuth } from '@/lib/auth';
 import routes from '@/lib/utils/routes';
 
 export function Header() {
   const pathname = usePathname();
-  const { isAuthenticated, sessionInfo } = useAuth();
+  const { user } = useAuth();
   const { signOut } = appAuth();
   const [mounted, setMounted] = useState(false);
 
@@ -72,7 +72,7 @@ export function Header() {
             >
               Technologies
             </Link>
-            {mounted && isAuthenticated && (
+            {mounted && user && (
               <Link
                 href={routes.favorites()}
                 className={`px-4 py-2 rounded hover:bg-gray-800 ${
@@ -90,34 +90,26 @@ export function Header() {
             {!mounted ? (
               // Placeholder during SSR to prevent hydration mismatch
               <div className="w-20 h-10"></div>
-            ) : isAuthenticated && sessionInfo ? (
+            ) : user ? (
               <div className="relative group">
-                <button className="flex items-center space-x-2 hover:bg-gray-800 rounded px-2 py-1">
-                  {sessionInfo.profileUrl && (
+                <button type="button" className="flex items-center space-x-2 hover:bg-gray-800 rounded px-2 py-1">
+                  {user.profileUrl && (
                     <img
-                      src={sessionInfo.profileUrl}
-                      alt={sessionInfo.displayName || 'User'}
+                      src={user.profileUrl}
+                      alt={user.displayName || 'User'}
                       className="w-10 h-10 rounded-full"
                     />
                   )}
                 </button>
                 <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                   <div className="py-1">
-                    {sessionInfo.userId && (
-                      <Link
-                        href={routes.user(sessionInfo.userId)}
-                        className="block px-4 py-2 hover:bg-gray-700"
-                      >
-                        Profile
-                      </Link>
-                    )}
                     <Link
                       href={routes.account()}
                       className="block px-4 py-2 hover:bg-gray-700"
                     >
                       Account
                     </Link>
-                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-700">
+                    <button type="button" onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-700">
                       Logout
                     </button>
                   </div>

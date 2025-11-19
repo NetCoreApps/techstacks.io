@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { PrimaryButton } from '@servicestack/react';
+import { useAuth, PrimaryButton } from '@servicestack/react';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 
 export default function TechnologyDetailClient({ slug }: { slug: string }) {

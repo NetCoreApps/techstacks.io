@@ -3,14 +3,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth, PrimaryButton } from '@servicestack/react';
 import { useAppStore } from '@/lib/stores/useAppStore';
+import { appAuth } from '@/lib/auth';
 import * as gateway from '@/lib/api/gateway';
 import routes from '@/lib/utils/routes';
 import { QueryPosts } from '@/shared/dtos';
 
 export default function AccountPage() {
-  const { isAuthenticated, sessionInfo } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { signOut } = appAuth();
   const { favoriteTechnologyIds, favoriteTechStackIds } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [techStacks, setTechStacks] = useState<any[]>([]);
@@ -19,7 +21,7 @@ export default function AccountPage() {
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated || !sessionInfo) {
+    if (!isAuthenticated || !user) {
       setLoading(false);
       return;
     }
@@ -28,7 +30,7 @@ export default function AccountPage() {
       try {
         // Load user's tech stacks
         const userStacksResponse = await gateway.queryTechStacks({
-          createdBy: sessionInfo.userName,
+          createdBy: user.userName,
           orderBy: '-created',
           take: 10
         });
@@ -51,7 +53,7 @@ export default function AccountPage() {
 
         // Load user's latest posts
         const postsResponse = await gateway.queryPosts(new QueryPosts({
-          createdBy: sessionInfo.userName,
+          userId: parseInt(user.userId!),
           orderBy: '-created',
           take: 10
         }));
@@ -68,7 +70,7 @@ export default function AccountPage() {
     };
 
     loadAccountData();
-  }, [isAuthenticated, sessionInfo, favoriteTechnologyIds, favoriteTechStackIds]);
+  }, [isAuthenticated, user, favoriteTechnologyIds, favoriteTechStackIds]);
 
   if (!isAuthenticated) {
     return (
@@ -94,47 +96,48 @@ export default function AccountPage() {
     );
   }
 
+  const handleLogout = async () => {
+    await signOut('/');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-center gap-4">
-            {sessionInfo?.profileUrl && (
-              <img
-                src={sessionInfo.profileUrl}
-                alt={sessionInfo.displayName || sessionInfo.userName}
-                className="w-20 h-20 rounded-full"
-              />
-            )}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {sessionInfo?.displayName || sessionInfo?.userName}
-              </h1>
-              <p className="text-gray-600">@{sessionInfo?.userName}</p>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              {user?.profileUrl && (
+                <img
+                  src={user.profileUrl}
+                  alt={user.displayName || user.userName}
+                  className="w-20 h-20 rounded-full"
+                />
+              )}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {user?.displayName || user?.userName}
+                </h1>
+                <p className="text-gray-600">@{user?.userName}</p>
+              </div>
             </div>
+            <PrimaryButton onClick={handleLogout} color="red">
+              Logout
+            </PrimaryButton>
           </div>
 
           {/* Account Info */}
           <div className="mt-6 flex flex-wrap gap-6">
-            {sessionInfo?.roles && sessionInfo.roles.length > 0 && (
+            {user?.roles && user.roles.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Roles</h3>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  {sessionInfo.roles.map((role: string) => (
+                  {user.roles.map((role: string) => (
                     <span key={role} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                       {role}
                     </span>
                   ))}
                 </div>
-              </div>
-            )}
-            {sessionInfo?.createdAt && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
-                <p className="mt-1 text-gray-900">
-                  {new Date(sessionInfo.createdAt).toLocaleDateString()}
-                </p>
               </div>
             )}
           </div>

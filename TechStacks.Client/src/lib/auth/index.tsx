@@ -61,8 +61,8 @@ export function appAuth() {
         }
     }
     async function signOut(redirectTo?:string) {
-        await client.post(new Authenticate({ provider: 'logout' }))
         authState.signOut()
+        await client.post(new Authenticate({ provider: 'logout' }))
         if (redirectTo) {
             router.push(redirectTo)
         }
