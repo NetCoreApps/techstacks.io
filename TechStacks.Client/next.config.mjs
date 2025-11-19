@@ -23,19 +23,15 @@ const nextConfig = {
     // Configure pageExtensions to include MDX files
     pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 
-    // Enable static export for production builds
-    output: isProd ? 'export' : undefined,
-
     // Change output directory from 'out' to 'dist'
     distDir: 'dist',
 
-    // Required for static export
+    // Images are served unoptimized; adjust if you later add an image optimizer/CDN
     images: {
         unoptimized: true
     },
 
-    // Don't use trailingSlash - it causes issues with dynamic routes in static export
-    // The C# backend's MapFallbackToFile handles routing correctly without it
+    // Keep clean URLs without trailing slashes
     trailingSlash: false,
 
     env: {

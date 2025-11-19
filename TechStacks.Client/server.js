@@ -1,53 +1,12 @@
-import { createServer } from 'https'
+import { createServer } from 'http'
 import { parse } from 'url'
 import next from 'next'
 import { createProxyMiddleware } from 'http-proxy-middleware'
-import fs from 'fs'
-import path from 'path'
-import child_process from 'child_process'
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
 const port = 3000
 
-const baseFolder =
-    process.env.APPDATA !== undefined && process.env.APPDATA !== ''
-        ? `${process.env.APPDATA}/ASP.NET/https`
-        : `${process.env.HOME}/.aspnet/https`;
-
-const certificateName = "techatacks.client";
-const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
-const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
-
-// Generate dev certificates if they don't exist (for dev mode only)
-if (dev) {
-    console.log(`Certificate path: ${certFilePath}`);
-
-    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-        // mkdir to fix dotnet dev-certs error 3 https://github.com/dotnet/aspnetcore/issues/58330
-        if (!fs.existsSync(baseFolder)) {
-            fs.mkdirSync(baseFolder, { recursive: true });
-        }
-        if (
-            0 !==
-            child_process.spawnSync(
-                "dotnet",
-                [
-                    "dev-certs",
-                    "https",
-                    "--export-path",
-                    certFilePath,
-                    "--format",
-                    "Pem",
-                    "--no-password",
-                ],
-                { stdio: "inherit" }
-            ).status
-        ) {
-            throw new Error("Could not create certificate.");
-        }
-    }
-}
 
 const target = process.env.ASPNETCORE_HTTPS_PORT
     ? `https://localhost:${process.env.ASPNETCORE_HTTPS_PORT}`
@@ -77,12 +36,7 @@ const apiProxy = createProxyMiddleware({
 })
 
 app.prepare().then(() => {
-    const serverOptions = dev ? {
-        key: fs.readFileSync(keyFilePath),
-        cert: fs.readFileSync(certFilePath),
-    } : {};
-
-    createServer(serverOptions, async (req, res) => {
+    createServer(async (req, res) => {
         try {
             const parsedUrl = parse(req.url, true)
             const { pathname } = parsedUrl
@@ -105,8 +59,7 @@ app.prepare().then(() => {
         process.exit(1)
     })
     .listen(port, () => {
-        console.log(`> Ready on https://${hostname}:${port}`)
+        console.log(`> Ready on http://${hostname}:${port}`)
         console.log(`> Proxying /api requests to ${target}`)
     })
 })
-

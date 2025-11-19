@@ -110,4 +110,8 @@ jobs:
         env:
           SERVICESTACK_LICENSE: ${{ secrets.SERVICESTACK_LICENSE }}
         run: |
-          dotnet publish --os linux --arch x64 -c Release -p:ContainerRepository=${{ env.image_repository_name }} -p:ContainerRegistry=ghcr.io -p:ContainerImageTags=latest -p:ContainerPort=80 -p:ContainerEnvironmentVariable="SERVICESTACK_LICENSE=${{ env.SERVICESTACK_LICENSE }}"
+          docker build \
+            --build-arg SERVICESTACK_LICENSE="$SERVICESTACK_LICENSE" \
+            -t ghcr.io/${{ env.image_repository_name }}:latest \
+            -f Dockerfile .
+          docker push ghcr.io/${{ env.image_repository_name }}:latest

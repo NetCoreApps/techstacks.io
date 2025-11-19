@@ -100,7 +100,27 @@ services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
+var nextServerBase = app.Environment.IsDevelopment()
+    ? new Uri("http://localhost:3000")
+    : new Uri("http://127.0.0.1:3000");
+
+var allowInvalidCertsForNext = false; // No HTTPS when proxying to Next internally
+
+HttpMessageHandler nextHandler = allowInvalidCertsForNext
+    ? new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    }
+    : new HttpClientHandler();
+
+var nextClient = new HttpClient(nextHandler)
+{
+    BaseAddress = nextServerBase
+};
+
 app.UseForwardedHeaders();
+app.UseWebSockets();
 
 app.UseMigrationsEndPoint();
 app.UseSwagger();
@@ -113,36 +133,23 @@ if (app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
     app.UseHttpsRedirection();
-
-    // Redirect root requests to the Client App in development
-    app.MapGet("/", async (HttpContext ctx) =>
-        ctx.Response.Redirect("https://localhost:3000"));
 }
+else
+{
+    // Production-specific middleware (if needed) can go here
+}
+
+// After all .NET middleware has run, let Next.js handle 404s
+Proxy.MapNotFoundToNode(app, nextClient, ignorePaths:[
+    "/api",
+    "/auth",
+    "/Identity",
+    "/swagger",
+]);
 
 app.UseStaticFiles();
 app.UseCookiePolicy();
 app.UseCors();
-
-// Fallback for dynamic post routes without a static exported page.
-// If a specific post HTML exists, serve it; otherwise serve the generic
-// placeholder page that loads the post client-side from the API.
-var fallbackRoutes = new Dictionary<string, string>
-{
-    ["/posts/{id:long}/{slug}"] = "posts/0/_placeholder.html",
-    ["/tech/{slug}"] = "tech/_placeholder.html",
-    ["/stacks/{slug}"] = "stacks/_placeholder.html",
-};
-foreach (var route in fallbackRoutes)
-{
-    app.MapGet(route.Key, (HttpContext ctx, IWebHostEnvironment env) =>
-    {
-        var placeholderPath = Path.Combine(env.WebRootPath, route.Value);
-        if (File.Exists(placeholderPath))
-            return Results.File(placeholderPath, "text/html; charset=utf-8");
-
-        return Results.NotFound();
-    });
-}
 
 // GitHub OAuth endpoint
 app.MapGet("/auth/github", (
@@ -166,6 +173,48 @@ app.UseAntiforgery();
 
 app.MapRazorPages();
 app.MapAdditionalIdentityEndpoints();
-app.MapFallbackToFile("index.html");
+
+// Proxy development HMR WebSocket and fallback routes to the Next server
+if (app.Environment.IsDevelopment())
+{
+    app.Map("/_next/webpack-hmr", async context =>
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            await Proxy.WebSocketToNode(context, nextServerBase, allowInvalidCertsForNext);
+        }
+        else
+        {
+            await Proxy.HttpToNode(context, nextClient);
+        }
+    });
+
+    // Start the Next.js dev server if the Next.js lockfile does not exist '../TechStacks.Client/dist/lock'
+    var nextLockFile = "../TechStacks.Client/dist/lock";
+    if (!File.Exists(nextLockFile))
+    {
+        Console.WriteLine("Starting Next.js dev server...");
+        if (!Proxy.TryStartNode("../TechStacks.Client", out var process))
+        {
+            Console.WriteLine($"Failed to start Next.js dev server: {process.ExitCode}");
+            return;
+        }
+    
+        process.Exited += (s, e) => {
+            Console.WriteLine("[node] Exited: " + process.ExitCode);
+            File.Delete(nextLockFile);
+        };
+
+        app.Lifetime.ApplicationStopping.Register(() => {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        });
+    }
+}
+
+// Fallback: any unmatched route goes to Next.js
+app.MapFallback(context => Proxy.HttpToNode(context, nextClient));
 
 app.Run();
