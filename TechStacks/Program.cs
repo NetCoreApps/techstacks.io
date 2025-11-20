@@ -99,26 +99,6 @@ services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
-
-var nextServerBase = app.Environment.IsDevelopment()
-    ? new Uri("http://localhost:3000")
-    : new Uri("http://127.0.0.1:3000");
-
-var allowInvalidCertsForNext = false; // No HTTPS when proxying to Next internally
-
-HttpMessageHandler nextHandler = allowInvalidCertsForNext
-    ? new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback =
-            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-    }
-    : new HttpClientHandler();
-
-var nextClient = new HttpClient(nextHandler)
-{
-    BaseAddress = nextServerBase
-};
-
 app.UseForwardedHeaders();
 app.UseWebSockets();
 
@@ -140,6 +120,7 @@ else
 }
 
 // After all .NET middleware has run, let Next.js handle 404s
+var nextClient = Proxy.CreateNodeClient();
 Proxy.MapNotFoundToNode(app, nextClient, ignorePaths:[
     "/api",
     "/auth",
@@ -174,14 +155,14 @@ app.UseAntiforgery();
 app.MapRazorPages();
 app.MapAdditionalIdentityEndpoints();
 
-// Proxy development HMR WebSocket and fallback routes to the Next server
+// Proxy development HMR WebSocket and fallback routes to the Next.js server
 if (app.Environment.IsDevelopment())
 {
     app.Map("/_next/webpack-hmr", async context =>
     {
         if (context.WebSockets.IsWebSocketRequest)
         {
-            await Proxy.WebSocketToNode(context, nextServerBase, allowInvalidCertsForNext);
+            await Proxy.WebSocketToNode(context, nextClient.BaseAddress!, allowInvalidCerts:true);
         }
         else
         {
@@ -214,7 +195,7 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-// Fallback: any unmatched route goes to Next.js
+// Fallback: Proxy any unmatched routes to Next.js
 app.MapFallback(context => Proxy.HttpToNode(context, nextClient));
 
 app.Run();

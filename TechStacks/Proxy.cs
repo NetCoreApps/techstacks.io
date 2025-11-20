@@ -57,6 +57,25 @@ public static class Proxy
 
     private static ConcurrentDictionary<string, (string mimeType, byte[] data, string? encoding)> Cache { get; } = new();
 
+    public static HttpClient CreateNodeClient(string nodeBaseUrl="http://localhost:3000")
+    {
+        var allowInvalidCertsForNext = false; // No HTTPS when proxying to Next internally
+
+        HttpMessageHandler nextHandler = allowInvalidCertsForNext
+            ? new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            }
+            : new HttpClientHandler();
+
+        var nextClient = new HttpClient(nextHandler)
+        {
+            BaseAddress = new Uri(nodeBaseUrl)
+        };
+        return nextClient;
+    }
+
     public static bool TryStartNode(string workingDirectory, out Process process, string logPrefix="[node]")
     {
         process = new Process 
