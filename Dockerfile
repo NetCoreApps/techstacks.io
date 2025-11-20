@@ -1,8 +1,24 @@
 # Multi-stage Dockerfile to run ASP.NET Core + Next.js in a single container
 
-# 1. Build .NET app
+# Build arguments
+ARG KAMAL_DEPLOY_HOST
+ARG SERVICESTACK_LICENSE
+ARG SERVICE_LABEL
+
+# 1. Build .NET app + Node.js apps
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
+ARG KAMAL_DEPLOY_HOST
+ENV KAMAL_DEPLOY_HOST=${KAMAL_DEPLOY_HOST}
+
 WORKDIR /src
+
+# Install Node.js for building Tailwind CSS and Next.js
+RUN apt-get update \
+    && apt-get install -y curl ca-certificates gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy solution and projects
 COPY TechStacks.sln ./
@@ -10,33 +26,35 @@ COPY TechStacks ./TechStacks
 COPY TechStacks.ServiceInterface ./TechStacks.ServiceInterface
 COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 
-# Restore and publish only the API project (avoid solution projects not copied into the image)
+# Build Tailwind CSS for .NET project
+WORKDIR /src/TechStacks
+RUN npm install
+RUN npm run ui:build
+
+# Build Next.js app
+
+WORKDIR /src/TechStacks.Client
+COPY TechStacks.Client/package*.json ./
+RUN npm ci
+COPY TechStacks.Client/ ./
+RUN npm run build:prod
+
+# Restore and publish .NET app
+WORKDIR /src
 RUN dotnet restore TechStacks/TechStacks.csproj
 # Disable .NET's built-in containerization (PublishProfile=DefaultContainer) inside Docker
 RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore -p:PublishProfile=
 
-# 2. Build Next.js app
-FROM node:20-alpine AS next-build
-ARG KAMAL_DEPLOY_HOST
-ENV KAMAL_DEPLOY_HOST=${KAMAL_DEPLOY_HOST}
-
-WORKDIR /app/client
-
-COPY TechStacks.Client/package*.json ./
-RUN npm ci
-COPY TechStacks.Client/ ./
-
-# Build Next.js in server mode
-RUN npm run build:prod
-
-# 3. Runtime image with .NET + Node
+# 2. Runtime image with .NET + Node
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+ARG SERVICESTACK_LICENSE
+ARG SERVICE_LABEL
+ARG KAMAL_DEPLOY_HOST
+
 WORKDIR /app
 
-# Label required by Kamal, must match config/deploy.yml service (techstacks-io)
-LABEL service="techstacks-io"
-
-ARG SERVICESTACK_LICENSE
+# Label required by Kamal, must match config/deploy.yml service
+LABEL service="${SERVICE_LABEL}"
 
 # Install Node.js >= 20.9 (Node 24.x LTS) and bash for the entrypoint script
 RUN apt-get update \
@@ -49,14 +67,15 @@ RUN apt-get update \
 # Copy published .NET app
 COPY --from=dotnet-build /src/TechStacks/bin/Release/net10.0/publish ./api
 
-# Copy built Next.js app (including .next, node_modules, public, etc.)
-COPY --from=next-build /app/client ./client
+# Copy built Next.js app (including dist, node_modules, public, etc.)
+COPY --from=dotnet-build /src/TechStacks.Client ./client
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080 \
+    INTERNAL_API_URL=http://127.0.0.1:8080 \
     NEXT_PORT=3000 \
     NODE_ENV=production \
-    INTERNAL_API_URL=http://127.0.0.1:8080 \
-    SERVICESTACK_LICENSE=$SERVICESTACK_LICENSE
+    SERVICESTACK_LICENSE=$SERVICESTACK_LICENSE \
+    KAMAL_DEPLOY_HOST=$KAMAL_DEPLOY_HOST
 
 EXPOSE 8080
 

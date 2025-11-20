@@ -5,7 +5,7 @@ const getBaseUrl = () => {
   if (typeof window === 'undefined') {
     // Server-side (during build): use absolute URL if available
     // This is needed for generateStaticParams to fetch data during build
-    return process.env.INTERNAL_API_URL || process.env.apiBaseUrl || 'https://techstacks.io';
+    return process.env.INTERNAL_API_URL || process.env.apiBaseUrl || '';
   }
   // Client-side: use relative path (served by same origin or proxied)
   return '/';

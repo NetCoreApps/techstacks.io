@@ -55,8 +55,4 @@
     <MakeDir Directories="$(PublishDir)App_Data" Condition="!Exists('$(PublishDir)App_Data')" />
   </Target>
 
-  <Target Name="tailwind" BeforeTargets="Publish">
-    <Exec Command="npm run ui:build" WorkingDirectory="./" />
-  </Target>
-
 </Project>

@@ -32,6 +32,9 @@ jobs:
           echo "repository_name_lower=$(echo ${{ github.repository }} | cut -d '/' -f 2 | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
           echo "org_name=$(echo ${{ github.repository }} | cut -d '/' -f 1)" >> $GITHUB_ENV
 
+          # Set SERVICE_LABEL: derive from GITHUB_REPOSITORY (replace dots with dashes)
+          echo "SERVICE_LABEL=$(echo ${{ github.repository }} | cut -d '/' -f 2 | tr '.' '-')" >> $GITHUB_ENV
+
           # Set KAMAL_DEPLOY_HOST: use secret if available, otherwise use repository name
           if [ -n "${{ secrets.KAMAL_DEPLOY_HOST }}" ]; then
             DEPLOY_HOST="${{ secrets.KAMAL_DEPLOY_HOST }}"
@@ -110,10 +113,12 @@ jobs:
         env:
           SERVICESTACK_LICENSE: ${{ secrets.SERVICESTACK_LICENSE }}
           KAMAL_DEPLOY_HOST: ${{ env.KAMAL_DEPLOY_HOST }}
+          SERVICE_LABEL: ${{ env.SERVICE_LABEL }}
         run: |
           docker build \
             --build-arg SERVICESTACK_LICENSE="$SERVICESTACK_LICENSE" \
             --build-arg KAMAL_DEPLOY_HOST="$KAMAL_DEPLOY_HOST" \
+            --build-arg SERVICE_LABEL="$SERVICE_LABEL" \
             -t ghcr.io/${{ env.image_repository_name }}:latest \
             -f Dockerfile .
           docker push ghcr.io/${{ env.image_repository_name }}:latest
