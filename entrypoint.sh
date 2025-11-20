@@ -4,6 +4,14 @@ set -e
 ASPNETCORE_URLS="${ASPNETCORE_URLS:-http://0.0.0.0:8080}"
 NEXT_PORT="${NEXT_PORT:-3000}"
 
+# If running an AppTask (e.g. --AppTasks=migrate), run only the .NET app and exit
+if [[ "$*" == *"--AppTasks"* ]]; then
+  echo "Running AppTask with args: $*"
+  ASPNETCORE_CONTENTROOT="/app/api" ASPNETCORE_URLS="${ASPNETCORE_URLS}" \
+    dotnet /app/api/TechStacks.dll "$@"
+  exit $?
+fi
+
 echo "Starting ASP.NET Core on ${ASPNETCORE_URLS}..."
 DOTNET_ENV_VARS=("ASPNETCORE_URLS=${ASPNETCORE_URLS}")
 
@@ -36,4 +44,3 @@ EXIT_CODE=$?
 
 echo "One of the processes exited with code ${EXIT_CODE}, shutting down the other..."
 term_handler
-
