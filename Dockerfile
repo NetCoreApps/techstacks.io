@@ -28,11 +28,14 @@ COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 
 # Build Tailwind CSS for .NET project
 WORKDIR /src/TechStacks
-RUN npm install
+
+# Download tailwindcss binary directly (avoiding sudo requirement in postinstall.js)
+RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
+    && chmod +x tailwindcss-linux-x64 \
+    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
 RUN npm run ui:build
 
 # Build Next.js app
-
 WORKDIR /src/TechStacks.Client
 COPY TechStacks.Client/package*.json ./
 RUN npm ci
