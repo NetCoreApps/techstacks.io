@@ -7,7 +7,6 @@
 *.xml
 dist/
 App_Data/
-wwwroot/
 node_modules/
 .next/
 .vscode/
