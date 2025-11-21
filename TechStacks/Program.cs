@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceStack;
 using ServiceStack.Logging;
 using ServiceStack.OrmLite;
+using Scalar.AspNetCore;
 using TechStacks;
 using TechStacks.Data;
 using TechStacks.ServiceInterface;
@@ -87,10 +88,17 @@ services.ConfigureApplicationCookie(options =>
 services.AddTransient<IEmailSender, EmailSender>();
 services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, AdditionalUserClaimsPrincipalFactory>();
 
-services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
-
-builder.Services.AddServiceStack(typeof(TechnologyServices).Assembly);
+services.AddOpenApi(options =>
+{
+    // Exclude Razor Pages from OpenAPI document
+    options.ShouldInclude = (description) =>
+    {
+        // Only include ServiceStack endpoints
+        return description.ActionDescriptor.DisplayName?.Contains("ServiceStack") == true;
+    };
+});
+services.AddServiceStackOpenApi();
+services.AddServiceStack(typeof(TechnologyServices).Assembly);
 
 //https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-3.1
 services.Configure<ForwardedHeadersOptions>(options =>
@@ -103,8 +111,6 @@ app.UseForwardedHeaders();
 app.UseWebSockets();
 
 app.UseMigrationsEndPoint();
-app.UseSwagger();
-app.UseSwaggerUI();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -118,15 +124,6 @@ else
 {
     // Production-specific middleware (if needed) can go here
 }
-
-// After all .NET middleware has run, let Next.js handle 404s
-var nextClient = Proxy.CreateNodeClient();
-Proxy.MapNotFoundToNode(app, nextClient, ignorePaths:[
-    "/api",
-    "/auth",
-    "/Identity",
-    "/swagger",
-]);
 
 app.UseStaticFiles(); // static assets are served by Next.js
 app.UseCookiePolicy();
@@ -155,6 +152,16 @@ app.UseAntiforgery();
 app.MapRazorPages();
 app.MapAdditionalIdentityEndpoints();
 
+// Map OpenAPI and Scalar endpoints after ServiceStack
+// if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
+// Create Node client for proxying to Next.js
+var nodeClient = Proxy.CreateNodeClient();
+
 // Proxy development HMR WebSocket and fallback routes to the Next.js server
 if (app.Environment.IsDevelopment())
 {
@@ -162,11 +169,11 @@ if (app.Environment.IsDevelopment())
     {
         if (context.WebSockets.IsWebSocketRequest)
         {
-            await Proxy.WebSocketToNode(context, nextClient.BaseAddress!, allowInvalidCerts:true);
+            await Proxy.WebSocketToNode(context, nodeClient.BaseAddress!, allowInvalidCerts:true);
         }
         else
         {
-            await Proxy.HttpToNode(context, nextClient);
+            await Proxy.HttpToNode(context, nodeClient);
         }
     });
 
@@ -196,6 +203,6 @@ if (app.Environment.IsDevelopment())
 }
 
 // Fallback: Proxy any unmatched routes to Next.js
-app.MapFallback(context => Proxy.HttpToNode(context, nextClient));
+app.MapFallback(context => Proxy.HttpToNode(context, nodeClient));
 
 app.Run();

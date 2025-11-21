@@ -1,18 +1,19 @@
 ﻿using ServiceStack;
+using ServiceStack.DataAnnotations;
 using ServiceStack.Messaging;
 
 namespace TechStacks.ServiceInterface.Messaging;
 
-[Route("/mq/stop")]
+[Route("/mq/stop"), ExcludeMetadata]
 public class MqStop : IReturn<string> {}
     
-[Route("/mq/start")]
+[Route("/mq/start"), ExcludeMetadata]
 public class MqStart : IReturn<string> {}
     
-[Route("/mq/stats")]
+[Route("/mq/stats"), ExcludeMetadata]
 public class MqStats : IReturn<string> {}
     
-[Route("/mq/status")]
+[Route("/mq/status"), ExcludeMetadata]
 public class MqStatus : IReturn<string> {}
     
 public class BackgroundAdminServices : Service

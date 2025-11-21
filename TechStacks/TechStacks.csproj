@@ -37,14 +37,26 @@
         <PackageReference Include="ServiceStack.Server" Version="8.*"/>
         <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="8.*"/>
         <PackageReference Include="ServiceStack.Extensions" Version="8.*"/>
-        <PackageReference Include="ServiceStack.AspNetCore.OpenApi" Version="8.*"/>
         <PackageReference Include="ServiceStack.Jobs" Version="8.*"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="/home/mythz/src/ServiceStack/ServiceStack/ServiceStack/src/ServiceStack.AspNetCore.OpenApi.Microsoft/ServiceStack.AspNetCore.OpenApi.Microsoft.csproj"/>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.*" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.*" GeneratePathProperty="true" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\TechStacks.ServiceInterface\TechStacks.ServiceInterface.csproj"/>
         <ProjectReference Include="..\TechStacks.ServiceModel\TechStacks.ServiceModel.csproj"/>
     </ItemGroup>
+
+  <!-- Disable the XML comment source generator to avoid compatibility issues with Microsoft.OpenApi 3.0.1 -->
+  <Target Name="DisableCompileTimeOpenApiXmlGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="$(PkgMicrosoft_AspNetCore_OpenApi)\analyzers\dotnet\cs\Microsoft.AspNetCore.OpenApi.SourceGenerators.dll" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="CreateWwwrootFolderBuild" AfterTargets="AfterBuild">
     <MakeDir Directories="$(BuildDir)wwwroot" Condition="!Exists('$(BuildDir)wwwroot')" />
