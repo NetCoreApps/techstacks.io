@@ -28,8 +28,8 @@ jobs:
       #   env:
       #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       #   run: |
-      #     dotnet nuget add source "https://nuget.pkg.github.com/YOUR_ORG/index.json" \
-      #       --name "GitHub" \
+      #     dotnet nuget add source "https://YOUR_FEED_URL/index.json" \
+      #       --name "PrivateFeed" \
       #       --username "YOUR_USERNAME" \
       #       --password "$NUGET_API_KEY" \
       #       --store-password-in-clear-text
