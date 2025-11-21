@@ -19,7 +19,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: build
-        run: dotnet build
+        run: dotnet build --configfile NuGet.Config
         working-directory: .
 
       # - name: test
