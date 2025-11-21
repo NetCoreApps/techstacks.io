@@ -22,6 +22,7 @@ RUN apt-get update \
 
 # Copy solution and projects
 COPY TechStacks.sln ./
+COPY NuGet.Config ./
 COPY TechStacks ./TechStacks
 COPY TechStacks.ServiceInterface ./TechStacks.ServiceInterface
 COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
