@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import Providers from '@/providers'
 import { Header } from '@/components/layout/Header';
 import '@/styles/globals.css';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -35,8 +36,9 @@ export default function RootLayout({
           <Header />
           <main className="min-h-screen bg-gray-50">
             {children}
-          </main>
+          </main>          
         </Providers>
+        <GoogleAnalytics gaId="G-9EZHMS9ZM6" />
       </body>
     </html>
   );
