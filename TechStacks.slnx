@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="TechStacks.Client/TechStacks.Client.esproj">
+    <BuildType Project="Debug" />
+    <Build />
+  </Project>
+  <Project Path="TechStacks.ServiceInterface/TechStacks.ServiceInterface.csproj" />
+  <Project Path="TechStacks.ServiceModel/TechStacks.ServiceModel.csproj" />
+  <Project Path="TechStacks.Tests/TechStacks.Tests.csproj" />
+  <Project Path="TechStacks/TechStacks.csproj" />
+</Solution>
