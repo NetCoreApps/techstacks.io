@@ -21,7 +21,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy solution and projects
-COPY TechStacks.sln ./
+COPY TechStacks.slnx ./
 COPY NuGet.Config ./
 COPY TechStacks ./TechStacks
 COPY TechStacks.ServiceInterface ./TechStacks.ServiceInterface
