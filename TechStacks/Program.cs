@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using TechStacks;
 using TechStacks.Data;
 using TechStacks.ServiceInterface;
+using MyApp;
 
 AppHost.RegisterLicense();
 var builder = WebApplication.CreateBuilder(args);

@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading;
 
-namespace TechStacks;
+namespace MyApp;
 
 public static class Proxy
 {
@@ -234,6 +234,9 @@ public static class Proxy
         await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
     }
 
+    /// <summary>
+    /// Proxy 404s to Node.js (except for API/backend routes) must be registered before endpoints
+    /// </summary>
     public static void MapNotFoundToNode(this WebApplication app, HttpClient nextClient, string[]? ignorePaths=null)
     {
         app.Use(async (context, next) =>
@@ -295,28 +298,35 @@ public static class Proxy
         WebSocket destination,
         CancellationToken cancellationToken)
     {
-        var buffer = new byte[8192];
-
-        while (source.State == WebSocketState.Open &&
-            destination.State == WebSocketState.Open)
+        try
         {
-            var result = await source.ReceiveAsync(
-                new ArraySegment<byte>(buffer), cancellationToken);
+            var buffer = new byte[8192];
 
-            if (result.MessageType == WebSocketMessageType.Close)
+            while (source.State == WebSocketState.Open &&
+                destination.State == WebSocketState.Open)
             {
-                await destination.CloseAsync(
-                    source.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
-                    source.CloseStatusDescription,
-                    cancellationToken);
-                break;
-            }
+                var result = await source.ReceiveAsync(
+                    new ArraySegment<byte>(buffer), cancellationToken);
 
-            await destination.SendAsync(
-                new ArraySegment<byte>(buffer, 0, result.Count),
-                result.MessageType,
-                result.EndOfMessage,
-                cancellationToken);
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await destination.CloseAsync(
+                        source.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
+                        source.CloseStatusDescription,
+                        cancellationToken);
+                    break;
+                }
+
+                await destination.SendAsync(
+                    new ArraySegment<byte>(buffer, 0, result.Count),
+                    result.MessageType,
+                    result.EndOfMessage,
+                    cancellationToken);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"WebSocket Proxy: {e.Message}");
         }
     }
 
@@ -354,7 +364,9 @@ public static class Proxy
             }
             else
             {
-                await HttpToNode(context, nodeClient);
+                // HMR endpoint expects WebSocket connections only
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("WebSocket connection expected");
             }
         });
     }
