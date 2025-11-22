@@ -234,7 +234,7 @@ public static class Proxy
         await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
     }
 
-    public static void MapNotFoundToNode(WebApplication app, HttpClient nextClient, string[] ignorePaths)
+    public static void MapNotFoundToNode(WebApplication app, HttpClient nextClient, string[]? ignorePaths=null)
     {
         app.Use(async (context, next) =>
         {
@@ -246,7 +246,7 @@ public static class Proxy
                 var pathValue = context.Request.Path.Value ?? string.Empty;
 
                 // Keep backend/api/identity/swagger/auth 404s as-is
-                if (ignorePaths.Any(x => pathValue.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
+                if (ignorePaths != null && ignorePaths.Any(x => pathValue.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
                 {
                     return;
                 }
