@@ -127,7 +127,7 @@ else
 
 // Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
 var nodeClient = Proxy.CreateNodeClient();
-Proxy.MapNotFoundToNode(app, nodeClient);
+app.MapNotFoundToNode(nodeClient);
 
 app.UseStaticFiles(); // static assets are served by Next.js
 app.UseCookiePolicy();
@@ -166,44 +166,22 @@ app.MapAdditionalIdentityEndpoints();
 // Proxy development HMR WebSocket to the Next.js server
 if (app.Environment.IsDevelopment())
 {
-    app.Map("/_next/webpack-hmr", async context =>
+    app.MapNextHmr(nodeClient);
+
+    // Start the Next.js dev server if the Next.js lockfile does not exist
+    var process = app.StartNodeProcess(
+        lockFile: "../TechStacks.Client/dist/lock",
+        workingDirectory: "../TechStacks.Client");
+    if (process != null)
     {
-        if (context.WebSockets.IsWebSocketRequest)
-        {
-            await Proxy.WebSocketToNode(context, nodeClient.BaseAddress!, allowInvalidCerts:true);
-        }
-        else
-        {
-            await Proxy.HttpToNode(context, nodeClient);
-        }
-    });
-
-    // Start the Next.js dev server if the Next.js lockfile does not exist '../TechStacks.Client/dist/lock'
-    var nextLockFile = "../TechStacks.Client/dist/lock";
-    if (!File.Exists(nextLockFile))
+        Console.WriteLine("Started Next.js dev server");
+    }
+    else
     {
-        Console.WriteLine("Starting Next.js dev server...");
-        if (!Proxy.TryStartNode("../TechStacks.Client", out var process))
-        {
-            Console.WriteLine($"Failed to start Next.js dev server: {process.ExitCode}");
-            return;
-        }
-
-        process.Exited += (s, e) => {
-            Console.WriteLine("[node] Exited: " + process.ExitCode);
-            File.Delete(nextLockFile);
-        };
-
-        app.Lifetime.ApplicationStopping.Register(() => {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-        });
+        Console.WriteLine("Next.js dev server already running");
     }
 }
 
-// Fallback: Proxy any unmatched routes to Next.js
-app.MapFallback(context => Proxy.HttpToNode(context, nodeClient));
+app.MapFallbackToNode(nodeClient);
 
 app.Run();

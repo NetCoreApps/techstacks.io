@@ -181,10 +181,10 @@ public static class Proxy
         }
 
         // Copy body for non-GET methods
-        if (!HttpMethods.IsGet(request.Method) &&
-            !HttpMethods.IsHead(request.Method) &&
-            !HttpMethods.IsDelete(request.Method) &&
-            !HttpMethods.IsTrace(request.Method))
+        if (!ServiceStack.HttpMethods.IsGet(request.Method) &&
+            !ServiceStack.HttpMethods.IsHead(request.Method) &&
+            !ServiceStack.HttpMethods.IsDelete(request.Method) &&
+            !ServiceStack.HttpMethods.IsTrace(request.Method))
         {
             forwardRequest.Content = new StreamContent(request.Body);
         }
@@ -234,7 +234,7 @@ public static class Proxy
         await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
     }
 
-    public static void MapNotFoundToNode(WebApplication app, HttpClient nextClient, string[]? ignorePaths=null)
+    public static void MapNotFoundToNode(this WebApplication app, HttpClient nextClient, string[]? ignorePaths=null)
     {
         app.Use(async (context, next) =>
         {
@@ -258,7 +258,7 @@ public static class Proxy
         });
     }
 
-    public static async Task WebSocketToNode(HttpContext context, Uri nextServerBase, bool allowInvalidCerts)
+    public static async Task WebSocketToNode(HttpContext context, Uri nextServerBase, bool allowInvalidCerts=true)
     {
         using var clientSocket = await context.WebSockets.AcceptWebSocketAsync();
 
@@ -318,5 +318,82 @@ public static class Proxy
                 result.EndOfMessage,
                 cancellationToken);
         }
+    }
+
+    public static void MapCleanUrls(this WebApplication app)
+    {
+        // Serve .html files without extension
+        app.Use(async (context, next) =>
+        {
+            // Only process GET requests that don't have an extension and don't start with /api
+            var path = context.Request.Path.Value;
+            if (context.Request.Method == "GET" && !string.IsNullOrEmpty(path) && !Path.HasExtension(path)
+                && !path.StartsWith("/api", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileProvider = app.Environment.WebRootFileProvider;
+                var fileInfo = fileProvider.GetFileInfo(path + ".html");
+                if (fileInfo.Exists && !fileInfo.IsDirectory)
+                {
+                    context.Response.ContentType = "text/html";
+                    using var stream = fileInfo.CreateReadStream();
+                    await stream.CopyToAsync(context.Response.Body); // Serve the HTML file directly
+                    return; // Don't call next(), we've handled the request
+                }
+            }
+            await next();
+        });
+    }
+    
+    public static IEndpointConventionBuilder MapNextHmr(this WebApplication app, HttpClient nodeClient)
+    {
+        return app.Map("/_next/webpack-hmr", async context =>
+        {
+            if (context.WebSockets.IsWebSocketRequest)
+            {
+                await WebSocketToNode(context, nodeClient.BaseAddress!);
+            }
+            else
+            {
+                await HttpToNode(context, nodeClient);
+            }
+        });
+    }
+
+    public static System.Diagnostics.Process? StartNodeProcess(this WebApplication app, 
+        string lockFile="../MyApp.Client/dist/lock",
+        string workingDirectory="../MyApp.Client", 
+        string? logPrefix="[node] ", 
+        bool registerExitHandler=true)
+    {
+        if (!File.Exists(lockFile))
+        {
+            if (!TryStartNode(workingDirectory, out var process))
+                return null;
+
+            var verbose = logPrefix != null;            
+            process.Exited += (s, e) => {
+                if (verbose) Console.WriteLine(logPrefix + "Exited: " + process.ExitCode);
+                File.Delete(lockFile);
+            };
+
+            if (registerExitHandler)
+            {
+                app.Lifetime.ApplicationStopping.Register(() => {
+                    if (!process.HasExited)
+                    {
+                        if (verbose) Console.WriteLine(logPrefix + "Teminating process: " + process.Id);
+                        process.Kill(entireProcessTree: true);
+                    }
+                });
+            }
+            return process;
+        }
+
+        return null;
+    }
+    
+    public static IEndpointConventionBuilder MapFallbackToNode(this WebApplication app, HttpClient nodeClient)
+    {
+        return app.MapFallback(context => HttpToNode(context, nodeClient));
     }
 }
