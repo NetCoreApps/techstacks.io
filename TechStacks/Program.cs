@@ -125,6 +125,10 @@ else
     // Production-specific middleware (if needed) can go here
 }
 
+// Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
+var nodeClient = Proxy.CreateNodeClient();
+Proxy.MapNotFoundToNode(app, nodeClient);
+
 app.UseStaticFiles(); // static assets are served by Next.js
 app.UseCookiePolicy();
 app.UseCors();
@@ -159,10 +163,7 @@ app.MapAdditionalIdentityEndpoints();
     app.MapScalarApiReference();
 }
 
-// Create Node client for proxying to Next.js
-var nodeClient = Proxy.CreateNodeClient();
-
-// Proxy development HMR WebSocket and fallback routes to the Next.js server
+// Proxy development HMR WebSocket to the Next.js server
 if (app.Environment.IsDevelopment())
 {
     app.Map("/_next/webpack-hmr", async context =>
