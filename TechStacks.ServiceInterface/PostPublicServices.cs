@@ -117,8 +117,8 @@ public static class PostExtensions
         foreach (var user in remainingUsers)
         {
             var profileUrl = user.profileUrl 
-                ?? ImageCreator.Instance.CreateSvgDataUri(char.ToUpper(user.userName[0]), 
-                    bgColor:ImageCreator.Instance.GetDarkColor(user.id));
+                ?? SvgCreator.CreateSvgDataUri(char.ToUpper(user.userName[0]), 
+                    bgColor:SvgCreator.GetDarkColor(user.id));
             UserProfilesCache[user.id] = profileUrl;
             to[user.id] = profileUrl;
         }
@@ -130,6 +130,6 @@ public static class PostExtensions
         (userId != null && users.TryGetValue(userId.Value, out var avatarUrl)
             ? avatarUrl
             : null)
-            ?? ImageCreator.Instance.CreateSvgDataUri('A', 
-                bgColor:ImageCreator.Instance.GetDarkColor(userId ?? 0));
+            ?? SvgCreator.CreateSvgDataUri('A', 
+                bgColor:SvgCreator.GetDarkColor(userId ?? 0));
 }
