@@ -11,7 +11,6 @@ using Scalar.AspNetCore;
 using TechStacks;
 using TechStacks.Data;
 using TechStacks.ServiceInterface;
-using MyApp;
 
 AppHost.RegisterLicense();
 var builder = WebApplication.CreateBuilder(args);
@@ -108,31 +107,36 @@ services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
-app.UseForwardedHeaders();
-app.UseWebSockets();
+// Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
+var nodeProxy = new NodeProxy("http://localhost:3000") {
+    Log = app.Logger
+};
 
-app.UseMigrationsEndPoint();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-    app.UseHttpsRedirection();
+    app.UseDeveloperExceptionPage();
+    app.UseMigrationsEndPoint();
+
+    app.MapNotFoundToNode(nodeProxy);
 }
 else
 {
-    // Production-specific middleware (if needed) can go here
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
-// Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
-var nodeClient = Proxy.CreateNodeClient();
-app.MapNotFoundToNode(nodeClient);
-
-app.UseStaticFiles(); // static assets are served by Next.js
-app.UseCookiePolicy();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.MapCleanUrls();
 app.UseCors();
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapRazorPages();
 
 // GitHub OAuth endpoint
 app.MapGet("/auth/github", (
@@ -167,22 +171,20 @@ app.MapAdditionalIdentityEndpoints();
 // Proxy development HMR WebSocket to the Next.js server
 if (app.Environment.IsDevelopment())
 {
-    app.MapNextHmr(nodeClient);
+    app.UseWebSockets();
+    app.MapNextHmr(nodeProxy);
 
     // Start the Next.js dev server if the Next.js lockfile does not exist
-    var process = app.StartNodeProcess(
+    app.RunNodeProcess(nodeProxy,
         lockFile: "../TechStacks.Client/dist/lock",
         workingDirectory: "../TechStacks.Client");
-    if (process != null)
-    {
-        Console.WriteLine("Started Next.js dev server");
-    }
-    else
-    {
-        Console.WriteLine("Next.js dev server already running");
-    }
-}
 
-app.MapFallbackToNode(nodeClient);
+    app.MapFallbackToNode(nodeProxy);
+}
+else
+{
+    // Map fallback to index.html in production (MyApp.Client/dist > wwwroot)
+    app.MapFallbackToFile("index.html");
+}
 
 app.Run();

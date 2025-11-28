@@ -7,6 +7,7 @@
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
         <PublishProfile>DefaultContainer</PublishProfile>
         <DefaultItemExcludes>$(DefaultItemExcludes);**/App_Data/**</DefaultItemExcludes>
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
     </PropertyGroup>
     <ItemGroup>
         <ContainerLabel Include="service" Value="techstacks-io" />
@@ -41,9 +42,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ServiceStack.AspNetCore.OpenApi.Microsoft" Version="8.*"/>
+        <PackageReference Include="ServiceStack.OpenApi.Microsoft" Version="8.*"/>
         <PackageReference Include="Scalar.AspNetCore" Version="2.*" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.*" GeneratePathProperty="true" />
     </ItemGroup>
 
     <ItemGroup>
