@@ -178,13 +178,8 @@ if (app.Environment.IsDevelopment())
     app.RunNodeProcess(nodeProxy,
         lockFile: "../TechStacks.Client/dist/lock",
         workingDirectory: "../TechStacks.Client");
+}
 
-    app.MapFallbackToNode(nodeProxy);
-}
-else
-{
-    // Map fallback to index.html in production (MyApp.Client/dist > wwwroot)
-    app.MapFallbackToFile("index.html");
-}
+app.MapFallbackToNode(nodeProxy);
 
 app.Run();
