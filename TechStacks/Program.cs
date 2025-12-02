@@ -107,20 +107,18 @@ services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
+
 // Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
 var nodeProxy = new NodeProxy("http://localhost:3000") {
     Log = app.Logger
 };
-
-app.UseForwardedHeaders();
+app.MapNotFoundToNode(nodeProxy);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
-
-    app.MapNotFoundToNode(nodeProxy);
 }
 else
 {
@@ -129,6 +127,7 @@ else
     app.UseHsts();
 }
 
+app.UseForwardedHeaders();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapCleanUrls();
