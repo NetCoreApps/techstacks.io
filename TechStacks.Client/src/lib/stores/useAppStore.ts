@@ -10,8 +10,6 @@ interface AppState {
   // Session & Auth
   sessionInfo: any | null;
   setSessionInfo: (session: any | null) => void;
-  isAuthenticated: () => boolean;
-  isAdmin: () => boolean;
 
   // Config & Overview
   config: any;
@@ -71,13 +69,6 @@ export const useAppStore = create<AppState>()(
       },
       setConfig: (config) => set({ config }),
       setOverview: (overview) => set({ overview }),
-
-      // Computed
-      isAuthenticated: () => get().sessionInfo !== null,
-      isAdmin: () => {
-        const roles = get().sessionInfo?.roles || [];
-        return roles.includes('Admin');
-      },
 
       // Initialize app
       initialize: async () => {

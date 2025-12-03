@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
-import { useAppStore } from '@/lib/stores/useAppStore';
+import { appAuth } from '@/lib/auth';
 import { TechnologyTags } from '@/components/TechnologyTags';
 import { Post } from '@/shared/dtos';
 
@@ -17,14 +17,14 @@ interface PostsListProps {
 
 export function PostsList({ posts }: PostsListProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAppStore();
+  const { isAuthenticated } = appAuth();
   const [upVotedPostIds, setUpVotedPostIds] = useState<number[]>([]);
   const [downVotedPostIds, setDownVotedPostIds] = useState<number[]>([]);
   const [localPoints, setLocalPoints] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const loadUserActivity = async () => {
-      if (!isAuthenticated()) return;
+      if (!isAuthenticated) return;
 
       try {
         const activity = await gateway.getUserPostActivity();
@@ -41,7 +41,7 @@ export function PostsList({ posts }: PostsListProps) {
   const handleVote = async (postId: number, weight: number, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when voting
 
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       // Optionally redirect to login
       return;
     }

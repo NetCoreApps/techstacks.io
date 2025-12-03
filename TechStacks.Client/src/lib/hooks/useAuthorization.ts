@@ -1,9 +1,11 @@
 'use client';
 
 import { useAppStore } from '@/lib/stores/useAppStore';
+import { appAuth } from '../auth';
 
 export function useAuthorization() {
-  const { sessionInfo, isAdmin } = useAppStore();
+  const { isAdmin } = appAuth();
+  const { sessionInfo } = useAppStore();
 
   const canEditTechnology = (tech: any) => {
     if (!sessionInfo) return false;

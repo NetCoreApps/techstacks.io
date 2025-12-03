@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { PrimaryButton } from '@servicestack/react';
 import { useAuthorization } from '@/lib/hooks/useAuthorization';
 import { useAppStore } from '@/lib/stores/useAppStore';
+import { appAuth } from '@/lib/auth';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
 import { TechnologyTags } from '@/components/TechnologyTags';
@@ -14,7 +15,8 @@ import { Avatar } from '@/components/ui/Avatar';
 
 export default function PostDetailClient() {
   const { canEditPost, canDeleteComment } = useAuthorization();
-  const { sessionInfo, isAuthenticated } = useAppStore();
+  const { isAuthenticated } = appAuth();
+  const { sessionInfo } = useAppStore();
   const [post, setPost] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function PostDetailClient() {
         setComments(response.comments || []);
 
         // Load user's comment votes if authenticated
-        if (isAuthenticated()) {
+        if (isAuthenticated) {
           try {
             const votes = await gateway.getUserPostCommentVotes(postId);
             setUpVotedCommentIds(votes.upVotedCommentIds || []);
@@ -71,7 +73,7 @@ export default function PostDetailClient() {
   const handleCommentVote = async (commentId: number, weight: number, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -120,7 +122,7 @@ export default function PostDetailClient() {
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isAuthenticated() || !newComment.trim()) {
+    if (!isAuthenticated || !newComment.trim()) {
       return;
     }
 
@@ -227,7 +229,7 @@ export default function PostDetailClient() {
                   : 'hover:text-green-600'
               }`}
               title={isUpVoted ? 'Remove upvote' : 'Upvote'}
-              disabled={!isAuthenticated()}
+              disabled={!isAuthenticated}
             >
               ▲
             </button>
@@ -240,7 +242,7 @@ export default function PostDetailClient() {
                   : 'hover:text-red-600'
               }`}
               title={isDownVoted ? 'Remove downvote' : 'Downvote'}
-              disabled={!isAuthenticated()}
+              disabled={!isAuthenticated}
             >
               ▼
             </button>
@@ -296,7 +298,7 @@ export default function PostDetailClient() {
                   dangerouslySetInnerHTML={{ __html: comment.contentHtml || comment.content }}
                 />
                 <div className="flex gap-3 text-sm text-gray-600">
-                  {isAuthenticated() && (
+                  {isAuthenticated && (
                     <button
                       onClick={() => setReplyToId(comment.id)}
                       className="hover:text-blue-600"
@@ -327,7 +329,7 @@ export default function PostDetailClient() {
         </div>
 
         {/* Reply Form */}
-        {isReplyingTo && isAuthenticated() && (
+        {isReplyingTo && isAuthenticated && (
           <div className="ml-12 mt-3">
             <form onSubmit={handleSubmitComment}>
               <div className="mb-2">
@@ -460,7 +462,7 @@ export default function PostDetailClient() {
         </h2>
 
         {/* Add Top-Level Comment Form */}
-        {isAuthenticated() && !replyToId && (
+        {isAuthenticated && !replyToId && (
           <form onSubmit={handleSubmitComment} className="mb-6">
             <div className="mb-2">
               <textarea
