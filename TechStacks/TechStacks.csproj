@@ -33,16 +33,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ServiceStack" Version="8.*"/>
-        <PackageReference Include="ServiceStack.Mvc" Version="8.*"/>
-        <PackageReference Include="ServiceStack.Server" Version="8.*"/>
-        <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="8.*"/>
-        <PackageReference Include="ServiceStack.Extensions" Version="8.*"/>
-        <PackageReference Include="ServiceStack.Jobs" Version="8.*"/>
+        <PackageReference Include="ServiceStack" Version="10.*"/>
+        <PackageReference Include="ServiceStack.Mvc" Version="10.*"/>
+        <PackageReference Include="ServiceStack.Server" Version="10.*"/>
+        <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="10.*"/>
+        <PackageReference Include="ServiceStack.Extensions" Version="10.*"/>
+        <PackageReference Include="ServiceStack.Jobs" Version="10.*"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ServiceStack.OpenApi.Microsoft" Version="8.*"/>
+        <PackageReference Include="ServiceStack.OpenApi.Microsoft" Version="10.*"/>
         <PackageReference Include="Scalar.AspNetCore" Version="2.*" />
     </ItemGroup>
 

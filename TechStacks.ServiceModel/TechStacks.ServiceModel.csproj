@@ -5,6 +5,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="ServiceStack.Interfaces" Version="8.*"/>
+        <PackageReference Include="ServiceStack.Interfaces" Version="10.*"/>
     </ItemGroup>
 </Project>

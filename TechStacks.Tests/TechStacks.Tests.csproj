@@ -13,10 +13,10 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="Markdig" Version="0.43.*" />
 
-    <PackageReference Include="ServiceStack" Version="8.*" />
-    <PackageReference Include="ServiceStack.Server" Version="8.*" />
-    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="8.*" />
-    <PackageReference Include="ServiceStack.OrmLite.Sqlite.Data" Version="8.*" />
-    <PackageReference Include="ServiceStack.Kestrel" Version="8.*" />
+    <PackageReference Include="ServiceStack" Version="10.*" />
+    <PackageReference Include="ServiceStack.Server" Version="10.*" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="10.*" />
+    <PackageReference Include="ServiceStack.OrmLite.Sqlite.Data" Version="10.*" />
+    <PackageReference Include="ServiceStack.Kestrel" Version="10.*" />
   </ItemGroup>
 </Project>
