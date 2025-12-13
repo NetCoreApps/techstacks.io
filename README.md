@@ -2,86 +2,227 @@
 
 # .NET 10.0 Next.js + Tailwindcss ASP.NET Identity Auth Template
 
-![](https://raw.githubusercontent.com/ServiceStack/Assets/master/csharp-templates/nextjs.png)
-![](https://raw.githubusercontent.com/ServiceStack/Assets/master/csharp-templates/start/nextjs.png)
+[![](https://react-templates.net/img/replacing-legacy-uis/react-home.webp)](https://techstacks.io)
 
-> Browse [source code](https://github.com/NetCoreTemplates/nextjs) and install with [x new](https://docs.servicestack.net/dotnet-new):
-
-This template should help get you started developing with Vue 3 and Typescript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+> Browse [source code](https://github.com/NetCoreTemplates/next-rsc) and install with:
 
 ```bash
-$ dotnet tool install -g x
-
-$ x new nextjs ProjectName
+npx create-net next-rsc ProjectName
 ```
 
 ## Getting Started
 
-Build Client UI & Run Dev Server
+Run Server .NET Project (automatically starts both .NET and Next.js dev servers):
 
 ```bash
-$ cd ui && npm run build:local
-$ npm run dev
+cd MyProject
+dotnet watch
 ```
 
-Run Server .NET Project (New Terminal)
+## Replacing Legacy UIs in an AI-First world 
 
-```bash
-$ cd api\ProjectName
-$ dotnet watch
+Software Development has reached an inflection point where AI Models and tools are now good enough to rebuild complete application UIs in hours, not months. 
+This fundamentally changes the economics of modernizing legacy applications where for many legacy frontends, it’s finally cheaper to rewrite than to keep refactoring legacy code bases.
+
+## The Legacy UI Problem
+
+Like old buildings, legacy UIs accumulate years of technical debt that makes renovation increasingly expensive:
+
+- **Layers of workarounds** - Code built on top of framework limitations that no longer exist
+- **Outdated patterns** - Solutions to problems that modern frameworks solve elegantly out-of-the-box
+- **Dependency hell** - Ancient package versions with security vulnerabilities and incompatible upgrades
+- **Framework quirks** - Intimate knowledge required of deprecated APIs and edge cases
+- **Integration friction** - Every new feature must navigate the minefield of existing code
+
+Traditional renovation means dealing with all these nuances. Each new feature requires understanding why things were done a certain way, working around old limitations, and maintaining compatibility with outdated patterns. It's like trying to add a second floor to your house whilst still living in it, technically possible, but an expensive, delicate, and compromised endeavor that's rarely done.
+
+## AI-Powered UI Transformation
+
+Modern AI models have transformed UI development from a time-intensive rewrite into a rapid transformation process. By utilizing an AI-first development approach (aka Vibe Coding) we can now leverage existing codebases as detailed specifications they can use as a blueprint, telling them exactly what to build.
+
+Something AI Models excel at is code transformations, they are remarkable at understanding the intent of code and transforming code from one framework to another, a perfect fit for rewriting legacy UIs.
+
+#### Context is King
+
+With AI code generation, the more details and context you provide, the closer the output matches your intent. With existing code-bases there is no ambiguity, the AI gets to know exactly what features it needs to build and how they work.
+
+### What Makes This Possible
+
+The key insight is that **your existing codebase is the perfect specification** as Legacy UIs already define:
+
+- All features and functionality
+- User interactions and workflows
+- Data structures and API contracts
+- Edge cases and business logic
+- Visual layouts and component hierarchy
+
+With just an existing code-base and a detailed migration plan, AI models can translate it to modern frameworks with remarkable accuracy to 90% completion in minutes, whilst you can Vibe Code the rest to get it over the line.
+
+### What Framework to Choose?
+
+Up until now, the framework to choose was mostly up to developers personal preferences; in our case we preferred Vue, given its readability and progressive enhancement capabilities. But with an AI-first development model, you're no longer writing the code directly, you're task becomes feeding AI Models text prompts and context on what features to implement, so it's more important to choose a framework that AI Models understand well. Currently, that's:
+
+### The Optimal Stack for AI Development
+
+Through this process, we've identified the most effective technology stack for AI-assisted development:
+
+- **Next.js 16** - Modern React framework with excellent AI model familiarity
+- **React 19** - Component patterns that AI models understand deeply
+- **TypeScript** - Type safety that helps AI generate correct code
+- **Tailwind CSS v4** - Utility-first styling that AI excels at composing
+
+This stack represents the sweet spot where AI models have the most training data, the clearest patterns, and the best ability to generate cohesive, loosely coupled, high-quality code, and what was used for the new [techstacks.io](https://techstacks.io).
+
+## A Real-World Example: TechStacks
+
+![](https://docs.servicestack.net/img/pages/react/replacing-legacy-uis/vuetify-home.webp)
+
+![](https://docs.servicestack.net/img/pages/react/replacing-legacy-uis/react-home.webp)
+
+Whilst the TechStacks C# ServiceStack backend is over a decade old, its UI has undergone multiple migrations, 
+with the last version rewritten 7 years ago. 
+
+- **v1**: [Angular 1 + Bootstrap](https://github.com/ServiceStackApps/TechStacks)
+- **v2**: [Nuxt.js 1.4 + Vuetify 1](https://github.com/NetCoreApps/TechStacks)
+- **v3**: [Next.js 16 + React 19 + Tailwindcss v4](https://github.com/NetCoreApps/techstacks.io) (Vibe Coded UI / Preserved backend .NET APIs)
+
+The previous migration from **Angular 1 / Bootstrap** to **Nuxt.js / Vuetify** was done over **several weeks** whilst the last AI completed migration to **React / Tailwindcss** was done within a couple of days. 
+
+The actual migration and Vibe coded walkthrough itself **only took a few hours**, as the majority of the time was spent moving the existing deployment from an AWS ECS / RDS setup to a much less expensive Hetzner + PostgreSQL setup, [deployed using GitHub Actions](https://github.com/NetCoreApps/techstacks.io/tree/main/.github/workflows) and [Kamal](https://kamal-deploy.org).
+
+### Migration Scope
+
+This wasn't a trivial update. The migration involved:
+
+- **20 pages** with complex routing and dynamic content
+- **23 components** including complex forms and interactive elements
+- Complete conversion from Vuetify/Bootstrap to React 19/Tailwindcss
+- Migration from JavaScript to strict TypeScript
+- Replaced Vuetify with Tailwind CSS + [@servicestack/react](https://react.servicestack.net) components
+- Implementation of modern patterns (Server Components, App Router)
+
+### Where to start:
+
+1. **Create a detailed Migration Plan** - It's vital for big migrations (and other large code generation tasks) to have a detailed plan of what needs to be done, how it will be done, and what the end result will be.
+
+### The Migration Prompt
+
+As it's a vital part of AI Assisted development, most AI Tools have planning tools built-in, Since Anthropic gave out
+free credits to their [Claude Code on the web](https://www.claude.com/blog/claude-code-on-the-web) we used it to create 
+the Migration plan:
+
+```txt
+Create a detailed plan for completely rewriting this old Nuxt.js Vuetify website into a 
+new modern beautiful Next.js 16 Web App utilizing the existing C# ServiceStack back-end.
+    
+The entire UI can be erased to make way for a modern, visually stunning React 19, 
+TypeScript and Tailwindcss v4 App.
+    
+Use the existing Nuxt Vuetify pages to learn how to call its C# ServiceStack APIs with 
+the TypeScript JsonServiceClient and Typed DTOs in ./TechStacks/src/shared/dtos.ts.
+    
+Do not generate code, only generate a comprehensive detailed plan for how to rewrite 
+the UI layer for the existing C# back-end APIs. All Data is already available in the 
+existing C# APIs.
 ```
 
-For more, see development workflow docs for **JetBrains Rider** and **VS Code / VS .NET**
+The result of which was the [NEXTJS_MIGRATION_PLAN.md](https://github.com/NetCoreApps/techstacks.io/blob/main/NEXTJS_MIGRATION_PLAN.md).
 
-#### Use npm dev server for UI Development
+After reviewing the plan and making the necessary changes to match what you want to build it's time to execute the migration. 
 
-- https://localhost:3000
+### Executing the Migration
 
-#### `npm run build:local` to view in .NET App
+We took a copy of the existing **Nuxt.js / Vuetify code-base** with the **migration plan** and instructed Claude Code to execute the migration with the prompt: 
 
-- https://localhost:5001
-
-
-## About Next.js
-
-### A statically generated blog example using Next.js, Markdown, and TypeScript
-
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
-
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/basic-features/pages) feature using Markdown files as the data source.
-
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
-
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
-
-## Preview
-
-Preview the example live on [StackBlitz](http://stackblitz.com/):
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter-typescript)
-
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter-typescript&project-name=blog-starter-typescript&repository-name=blog-starter-typescript)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init) or [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/) to bootstrap the example:
-
-```bash
-npx create-next-app --example blog-starter-typescript blog-starter-typescript-app
-# or
-yarn create next-app --example blog-starter-typescript blog-starter-typescript-app
+```
+Implement the NEXTJS_MIGRATION_PLAN.md
 ```
 
-Your blog should be up and running on [https://localhost:3000](https://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+With access to both the Migration Plan and existing code-base, Claude Code was able to generate the entire new Next.js UI within 10-20 minutes, for less than $10 (in free credits).
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+The initial AI-generated code wasn't perfect, but it generated an excellent starting point that converted most of the existing Nuxt/Vuetify implementation into a modern Next.js App, with its preferred project structure.
 
-# Notes
+### Vibe Code the rest
 
-This blog-starter-typescript uses [Tailwind CSS](https://tailwindcss.com). To control the generated stylesheet's filesize, this example uses Tailwind CSS' v2.0 [`purge` option](https://tailwindcss.com/docs/controlling-file-size/#removing-unused-css) to remove unused CSS.
+The most time consuming part of the migration is walking through the entire Application, in tandem with your existing App to test that everything functions as it did before. Fortunately you never need to take the reins to get it over the line, as now that we have a modern AI-friendly Next.js/React/Tailwind UI we can just use Vibe Coding to prompt the AI Models to implement any missing features or fix any issues that you find along the way.
 
-[Tailwind CSS v2.0 no longer supports Node.js 8 or 10](https://tailwindcss.com/docs/upgrading-to-v2#upgrade-to-node-js-12-13-or-higher). To build your CSS you'll need to ensure you are running Node.js 12.13.0 or higher in both your local and CI environments.
+If this is your first time using AI Models for all development, it can seem like unrealistic magic from the future. 
+But not only is it possible, it's the most productive development model we've ever experienced, and is all likely to be the future of software development.
+
+### Old vs New UI
+
+Here's a sample set of screenshots of the old vs new UIs:
+
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-home.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-home.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-post-edit.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-post-edit.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-top.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-top.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-stacks.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-stacks.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-stacks-edit.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-stacks-edit.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-tech.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-tech.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/vuetify-favorites.webp)
+![](https://servicestack.net/img/posts/replacing-legacy-uis/react-favorites.webp)
+
+Whilst we keep the old UI around for reference, you can view both UIs side-by-side at:
+
+- Old (AWS + ECS + RDS): https://vuetify.techstacks.io
+- New (Hetzner + PostgreSQL): https://techstacks.io
+
+### Why UIs Are Perfect Candidates for Replacement
+
+Unlike backend systems where "tear down and rebuild" is far riskier and requires a more methodical approach, UIs are uniquely suited for complete replacement:
+
+**1. WYSIWYG Validation**
+The end result is immediately visible. You can see if it works correctly just by using it. No hidden business logic, no subtle data corruption bugs - it just needs to look and behave right.
+
+**2. Clear API Boundaries**
+When your UI integrates with existing, battle-tested backend APIs, you're building on proven business logic. The API contract is your safety boundary — preventing you from accidentally introducing server-side vulnerabilities or data corruption.
+
+**3. No Legacy Baggage**
+Start fresh without inheriting:
+- Workarounds for bugs in older framework versions but never updated
+- CSS hacks for IE11 compatibility that we no longer need
+- State management patterns designed before modern solutions existed
+- Build configurations accumulated over years of framework updates
+
+**4. Better Modern Frameworks**
+Today's frameworks solve problems that required custom code in legacy stacks:
+- Server Components eliminate entire categories of client-side state management
+- Modern CSS (Grid, Flexbox, Container Queries) replaces brittle layout hacks
+- TypeScript catches errors that required runtime checks and defensive coding
+- Built-in optimizations (code splitting, lazy loading) that were manual before
+
+**5. Separation of Concerns**
+The UI layer is just the presentation layer. All the critical business logic, validation, authorization, and data integrity remains safely in the backend where it's been tested and proven over years of production use.
+
+### The AI-First Advantage
+
+The real return on migrating isn’t the one-time rewrite, it’s the velocity that's gained afterward. After migrating to an AI‑native stack (Next.js, React, TypeScript, Tailwind), AI agents are better able to reliably implement new features asynchronously, i.e. without human intervention. 
+
+Changes like **"Add dark mode support"**, **"Implement infinite scrolling"** or **"Add export to CSV"** become natural‑language prompts instead of full developer-assigned tickets. Iteration cycles of most UI features get compressed down to seconds, where it now takes less time to get AI Agents to implement features than it would take to describe the feature to a developer. Code becomes a disposable resource that's become cheap to write, where complete UI rewrites, prototypes, and experiments are now feasible.
+
+Most importantly, a high quality product is the result of multiple dev iterations, i.e. continuously improving on features until they work exactly as intended and AI Agents enables far greater iteration velocity than hand coded implementations, at a fraction of the cost – that's able to supercharge the productivity of existing developers.
+
+This is the primary benefit of rewriting to an AI‑native stack: creating a new foundation that enables **"Vibe Coding"** - where UI changes are described by text prompts and implemented by AI Agents.
+
+Work that once took hours of human effort can now be done using AI Agents in minutes, with the migration typically paying for itself within the first few features.
+
+## Looking Forward
+
+We're at the beginning of a fundamental shift in how we approach software development. AI Assistance has become a mandatory tool for developers, amplifying their capabilities and automating away tedious, repetitive work. 
+AI models are only going to get better at understanding codebases and generating accurate implementations. The frameworks and patterns that work best with AI will become the new standard.
+
+For organizations with legacy applications, it means **modernization is now economically viable**. Barriers that made UI rewrites prohibitively expensive have eroded. What was once a multi-month project requiring dedicated teams is now achievable in days with AI assistance.
+
+## From .NET APIs to AI First UIs
+
+The unprecedented productivity of AI Assisted development has transformed our roadmap which is now firmly centered on developing the ideal .NET AI‑first development stack, powered by a growing suite of React / TypeScript / Tailwind CSS templates and components, the ultimate UX of hot-reloading npm UIs and built on our highly capable & performant .NET backend APIs. 
+
+## [react-templates.net](https://react-templates.net)
+
+[Templates](https://react-templates.net) for the next generation of AI-assisted web applications.
