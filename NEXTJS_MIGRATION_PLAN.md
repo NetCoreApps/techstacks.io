@@ -2095,7 +2095,6 @@ const nextConfig: NextConfig = {
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:prod": "next build && cp -r out/* ../TechStacks/wwwroot/",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
@@ -2109,7 +2108,7 @@ const nextConfig: NextConfig = {
 {
   "scripts": {
     "ui:dev": "cd nextjs-app && npm run dev",
-    "ui:build": "cd nextjs-app && npm run build:prod",
+    "ui:build": "cd nextjs-app && npm run build",
     "dtos": "cd TechStacks/src/shared && x ts && cp dtos.ts ../../nextjs-app/src/shared/dtos.ts",
     "publish": "npm run ui:build && cd TechStacks && dotnet publish -c Release",
     "deploy": "npm run publish && bash deploy.sh"

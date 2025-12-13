@@ -100,7 +100,6 @@ npm run dev          # Start development server
 
 # Build
 npm run build        # Build for production
-npm run build:prod   # Build and output to C# wwwroot
 
 # Type checking
 npm run type-check   # Run TypeScript compiler check
@@ -147,7 +146,7 @@ The production build uses Next.js static export to generate a fully static websi
 
 ```bash
 # Build for production (static export to ./dist)
-NODE_ENV=production npm run build:prod
+NODE_ENV=production npm run build
 
 # Build and copy to C# wwwroot (for deployment)
 npm run build

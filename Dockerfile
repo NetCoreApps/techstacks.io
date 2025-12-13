@@ -3,7 +3,7 @@
 # Build arguments
 ARG KAMAL_DEPLOY_HOST
 ARG SERVICESTACK_LICENSE
-ARG SERVICE_LABEL
+ARG SERVICE
 
 # 1. Build .NET app + Node.js apps
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
@@ -22,7 +22,6 @@ RUN apt-get update \
 
 # Copy solution and projects
 COPY TechStacks.slnx ./
-COPY NuGet.Config ./
 COPY TechStacks ./TechStacks
 COPY TechStacks.ServiceInterface ./TechStacks.ServiceInterface
 COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
@@ -31,17 +30,17 @@ COPY TechStacks.ServiceModel ./TechStacks.ServiceModel
 WORKDIR /src/TechStacks
 
 # Download tailwindcss binary directly (avoiding sudo requirement in postinstall.js)
-RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
-    && chmod +x tailwindcss-linux-x64 \
-    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+RUN curl -sL https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
+    -o /usr/local/bin/tailwindcss \
+    && chmod +x /usr/local/bin/tailwindcss
 RUN npm run ui:build
 
 # Build Next.js app
 WORKDIR /src/TechStacks.Client
-COPY TechStacks.Client/package*.json ./
+COPY TechStacks.Client/package*.json TechStacks.Client/postinstall.mjs ./
 RUN npm ci
 COPY TechStacks.Client/ ./
-RUN npm run build:prod
+RUN npm run build
 
 # Restore and publish .NET app
 WORKDIR /src
@@ -52,13 +51,13 @@ RUN dotnet publish TechStacks/TechStacks.csproj -c Release --no-restore -p:Publi
 # 2. Runtime image with .NET + Node
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 ARG SERVICESTACK_LICENSE
-ARG SERVICE_LABEL
+ARG SERVICE
 ARG KAMAL_DEPLOY_HOST
 
 WORKDIR /app
 
 # Label required by Kamal, must match config/deploy.yml service
-LABEL service="${SERVICE_LABEL}"
+LABEL service="${SERVICE}"
 
 # Install Node.js >= 20.9 (Node 24.x LTS) and bash for the entrypoint script
 RUN apt-get update \
@@ -68,11 +67,19 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy published .NET app
-COPY --from=dotnet-build /src/TechStacks/bin/Release/net10.0/publish ./api
+# Create unprivileged user for Next.js
+RUN groupadd -r nextjs && useradd -r -g nextjs -s /bin/bash nextjs
 
-# Copy built Next.js app (including dist, node_modules, public, etc.)
-COPY --from=dotnet-build /src/TechStacks.Client ./client
+# Copy published .NET app (owned by root, no access for nextjs user)
+COPY --from=dotnet-build /src/TechStacks/bin/Release/net10.0/publish ./dotnet
+RUN chmod -R 700 ./dotnet && chown -R root:root ./dotnet
+
+# Copy built Next.js app (owned by nextjs user, read-only)
+COPY --from=dotnet-build /src/TechStacks.Client ./nextjs
+RUN chown -R nextjs:nextjs ./nextjs && chmod -R 500 ./nextjs
+
+# Create /tmp directory accessible to nextjs user
+RUN mkdir -p /tmp && chmod 1777 /tmp
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080 \
     INTERNAL_API_URL=http://127.0.0.1:8080 \
