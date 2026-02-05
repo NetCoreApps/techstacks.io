@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using TechStacks;
 using TechStacks.Data;
 using TechStacks.ServiceInterface;
+using Microsoft.Extensions.Options;
 
 AppHost.RegisterLicense();
 var builder = WebApplication.CreateBuilder(args);
@@ -106,6 +107,36 @@ services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
 
+services.Configure<UserAgentBlockingOptions>(options =>
+{
+    // Add user agents to block
+    options.BlockedUserAgents.AddRange([
+        "bytespider",
+        "gptbot",
+        "gptbot",
+        "claudebot",
+        "amazonbot",
+        "imagesiftbot",
+        "semrushbot",
+        "dotbot",
+        "semrushbot",
+        "dataforseobot",
+        "WhatsApp Bot",
+        "HeadlessChrome",
+        "PetalBot",
+    ]);
+
+    options.BlockedIps.AddRange([
+        "114.119"
+    ]);
+
+    // Optional: Customize the response status code
+    // options.BlockedStatusCode = StatusCodes.Status429TooManyRequests;
+    
+    // Optional: Customize the blocked message
+    options.BlockedMessage = "This bot is not allowed to access our website";
+});
+
 var app = builder.Build();
 
 // Proxy 404s to Next.js (except for API/backend routes) must be registered before endpoints
@@ -136,6 +167,8 @@ app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapRazorPages();
+
+app.UseUserAgentBlocking();
 
 // GitHub OAuth endpoint
 app.MapGet("/auth/github", (
