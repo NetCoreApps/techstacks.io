@@ -142,5 +142,5 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
         };
 
     public static void RegisterLicense() =>
-        Licensing.RegisterLicense("OSS BSD-3-Clause 2025 https://github.com/NetCoreApps/TechStacks JRyw8xVplbFrCTt2rFzl0spRemy2vfIrc1aBOS4+7HsIw43oTmRr2OrnXQzll1tl7zzeznH4Dke4GVOjKTte1BHxEgbgSaWa5pFVYk3l0m0ze+y/wx9TavdBHqQWfF0VtquD4wpiyhOFcNnV7jKheXcmxD+YQi7XeOP+GrpGWjU=");
+        ServiceStack.Licensing.RegisterLicense("OSS BSD-2-Clause 2026 https://github.com/NetCoreApps/techstacks.io Tc6/uBrTv9Eos74a+xi97t+rnICwOvAjfJgt5Tbt5HjgW4xU23eoV8baQXcKIwt2OCiMGjO2UIF2kssidIWJIs1Njr1RfIhw1VmOmuXTi7uzUjCUrw9kvkP3CwzOrUPbtCgSeBrApxxDuTlX8WNKnLW9/6tpE/9enBCbxQ5i+kg=");
 }
