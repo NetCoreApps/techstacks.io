@@ -34,7 +34,7 @@ public static class TechExtensions
     /// </summary>
     /// <param name="phrase"></param>
     /// <returns></returns>
-    public static string GenerateSlug(this string phrase)
+    public static string? GenerateSlug(this string phrase)
     {
         var str = phrase.RemoveAccent().ToLower()
             .Replace("#", "sharp")  // c#, f# => csharp, fsharp

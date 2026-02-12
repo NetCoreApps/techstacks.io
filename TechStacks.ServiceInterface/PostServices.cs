@@ -14,6 +14,103 @@ namespace TechStacks.ServiceInterface;
 [Authenticate]
 public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown, IConfiguration configuration) : PostServicesBase(markdown)
 {
+    public class TechnologyResult
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string Slug { get; set; }
+    }
+
+    public async Task<CreatePostResponse> Post(ImportHackerNewsPost request)
+    {
+        string SanitizeName(string tech) => tech.GenerateSlug()!.Replace("-", "").Trim();
+
+        var allTechnologies = await Db.SelectAsync<TechnologyResult>(Db.From<Technology>());
+        var techIds = new List<int>();
+        if (request.Technologies != null)
+        {
+            foreach (var tech in request.Technologies)
+            {
+                var techLower = tech.ToLower();
+                var existingTech = allTechnologies.FirstOrDefault(x => 
+                    x.Name.ToLower() == techLower || x.Slug.ToLower() == techLower);
+
+                if (existingTech == null)
+                {
+                    var techSanitized = SanitizeName(tech);
+                    existingTech = allTechnologies.FirstOrDefault(x => SanitizeName(x.Name) == techSanitized);
+                }
+
+                if (existingTech != null)
+                {
+                    techIds.Add((int)existingTech.Id);
+                }
+            }
+        }
+
+        var post = new CreatePost
+        {
+            OrganizationId = 73,
+            Type = request.Type,
+            Title = request.Title,
+            Url = request.Url,
+            Content = request.Summary,
+            TechnologyIds = techIds.ToArray(),
+        };
+
+        if (request.Sentiment != null)
+        {
+            post.Content += $"""
+            
+                ---
+                sentiment from [comments]({request.CommentsUrl}):
+                
+                {request.Sentiment}
+                """;
+        }
+
+        log.LogInformation("Importing HackerNews post: {Title} with technologies {Technologies}, top comment: {TopComment}", 
+            post.Title, string.Join(", ", techIds), request.TopComment?.Text);  
+        var ret = await Post(post);
+
+        if (request.TopComment != null)
+        {
+            await InsertCommentTreeAsync(ret.Id, request.TopComment, replyId: null);
+        }
+        return ret;
+    }
+
+    private async Task InsertCommentTreeAsync(long postId, HackerNewsComment comment, long? replyId)
+    {
+        var now = DateTime.Now;
+        var postComment = new PostComment
+        {
+            PostId = postId,
+            ReplyId = replyId,
+            Content = comment.Text ?? "",
+            ContentHtml = Markdown.Transform(comment.Text ?? ""),
+            UserId = 2116, // News
+            CreatedBy = comment.By ?? "unknown",
+            Created = comment.Time > 0
+                ? DateTimeOffset.FromUnixTimeSeconds(comment.Time).DateTime
+                : now,
+            Modified = now,
+            UpVotes = 0,
+            RefId = comment.Id,
+            RefSource = "HackerNews",
+            RefUrn = $"urn:post:{comment.Id}",
+        };
+        var commentId = await Db.InsertAsync(postComment, selectIdentity: true);
+
+        if (comment.Children != null)
+        {
+            foreach (var child in comment.Children)
+            {
+                await InsertCommentTreeAsync(postId, child, replyId: commentId);
+            }
+        }
+    }
+
     public async Task<CreatePostResponse> Post(CreatePost request)
     {
         var user = GetUser();
