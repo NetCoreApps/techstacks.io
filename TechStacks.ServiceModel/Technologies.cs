@@ -26,6 +26,9 @@ public class FindTechnologies : QueryDb<Technology,TechnologyView>
 public class QueryTechnology : QueryDb<Technology,TechnologyView>
 {
     public List<long> Ids { get; set; }
+
+    [QueryDbField(Template="name LIKE {Value} or vendor_name LIKE {Value} or slug LIKE {Value}", Field="Name", ValueFormat="%{0}%")]
+    public string Search { get; set; }
     public string Name { get; set; }
     public string VendorName { get; set; }
     public string NameContains { get; set; }
