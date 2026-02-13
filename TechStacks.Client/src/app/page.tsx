@@ -8,6 +8,7 @@ import { PostForm } from '@/components/forms/PostForm';
 import { WatchListDialog } from '@/components/WatchListDialog';
 import * as gateway from '@/lib/api/gateway';
 import { useAppStore } from '@/lib/stores/useAppStore';
+import Link from 'next/link';
 import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 
 const POSTS_PER_PAGE = 25;
@@ -27,7 +28,6 @@ function HomePageContent() {
   const [error, setError] = useState<string | null>(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [technologies, setTechnologies] = useState<TechnologyView[]>([]);
-  const [selectedTechId, setSelectedTechId] = useState<number | null>(null);
   const [selectedPostType, setSelectedPostType] = useState<string>('');
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,27 +63,32 @@ function HomePageContent() {
   // Only apply watch filter when enabled
   const activeWatched = watchEnabled ? watchedTechIds : [];
 
+  // Refresh posts when watch list changes (after initial mount)
+  const [initialLoad, setInitialLoad] = useState(true);
+  useEffect(() => {
+    if (initialLoad) {
+      setInitialLoad(false);
+      return;
+    }
+    setCurrentPage(1);
+    loadPosts(1, selectedPostType, watchEnabled ? watchedTechIds : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedTechIds]);
+
   // Read initial state from URL
   useEffect(() => {
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const techId = searchParams.get('techId');
     const postType = searchParams.get('type') || '';
 
     setCurrentPage(page);
-    if (techId) {
-      setSelectedTechId(parseInt(techId, 10));
-    }
     setSelectedPostType(postType);
   }, [searchParams]);
 
   // Update URL with current state
-  const updateUrl = useCallback((page: number, techId: number | null, postType: string) => {
+  const updateUrl = useCallback((page: number, postType: string) => {
     const params = new URLSearchParams();
     if (page > 1) {
       params.set('page', page.toString());
-    }
-    if (techId) {
-      params.set('techId', techId.toString());
     }
     if (postType) {
       params.set('type', postType);
@@ -92,14 +97,12 @@ function HomePageContent() {
     router.replace(queryString ? `/?${queryString}` : '/');
   }, [router]);
 
-  const loadPosts = useCallback(async (techId?: number | null, page: number = 1, postType: string = '', watched: number[] = []) => {
+  const loadPosts = useCallback(async (page: number = 1, postType: string = '', watched: number[] = []) => {
     try {
       setLoading(true);
       const skip = (page - 1) * POSTS_PER_PAGE;
       const query = new QueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip });
-      if (techId) {
-        query.anyTechnologyIds = [techId];
-      } else if (watched.length > 0) {
+      if (watched.length > 0) {
         query.anyTechnologyIds = watched;
       }
       if (postType) {
@@ -110,7 +113,7 @@ function HomePageContent() {
       setTotal(response.total || 0);
       setCurrentPage(page);
       setSelectedPostType(postType);
-      updateUrl(page, techId || null, postType);
+      updateUrl(page, postType);
     } catch (err: any) {
       console.error('Failed to load posts:', err);
       setError(err.message || 'Failed to load posts');
@@ -132,63 +135,47 @@ function HomePageContent() {
   useEffect(() => {
     setMounted(true);
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const techId = searchParams.get('techId');
     const postType = searchParams.get('type') || '';
 
-    loadPosts(techId ? parseInt(techId, 10) : null, page, postType, activeWatched);
+    loadPosts(page, postType, activeWatched);
     loadTechnologies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePostDone = () => {
     setShowPostForm(false);
-    setSelectedTechId(null);
     setCurrentPage(1);
-    loadPosts(null, 1, selectedPostType, activeWatched);
-  };
-
-  const handleTagClick = (techId: number) => {
-    if (selectedTechId === techId) {
-      setSelectedTechId(null);
-      setCurrentPage(1);
-      loadPosts(null, 1, selectedPostType, activeWatched);
-    } else {
-      setSelectedTechId(techId);
-      setCurrentPage(1);
-      loadPosts(techId, 1, selectedPostType);
-    }
+    loadPosts(1, selectedPostType, activeWatched);
   };
 
   const handleToggleWatchEnabled = () => {
     const next = !watchEnabled;
     setWatchEnabled(next);
-    if (!selectedTechId) {
-      setCurrentPage(1);
-      loadPosts(null, 1, selectedPostType, next ? watchedTechIds : []);
-    }
+    setCurrentPage(1);
+    loadPosts(1, selectedPostType, next ? watchedTechIds : []);
   };
 
   const handleWatchDialogClose = (open: boolean) => {
     const wasOpen = watchDialogOpen;
     setWatchDialogOpen(open);
     // When closing the dialog, refresh posts with the (possibly changed) watch list
-    if (wasOpen && !open && !selectedTechId) {
+    if (wasOpen && !open) {
       setWatchEnabled(true);
       setCurrentPage(1);
       // Read directly from store since state may be stale
       const currentWatched = useAppStore.getState().watchedTechIds;
-      loadPosts(null, 1, selectedPostType, currentWatched);
+      loadPosts(1, selectedPostType, currentWatched);
     }
   };
 
   const handlePostTypeChange = (postType: string) => {
     setSelectedPostType(postType);
     setCurrentPage(1);
-    loadPosts(selectedTechId, 1, postType, activeWatched);
+    loadPosts(1, postType, activeWatched);
   };
 
   const handlePageChange = (page: number) => {
-    loadPosts(selectedTechId, page, selectedPostType, activeWatched);
+    loadPosts(page, selectedPostType, activeWatched);
     // Scroll to top of posts
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -246,7 +233,7 @@ function HomePageContent() {
             {mounted && isAuthenticated && !showPostForm && (
               <PrimaryButton
                 onClick={() => setShowPostForm(true)}
-                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
+                className="whitespace-nowrap px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
               >
                 + New Post
               </PrimaryButton>
@@ -388,12 +375,7 @@ function HomePageContent() {
                           <span key={id} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                             watchEnabled ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-500'
                           }`}>
-                            <button type="button"
-                              onClick={() => handleTagClick(id)}
-                              className="hover:underline"
-                            >
-                              {name}
-                            </button>
+                            {name}
                             <button type="button"
                               onClick={() => toggleWatchedTech(id)}
                               className={watchEnabled ? 'text-indigo-400 hover:text-indigo-700' : 'text-gray-400 hover:text-gray-600'}
@@ -431,18 +413,14 @@ function HomePageContent() {
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {technologies.map((tech) => (
-                      <button type="button"
+                      <Link
                         key={tech.id}
-                        onClick={() => handleTagClick(tech.id!)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                          selectedTechId === tech.id
-                            ? 'bg-pink-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        href={`/tech/${tech.slug}`}
+                        className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
                         title={`${tech.name} (${tech.favCount || 0} favorites)`}
                       >
                         {tech.name}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 </div>

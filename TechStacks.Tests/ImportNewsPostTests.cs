@@ -8,9 +8,9 @@ using TechStacks.ServiceModel.Types;
 
 namespace TechStacks.Tests;
 
-public class ImportHackerNewsPost : DbTasksBase
+public class ImportNewsPostTests : DbTasksBase
 {
-    static ImportHackerNewsPost() => LogManager.LogFactory = new ConsoleLogFactory(debugEnabled: true);
+    static ImportNewsPostTests() => LogManager.LogFactory = new ConsoleLogFactory(debugEnabled: true);
 
     string PostJson = """
     {
