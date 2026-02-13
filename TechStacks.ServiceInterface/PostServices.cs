@@ -57,7 +57,20 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             Content = request.Summary,
             TechnologyIds = techIds.ToArray(),
             PointsModifier = request.Points > 0 ? request.Points : 1,
+            RefId = request.Id,
         };
+        if (!string.IsNullOrEmpty(request.CommentsUrl))
+        {
+            post.RefSource  = request.CommentsUrl.Contains("news.ycombinator.com") 
+                ? "HN"
+                : request.CommentsUrl.Contains("reddit.com")
+                    ? "Reddit"
+                    : null;
+            if (post.RefSource != null)
+            {
+                post.RefUrn = $"urn:{post.RefSource.ToLower()}:post:{request.Id}";
+            }
+        }
 
         if (request.Sentiment != null)
         {
