@@ -75,7 +75,7 @@ public class CreatePost : IReturn<CreatePostResponse>, IPost
     public string RefUrn { get; set; }
 
     [IgnoreDataMember]
-    public int? Points { get; set; }
+    public int? PointsModifier { get; set; }
 }
 
 public class CreatePostResponse

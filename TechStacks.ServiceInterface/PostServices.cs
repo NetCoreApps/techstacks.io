@@ -56,7 +56,7 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             Url = request.Url,
             Content = request.Summary,
             TechnologyIds = techIds.ToArray(),
-            Points = request.Points > 0 ? request.Points : 1,
+            PointsModifier = request.Points > 0 ? request.Points : 1,
         };
 
         if (request.Sentiment != null)
@@ -132,7 +132,8 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
         post.CreatedBy = post.ModifiedBy = user.UserName;
         post.UserId = user.UserAuthId.ToInt();
         post.UpVotes = 0;
-        post.Points = request.Points ?? 1;
+        post.Points = 1;
+        post.PointsModifier = request.PointsModifier ?? 0;
         post.ContentHtml = Markdown.Transform(post.Content);
         post.Rank = 0;
 
