@@ -25,6 +25,9 @@ export default function PostDetailClient() {
   const [replyToId, setReplyToId] = useState<number | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [upVotedPostIds, setUpVotedPostIds] = useState<number[]>([]);
+  const [downVotedPostIds, setDownVotedPostIds] = useState<number[]>([]);
+  const [localPostPoints, setLocalPostPoints] = useState<number | null>(null);
   const [upVotedCommentIds, setUpVotedCommentIds] = useState<number[]>([]);
   const [downVotedCommentIds, setDownVotedCommentIds] = useState<number[]>([]);
   const [localCommentPoints, setLocalCommentPoints] = useState<Record<number, number>>({});
@@ -49,14 +52,19 @@ export default function PostDetailClient() {
         setPost(response.post);
         setComments(response.comments || []);
 
-        // Load user's comment votes if authenticated
+        // Load user's votes if authenticated
         if (isAuthenticated) {
           try {
-            const votes = await gateway.getUserPostCommentVotes(postId);
+            const [votes, activity] = await Promise.all([
+              gateway.getUserPostCommentVotes(postId),
+              gateway.getUserPostActivity(),
+            ]);
             setUpVotedCommentIds(votes.upVotedCommentIds || []);
             setDownVotedCommentIds(votes.downVotedCommentIds || []);
+            setUpVotedPostIds(activity.upVotedPostIds || []);
+            setDownVotedPostIds(activity.downVotedPostIds || []);
           } catch (err) {
-            console.error('Failed to load comment votes:', err);
+            console.error('Failed to load votes:', err);
           }
         }
       } catch (err) {
@@ -69,6 +77,47 @@ export default function PostDetailClient() {
 
     loadPost();
   }, [postId, isAuthenticated]);
+
+  const handlePostVote = async (weight: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+
+    try {
+      const currentUpVoted = upVotedPostIds.includes(postId);
+      const currentDownVoted = downVotedPostIds.includes(postId);
+      const currentPoints = localPostPoints ?? post?.points ?? 0;
+
+      let newWeight = weight;
+      let pointsDelta = 0;
+
+      if (weight === 1) {
+        if (currentUpVoted) {
+          newWeight = 0;
+          pointsDelta = -1;
+          setUpVotedPostIds(prev => prev.filter(id => id !== postId));
+        } else {
+          pointsDelta = currentDownVoted ? 2 : 1;
+          setUpVotedPostIds(prev => [...prev, postId]);
+          setDownVotedPostIds(prev => prev.filter(id => id !== postId));
+        }
+      } else if (weight === -1) {
+        if (currentDownVoted) {
+          newWeight = 0;
+          pointsDelta = 1;
+          setDownVotedPostIds(prev => prev.filter(id => id !== postId));
+        } else {
+          pointsDelta = currentUpVoted ? -2 : -1;
+          setDownVotedPostIds(prev => [...prev, postId]);
+          setUpVotedPostIds(prev => prev.filter(id => id !== postId));
+        }
+      }
+
+      setLocalPostPoints(currentPoints + pointsDelta);
+      await gateway.votePost(postId, newWeight);
+    } catch (err) {
+      console.error('Failed to vote on post:', err);
+    }
+  };
 
   const handleCommentVote = async (commentId: number, weight: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -391,27 +440,60 @@ export default function PostDetailClient() {
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-6">
       {/* Post Card */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="mb-4">
-          <div className="flex items-start justify-between mb-4">
-            <h1 className="text-3xl font-normal flex-1">
-              {post.url ? (
-                <a href={post.url} className="text-blue-600 hover:underline">
-                  {post.title}
-                </a>
-              ) : (
-                post.title
-              )}
-            </h1>
-            {canEditPost(post) && (
-              <Link href={routes.postEdit(postId, slug)}>
-                <PrimaryButton className="ml-4">
-                  Edit
-                </PrimaryButton>
-              </Link>
-            )}
+        <div className="flex gap-4 mb-4">
+          {/* Post Voting */}
+          <div className="flex flex-col items-center text-gray-500 -mt-1">
+            <button type="button"
+              onClick={(e) => handlePostVote(1, e)}
+              className={`text-2xl leading-none p-1 transition-colors ${
+                upVotedPostIds.includes(postId)
+                  ? 'text-green-600'
+                  : 'hover:text-green-600'
+              }`}
+              title={upVotedPostIds.includes(postId) ? 'Remove upvote' : 'Upvote'}
+              disabled={!isAuthenticated}
+            >
+              ▲
+            </button>
+            <span className="font-semibold text-base">
+              {localPostPoints ?? post.points ?? 0}
+            </span>
+            <button type="button"
+              onClick={(e) => handlePostVote(-1, e)}
+              className={`text-2xl leading-none p-1 transition-colors ${
+                downVotedPostIds.includes(postId)
+                  ? 'text-red-600'
+                  : 'hover:text-red-600'
+              }`}
+              title={downVotedPostIds.includes(postId) ? 'Remove downvote' : 'Downvote'}
+              disabled={!isAuthenticated}
+            >
+              ▼
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
+          {/* Post Header */}
+          <div className="flex-1">
+            <div className="flex items-start justify-between mb-4">
+              <h1 className="text-3xl font-normal flex-1">
+                {post.url ? (
+                  <a href={post.url} className="text-blue-600 hover:underline">
+                    {post.title}
+                  </a>
+                ) : (
+                  post.title
+                )}
+              </h1>
+              {canEditPost(post) && (
+                <Link href={routes.postEdit(postId, slug)}>
+                  <PrimaryButton className="ml-4">
+                    Edit
+                  </PrimaryButton>
+                </Link>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
             {post.userProfileUrl && (
               <img
                 src={post.userProfileUrl}
@@ -448,6 +530,7 @@ export default function PostDetailClient() {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
