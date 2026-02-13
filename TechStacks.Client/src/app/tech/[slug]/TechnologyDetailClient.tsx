@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import routes from '@/lib/utils/routes';
@@ -24,22 +24,57 @@ export default function TechnologyDetailClient() {
   const [tech, setTech] = useState<any>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState<string>('');
   const [showAllStacks, setShowAllStacks] = useState(false);
   const { isAuthenticated } = useAuth();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 10;
 
-  const loadPosts = async (techId: number, postType: string) => {
+  const loadPosts = async (techId: number, postType: string, skip = 0) => {
     const query = new QueryPosts({
       anyTechnologyIds: [techId],
       orderBy: '-id',
-      take: 10,
+      take: PAGE_SIZE,
+      skip,
     });
     if (postType) {
       query.types = [postType];
     }
     const response = await gateway.queryPosts(query);
-    setPosts(response.results);
+    if (skip === 0) {
+      setPosts(response.results);
+    } else {
+      setPosts(prev => [...prev, ...response.results]);
+    }
+    setHasMore(skip + response.results.length < (response.total ?? 0));
   };
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !tech?.id) return;
+    setLoadingMore(true);
+    try {
+      await loadPosts(tech.id, selectedPostType, posts.length);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, tech?.id, selectedPostType, posts.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   useEffect(() => {
     const loadTech = async () => {
@@ -205,6 +240,12 @@ export default function TechnologyDetailClient() {
                 </div>
               </div>
               <PostsList posts={posts} />
+              {loadingMore && (
+                <div className="flex justify-center py-4">
+                  <div className="text-gray-500">Loading more posts...</div>
+                </div>
+              )}
+              <div ref={sentinelRef} />
             </div>
           )}
         </div>
