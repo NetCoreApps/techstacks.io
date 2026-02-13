@@ -26,11 +26,14 @@ interface AppState {
   // User data
   favoriteTechnologyIds: number[];
   favoriteTechStackIds: number[];
+  watchedTechIds: number[];
+  watchedTechNames: Record<number, string>;
   userVotes: Record<number, number>; // postId -> weight
   userCommentVotes: Record<number, number>; // commentId -> weight
 
   // Actions
   initialize: () => Promise<void>;
+  toggleWatchedTech: (id: number, name?: string) => void;
   loadTechnology: (slug: string) => Promise<any>;
   loadTechnologyStack: (slug: string) => Promise<any>;
   addFavoriteTechnology: (id: number) => Promise<void>;
@@ -55,6 +58,8 @@ export const useAppStore = create<AppState>()(
       organizations: [],
       favoriteTechnologyIds: [],
       favoriteTechStackIds: [],
+      watchedTechIds: [],
+      watchedTechNames: {},
       userVotes: {},
       userCommentVotes: {},
 
@@ -150,6 +155,25 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
+      // Toggle watched technology
+      toggleWatchedTech: (id: number, name?: string) => {
+        set((state) => {
+          const removing = state.watchedTechIds.includes(id);
+          const newNames = { ...state.watchedTechNames };
+          if (removing) {
+            delete newNames[id];
+          } else if (name) {
+            newNames[id] = name;
+          }
+          return {
+            watchedTechIds: removing
+              ? state.watchedTechIds.filter(tid => tid !== id)
+              : [...state.watchedTechIds, id],
+            watchedTechNames: newNames,
+          };
+        });
+      },
+
       // Vote on post
       votePost: async (id: number, weight: number) => {
         await gateway.votePost(id, weight);
@@ -172,7 +196,9 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         sessionInfo: state.sessionInfo,
         favoriteTechnologyIds: state.favoriteTechnologyIds,
-        favoriteTechStackIds: state.favoriteTechStackIds
+        favoriteTechStackIds: state.favoriteTechStackIds,
+        watchedTechIds: state.watchedTechIds,
+        watchedTechNames: state.watchedTechNames
       })
     }
   )

@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, PrimaryButton, SecondaryButton } from '@servicestack/react';
 import { PostsList } from '@/components/posts/PostsList';
 import { PostForm } from '@/components/forms/PostForm';
+import { WatchListDialog } from '@/components/WatchListDialog';
 import * as gateway from '@/lib/api/gateway';
+import { useAppStore } from '@/lib/stores/useAppStore';
 import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 
 const POSTS_PER_PAGE = 25;
@@ -30,7 +32,36 @@ function HomePageContent() {
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [watchDialogOpen, setWatchDialogOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const watchedTechIds = useAppStore((s) => s.watchedTechIds);
+  const watchedTechNames = useAppStore((s) => s.watchedTechNames);
+  const toggleWatchedTech = useAppStore((s) => s.toggleWatchedTech);
+  const [watchEnabled, setWatchEnabled] = useState(true);
+
+  // Backfill missing tech names for existing watched IDs
+  useEffect(() => {
+    const missingIds = watchedTechIds.filter(id => !watchedTechNames[id]);
+    if (missingIds.length === 0) return;
+    gateway.getTechnologyTiers().then((allTechs) => {
+      if (!allTechs) return;
+      const store = useAppStore.getState();
+      const updated = { ...store.watchedTechNames };
+      let changed = false;
+      for (const tech of allTechs as { id: number; name: string }[]) {
+        if (missingIds.includes(tech.id) && !updated[tech.id]) {
+          updated[tech.id] = tech.name;
+          changed = true;
+        }
+      }
+      if (changed) {
+        useAppStore.setState({ watchedTechNames: updated });
+      }
+    }).catch(console.error);
+  }, [watchedTechIds, watchedTechNames]);
+
+  // Only apply watch filter when enabled
+  const activeWatched = watchEnabled ? watchedTechIds : [];
 
   // Read initial state from URL
   useEffect(() => {
@@ -61,13 +92,15 @@ function HomePageContent() {
     router.replace(queryString ? `/?${queryString}` : '/');
   }, [router]);
 
-  const loadPosts = useCallback(async (techId?: number | null, page: number = 1, postType: string = '') => {
+  const loadPosts = useCallback(async (techId?: number | null, page: number = 1, postType: string = '', watched: number[] = []) => {
     try {
       setLoading(true);
       const skip = (page - 1) * POSTS_PER_PAGE;
       const query = new QueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip });
       if (techId) {
         query.anyTechnologyIds = [techId];
+      } else if (watched.length > 0) {
+        query.anyTechnologyIds = watched;
       }
       if (postType) {
         query.types = [postType];
@@ -88,7 +121,7 @@ function HomePageContent() {
 
   const loadTechnologies = async () => {
     try {
-      const techs = await gateway.getPopularTechnologies(30);
+      const techs = await gateway.getPopularTechnologies(100);
       setTechnologies(techs || []);
     } catch (err: any) {
       console.error('Failed to load technologies:', err);
@@ -102,7 +135,7 @@ function HomePageContent() {
     const techId = searchParams.get('techId');
     const postType = searchParams.get('type') || '';
 
-    loadPosts(techId ? parseInt(techId, 10) : null, page, postType);
+    loadPosts(techId ? parseInt(techId, 10) : null, page, postType, activeWatched);
     loadTechnologies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -111,15 +144,14 @@ function HomePageContent() {
     setShowPostForm(false);
     setSelectedTechId(null);
     setCurrentPage(1);
-    loadPosts(null, 1, selectedPostType);
+    loadPosts(null, 1, selectedPostType, activeWatched);
   };
 
   const handleTagClick = (techId: number) => {
     if (selectedTechId === techId) {
-      // Deselect if clicking the same tag
       setSelectedTechId(null);
       setCurrentPage(1);
-      loadPosts(null, 1, selectedPostType);
+      loadPosts(null, 1, selectedPostType, activeWatched);
     } else {
       setSelectedTechId(techId);
       setCurrentPage(1);
@@ -127,14 +159,36 @@ function HomePageContent() {
     }
   };
 
+  const handleToggleWatchEnabled = () => {
+    const next = !watchEnabled;
+    setWatchEnabled(next);
+    if (!selectedTechId) {
+      setCurrentPage(1);
+      loadPosts(null, 1, selectedPostType, next ? watchedTechIds : []);
+    }
+  };
+
+  const handleWatchDialogClose = (open: boolean) => {
+    const wasOpen = watchDialogOpen;
+    setWatchDialogOpen(open);
+    // When closing the dialog, refresh posts with the (possibly changed) watch list
+    if (wasOpen && !open && !selectedTechId) {
+      setWatchEnabled(true);
+      setCurrentPage(1);
+      // Read directly from store since state may be stale
+      const currentWatched = useAppStore.getState().watchedTechIds;
+      loadPosts(null, 1, selectedPostType, currentWatched);
+    }
+  };
+
   const handlePostTypeChange = (postType: string) => {
     setSelectedPostType(postType);
     setCurrentPage(1);
-    loadPosts(selectedTechId, 1, postType);
+    loadPosts(selectedTechId, 1, postType, activeWatched);
   };
 
   const handlePageChange = (page: number) => {
-    loadPosts(selectedTechId, page, selectedPostType);
+    loadPosts(selectedTechId, page, selectedPostType, activeWatched);
     // Scroll to top of posts
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -145,7 +199,31 @@ function HomePageContent() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-5xl mx-auto">
         <div className="relative flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Latest News</h1>
+          <div className="w-full flex items-center justify-between pr-4">
+            <h1 className="text-3xl font-bold text-gray-900">Latest News</h1>
+            <div>
+              {watchedTechIds.length > 0 && (
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <button type="button"
+                    onClick={() => { if (watchEnabled) handleToggleWatchEnabled(); }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      !watchEnabled ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button type="button"
+                    onClick={() => { if (!watchEnabled) handleToggleWatchEnabled(); }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      watchEnabled ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Watch List
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             {/* Post Type Filter */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
@@ -289,6 +367,51 @@ function HomePageContent() {
                 )}
               </div>
               <div className="space-y-4">
+                {/* Watch List */}
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase">
+                      Watch List
+                    </h3>
+                    <button type="button"
+                      onClick={() => setWatchDialogOpen(true)}
+                      className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                    >
+                      {watchedTechIds.length > 0 ? 'Edit' : '+ Add'}
+                    </button>
+                  </div>
+                  {watchedTechIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {watchedTechIds.map((id) => {
+                        const name = watchedTechNames[id] || technologies.find(t => t.id === id)?.name || `#${id}`;
+                        return (
+                          <span key={id} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            watchEnabled ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            <button type="button"
+                              onClick={() => handleTagClick(id)}
+                              className="hover:underline"
+                            >
+                              {name}
+                            </button>
+                            <button type="button"
+                              onClick={() => toggleWatchedTech(id)}
+                              className={watchEnabled ? 'text-indigo-400 hover:text-indigo-700' : 'text-gray-400 hover:text-gray-600'}
+                              title={`Remove ${name}`}
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Add technologies to filter posts by your interests.
+                    </p>
+                  )}
+                </div>
+
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
                     Sponsored by:
@@ -304,7 +427,7 @@ function HomePageContent() {
 
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-                    Popular Tags
+                    Popular Technologies
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {technologies.map((tech) => (
@@ -322,16 +445,6 @@ function HomePageContent() {
                       </button>
                     ))}
                   </div>
-                  {selectedTechId && (
-                    <div className="mt-4 flex justify-center">
-                      <button type="button"
-                      onClick={() => handleTagClick(selectedTechId)}
-                      className="text-sm text-pink-600 hover:text-pink-700 font-medium"
-                    >
-                      show all posts
-                    </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -344,6 +457,8 @@ function HomePageContent() {
           </div>
         )}
       </div>
+
+      <WatchListDialog open={watchDialogOpen} onOpenChange={handleWatchDialogClose} />
     </div>
   );
 }

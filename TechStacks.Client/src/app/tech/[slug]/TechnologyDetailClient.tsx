@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import routes from '@/lib/utils/routes';
 import * as gateway from '@/lib/api/gateway';
 import { useAuth, PrimaryButton } from '@servicestack/react';
+import { useAppStore } from '@/lib/stores/useAppStore';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { PostsList } from '@/components/posts/PostsList';
 import { Post, PostType, QueryPosts } from '@/shared/dtos';
@@ -29,6 +30,9 @@ export default function TechnologyDetailClient() {
   const [selectedPostType, setSelectedPostType] = useState<string>('');
   const [showAllStacks, setShowAllStacks] = useState(false);
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const watchedTechIds = useAppStore((s) => s.watchedTechIds);
+  const toggleWatchedTech = useAppStore((s) => s.toggleWatchedTech);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 10;
 
@@ -152,6 +156,26 @@ export default function TechnologyDetailClient() {
             </div>
             <div className="flex gap-2">
               <FavoriteButton type="technology" id={tech.id} />
+              {!watchedTechIds.includes(tech.id) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleWatchedTech(tech.id);
+                    router.push('/');
+                  }}
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition-colors"
+                >
+                  + Watch
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => router.push('/')}
+                  className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200"
+                >
+                  Watching
+                </button>
+              )}
               {isAuthenticated && (
                 <PrimaryButton
                   href={`/tech/${slug}/edit`}>

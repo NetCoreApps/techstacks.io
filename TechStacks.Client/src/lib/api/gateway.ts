@@ -138,7 +138,7 @@ export const getTechnologyTiers = async () => {
 
 export const getPopularTechnologies = async (take: number = 50) => {
   const request = new dtos.QueryTechnology({
-    orderBy: '-favCount,-viewCount',
+    orderBy: '-viewCount,-favCount',
     fields: 'id,name,slug,logoUrl,favCount,viewCount',
     take,
   });
