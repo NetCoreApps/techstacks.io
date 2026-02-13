@@ -221,7 +221,7 @@ export default function PostDetailClient() {
         <div className="flex gap-3">
           {/* Voting */}
           <div className="flex flex-col items-center space-y-1 text-gray-500">
-            <button
+            <button type="button"
               onClick={(e) => handleCommentVote(comment.id, 1, e)}
               className={`text-xl transition-colors ${
                 isUpVoted
@@ -234,7 +234,7 @@ export default function PostDetailClient() {
               ▲
             </button>
             <span className="font-semibold text-sm">{displayPoints}</span>
-            <button
+            <button type="button"
               onClick={(e) => handleCommentVote(comment.id, -1, e)}
               className={`text-xl transition-colors ${
                 isDownVoted
