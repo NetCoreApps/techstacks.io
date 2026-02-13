@@ -83,6 +83,9 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
     private async Task InsertCommentTreeAsync(long postId, HackerNewsComment comment, long? replyId)
     {
         var now = DateTime.Now;
+        var created = comment.Time > 0
+            ? DateTimeOffset.FromUnixTimeSeconds(comment.Time).DateTime
+            : now;
         var postComment = new PostComment
         {
             PostId = postId,
@@ -91,10 +94,8 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             ContentHtml = Markdown.Transform(comment.Text ?? ""),
             UserId = 2116, // News
             CreatedBy = comment.By ?? "unknown",
-            Created = comment.Time > 0
-                ? DateTimeOffset.FromUnixTimeSeconds(comment.Time).DateTime
-                : now,
-            Modified = now,
+            Created = created,
+            Modified = created,
             UpVotes = 0,
             RefId = comment.Id,
             RefSource = "HackerNews",
