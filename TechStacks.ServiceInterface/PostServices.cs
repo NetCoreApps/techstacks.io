@@ -145,8 +145,8 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
         post.CreatedBy = post.ModifiedBy = user.UserName;
         post.UserId = user.UserAuthId.ToInt();
         post.UpVotes = 0;
-        post.Points = 1;
         post.PointsModifier = request.PointsModifier ?? 0;
+        post.Points = 1 + post.PointsModifier;
         post.ContentHtml = Markdown.Transform(post.Content);
         post.Rank = 0;
 
