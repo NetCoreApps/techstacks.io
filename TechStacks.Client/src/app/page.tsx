@@ -37,7 +37,13 @@ function HomePageContent() {
   const watchedTechIds = useAppStore((s) => s.watchedTechIds);
   const watchedTechNames = useAppStore((s) => s.watchedTechNames);
   const toggleWatchedTech = useAppStore((s) => s.toggleWatchedTech);
-  const [watchEnabled, setWatchEnabled] = useState(true);
+  const [watchEnabled, setWatchEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('watchEnabled');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
 
   // Backfill missing tech names for existing watched IDs
   useEffect(() => {
@@ -151,6 +157,7 @@ function HomePageContent() {
   const handleToggleWatchEnabled = () => {
     const next = !watchEnabled;
     setWatchEnabled(next);
+    localStorage.setItem('watchEnabled', String(next));
     setCurrentPage(1);
     loadPosts(1, selectedPostType, next ? watchedTechIds : []);
   };
@@ -161,6 +168,7 @@ function HomePageContent() {
     // When closing the dialog, refresh posts with the (possibly changed) watch list
     if (wasOpen && !open) {
       setWatchEnabled(true);
+      localStorage.setItem('watchEnabled', 'true');
       setCurrentPage(1);
       // Read directly from store since state may be stale
       const currentWatched = useAppStore.getState().watchedTechIds;
