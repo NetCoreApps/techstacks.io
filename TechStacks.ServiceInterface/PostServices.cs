@@ -21,7 +21,7 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
         public string Slug { get; set; }
     }
 
-    public async Task<CreatePostResponse> Post(ImportHackerNewsPost request)
+    public async Task<CreatePostResponse> Post(ImportNewsPost request)
     {
         string SanitizeName(string tech) => tech.GenerateSlug()!.Replace("-", "").Trim();
 
@@ -56,6 +56,7 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             Url = request.Url,
             Content = request.Summary,
             TechnologyIds = techIds.ToArray(),
+            Points = request.Points > 0 ? request.Points : 1,
         };
 
         if (request.Sentiment != null)
@@ -126,12 +127,12 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             throw new ArgumentException($"URL already used in unarchived /posts/{existingPost.Id}/{existingPost.Slug}", nameof(request.Url));
             
         var post = request.ConvertTo<Post>();
-        post.Slug = request.Title.GenerateSlug();
+        post.Slug = request.Title.GenerateSlug() ?? "";
         post.Created = post.Modified = DateTime.Now;
         post.CreatedBy = post.ModifiedBy = user.UserName;
         post.UserId = user.UserAuthId.ToInt();
         post.UpVotes = 0;
-        post.Points = 1;
+        post.Points = request.Points ?? 1;
         post.ContentHtml = Markdown.Transform(post.Content);
         post.Rank = 0;
 

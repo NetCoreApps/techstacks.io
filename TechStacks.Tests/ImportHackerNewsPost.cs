@@ -103,7 +103,7 @@ public class ImportHackerNewsPost : DbTasksBase
     [Test]
     public void Import_HackerNewsPost()
     {
-        var post = PostJson.FromJson<ServiceModel.ImportHackerNewsPost>();
+        var post = PostJson.FromJson<ServiceModel.ImportNewsPost>();
 
         post.PrintDump();
     }

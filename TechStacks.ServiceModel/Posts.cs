@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using ServiceStack;
 using ServiceStack.DataAnnotations;
 using TechStacks.ServiceModel.Types;
@@ -72,6 +73,9 @@ public class CreatePost : IReturn<CreatePostResponse>, IPost
     public long? RefId { get; set; }
     public string RefSource { get; set; }
     public string RefUrn { get; set; }
+
+    [IgnoreDataMember]
+    public int? Points { get; set; }
 }
 
 public class CreatePostResponse

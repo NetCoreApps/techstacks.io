@@ -6,7 +6,7 @@ using TechStacks.ServiceModel.Types;
 namespace TechStacks.ServiceModel;
 
 [SystemJson(UseSystemJson.Never)]
-public class ImportHackerNewsPost : IReturn<CreatePostResponse>
+public class ImportNewsPost : IReturn<CreatePostResponse>
 {
     public long Id { get; set; }
     [ValidateNotEmpty]
