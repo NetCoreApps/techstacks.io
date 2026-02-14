@@ -128,14 +128,34 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
 
     public async Task<CreatePostResponse> Post(CreatePost request)
     {
-        var titleLower = request.Title.ToLower();
+        var titleLower = request.Title.ToLower().Replace("-", " ").Replace("_", " ").Replace(".", " ").Trim();
         if ((titleLower.Contains("crypto") && !titleLower.Contains("cryptography") && !titleLower.Contains("cryptographic")) 
+            || titleLower.Contains("rummy")
+            || titleLower.Contains("1win")
+            || titleLower.Contains("ppc")
+            || titleLower.Contains("bet365")
+            || titleLower.Contains("fantasy sport")
+            || titleLower.Contains("wallet")
+            || titleLower.Contains("meme coin")
+            || titleLower.Contains("defi ")
+            || titleLower.Contains("sports book")
+            || titleLower.Contains("prediction bot")
+            || titleLower.Contains("bot development")
+            || titleLower.Contains("trading bots")
             || titleLower.Contains("blockchain")
+            || titleLower.Contains("poker") 
+            || titleLower.Contains("betting") 
+            || titleLower.Contains("cash app") 
+            || titleLower.Contains("clone app") 
+            || titleLower.Contains("clone script") 
+            || titleLower.Contains("clone software") 
+            || titleLower.Contains("white label") 
+            || titleLower.Contains("marketing services") 
             || titleLower.Contains("gambling") 
             || titleLower.Contains("casino"))
         {
             log.LogInformation("Banning post with title: {Title}", request.Title);
-            throw new ArgumentException("Crypto and Gaming related content is not allowed", nameof(request.Title));
+            throw new ArgumentException("Crypto, Gaming & other Scam related content is not allowed.", nameof(request.Title));
         }
 
         var user = GetUser();
