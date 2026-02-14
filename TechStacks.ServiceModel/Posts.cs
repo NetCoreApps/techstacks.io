@@ -47,6 +47,7 @@ public class CreatePost : IReturn<CreatePostResponse>, IPost
 
     public int CategoryId { get; set; }
 
+    [ValidateNotEmpty]
     public string Title { get; set; }
 
     [Index]

@@ -128,6 +128,16 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
 
     public async Task<CreatePostResponse> Post(CreatePost request)
     {
+        var titleLower = request.Title.ToLower();
+        if ((titleLower.Contains("crypto") && !titleLower.Contains("cryptography") && !titleLower.Contains("cryptographic")) 
+            || titleLower.Contains("blockchain")
+            || titleLower.Contains("gambling") 
+            || titleLower.Contains("casino"))
+        {
+            log.LogInformation("Banning post with title: {Title}", request.Title);
+            throw new ArgumentException("Crypto and Gaming related content is not allowed", nameof(request.Title));
+        }
+
         var user = GetUser();
         AssertCanPostToOrganization(Db, request.OrganizationId, user, out var org, out var orgMember);
         AssertCanPostTypeToOrganization(request.Type, org, orgMember, user);
