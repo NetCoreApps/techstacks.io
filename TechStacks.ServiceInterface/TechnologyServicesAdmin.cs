@@ -5,12 +5,22 @@ using ServiceStack.OrmLite;
 using ServiceStack.Configuration;
 using TechStacks.ServiceModel;
 using TechStacks.ServiceModel.Types;
+using Microsoft.Extensions.Logging;
 
 namespace TechStacks.ServiceInterface;
 
 [Authenticate]
-public class TechnologyServicesAdmin(IConfiguration configuration) : Service
+public class TechnologyServicesAdmin(ILogger<TechnologyServicesAdmin> log, IConfiguration configuration) : Service
 {
+    public async Task<object> Post(SyncStats request)
+    {
+        log.LogInformation("Syncing stats...");
+
+        PostServicesBase.PeriodicUpdateTableCaches(Db);
+
+        return new StringResponse { Result = "OK" };
+    }
+
     public object Post(CreateTechnology request)
     {
         var slug = request.Slug;

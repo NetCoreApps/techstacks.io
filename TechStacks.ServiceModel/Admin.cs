@@ -57,3 +57,10 @@ public class HourlyTaskResponse : IMeta
 [Restrict(VisibleInternalOnly = true)]
 [Route("/cache/clear")]
 public class ClearCache : IReturn<string>, IGet {}
+
+[ValidateIsAdmin]
+[Route("/tasks/syncstats")]
+public class SyncStats : IPost, IReturn<StringResponse>
+{
+}
+
