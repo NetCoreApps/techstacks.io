@@ -130,7 +130,7 @@ function HomePageContent() {
 
   const loadTechnologies = async () => {
     try {
-      const techs = await gateway.getPopularTechnologies(100);
+      const techs = await gateway.getPopularTechnologies(30);
       setTechnologies(techs || []);
     } catch (err: any) {
       console.error('Failed to load technologies:', err);
@@ -404,19 +404,6 @@ function HomePageContent() {
 
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-                    Sponsored by:
-                  </h3>
-                  <a href="https://servicestack.net" target="_blank" rel="noopener noreferrer">
-                    <img
-                      src="/img/logo-text.svg"
-                      alt="ServiceStack"
-                      className="w-full"
-                    />
-                  </a>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
                     Popular Technologies
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -432,6 +419,20 @@ function HomePageContent() {
                     ))}
                   </div>
                 </div>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-4">
+                    Sponsored by:
+                  </h3>
+                  <a href="https://servicestack.net" target="_blank" rel="noopener noreferrer">
+                    <img
+                      src="/img/logo-text.svg"
+                      alt="ServiceStack"
+                      className="w-full"
+                    />
+                  </a>
+                </div>
+
               </div>
             </div>
           </>
