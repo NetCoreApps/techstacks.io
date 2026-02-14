@@ -84,7 +84,7 @@ public class PostServicesBase(IMarkdownProvider markdown) : Service
                 where deleted is null");
 
         db.ExecuteSql(@"update technology set 
-                posts_count = (select count(*) from post where technology.id = ANY (post.technology_ids) and post.deleted is null),");
+                posts_count = (select count(*) from post where technology.id = ANY (post.technology_ids) and post.deleted is null)");
 
         db.ExecuteSql(@"update organization set  
                 posts_count = (select count(*) from post p where (organization_id = organization.id or (organization.ref_source = 'Technology' and p.technology_ids @> ARRAY[organization.ref_id]::int[])) and p.deleted is null),
