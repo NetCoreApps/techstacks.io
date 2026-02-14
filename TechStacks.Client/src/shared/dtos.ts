@@ -1,6 +1,6 @@
 /* Options:
-Date: 2025-11-19 10:21:19
-Version: 8.101
+Date: 2026-02-14 21:34:33
+Version: 10.06
 Tip: To override a DTO option, remove "//" prefix before updating
 BaseUrl: https://localhost:5001
 
@@ -15,6 +15,7 @@ BaseUrl: https://localhost:5001
 //DefaultImports: 
 */
 
+// @ts-nocheck
 
 export interface IReturn<T>
 {
@@ -96,14 +97,14 @@ export enum PostType
 
 export class Post
 {
-    public id?: number;
-    public organizationId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public userId: number;
     // @Ignore()
     public userProfileUrl: string;
 
-    public type?: PostType;
-    public categoryId?: number;
+    public type: PostType;
+    public categoryId: number;
     public title: string;
     public slug: string;
     public url: string;
@@ -121,21 +122,21 @@ export class Post
     public location: string;
     public metaType: string;
     public meta: string;
-    public approved?: boolean;
-    public upVotes?: number;
-    public downVotes?: number;
-    public points?: number;
-    public views?: number;
-    public favorites?: number;
-    public subscribers?: number;
-    public replyCount?: number;
-    public commentsCount?: number;
-    public wordCount?: number;
-    public reportCount?: number;
-    public linksCount?: number;
-    public linkedToCount?: number;
-    public score?: number;
-    public rank?: number;
+    public approved: boolean;
+    public upVotes: number;
+    public downVotes: number;
+    public points: number;
+    public views: number;
+    public favorites: number;
+    public subscribers: number;
+    public replyCount: number;
+    public commentsCount: number;
+    public wordCount: number;
+    public reportCount: number;
+    public linksCount: number;
+    public linkedToCount: number;
+    public score: number;
+    public rank: number;
     public labels?: string[];
     public refUserIds?: number[];
     public refLinks?: string[];
@@ -152,17 +153,28 @@ export class Post
     public status: string;
     public statusDate?: string;
     public statusBy: string;
-    public archived?: boolean;
+    public archived: boolean;
     public bumped?: string;
-    public created?: string;
+    public created: string;
     public createdBy: string;
-    public modified?: string;
+    public modified: string;
     public modifiedBy: string;
     public refId?: number;
     public refSource: string;
     public refUrn: string;
 
     public constructor(init?: Partial<Post>) { (Object as any).assign(this, init); }
+}
+
+export class HackerNewsComment
+{
+    public id: number;
+    public by?: string;
+    public text?: string;
+    public time: number;
+    public children?: HackerNewsComment[];
+
+    public constructor(init?: Partial<HackerNewsComment>) { (Object as any).assign(this, init); }
 }
 
 export enum ReportAction
@@ -210,27 +222,28 @@ export enum TechnologyTier
 
 export class TechnologyBase
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public vendorName: string;
     public vendorUrl: string;
     public productUrl: string;
     public logoUrl: string;
     public description: string;
-    public created?: string;
+    public created: string;
     public createdBy: string;
-    public lastModified?: string;
+    public lastModified: string;
     public lastModifiedBy: string;
     public ownerId: string;
     public slug: string;
-    public logoApproved?: boolean;
-    public isLocked?: boolean;
-    public tier?: TechnologyTier;
+    public logoApproved: boolean;
+    public isLocked: boolean;
+    public tier: TechnologyTier;
     public lastStatusUpdate?: string;
     public organizationId?: number;
     public commentsPostId?: number;
-    public viewCount?: number;
-    public favCount?: number;
+    public viewCount: number;
+    public favCount: number;
+    public postsCount: number;
 
     public constructor(init?: Partial<TechnologyBase>) { (Object as any).assign(this, init); }
 }
@@ -264,6 +277,7 @@ export class TechnologyView
     public commentsPostId?: number;
     public viewCount?: number;
     public favCount?: number;
+    public postsCount?: number;
 
     public constructor(init?: Partial<TechnologyView>) { (Object as any).assign(this, init); }
 }
@@ -274,17 +288,17 @@ export interface IRegisterStats
 
 export class TechnologyStackBase
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public vendorName: string;
     public description: string;
     public appUrl: string;
     public screenshotUrl: string;
-    public created?: string;
+    public created: string;
     public createdBy: string;
-    public lastModified?: string;
+    public lastModified: string;
     public lastModifiedBy: string;
-    public isLocked?: boolean;
+    public isLocked: boolean;
     public ownerId: string;
     public slug: string;
     // @StringLength(2147483647)
@@ -296,8 +310,8 @@ export class TechnologyStackBase
     public lastStatusUpdate?: string;
     public organizationId?: number;
     public commentsPostId?: number;
-    public viewCount?: number;
-    public favCount?: number;
+    public viewCount: number;
+    public favCount: number;
 
     public constructor(init?: Partial<TechnologyStackBase>) { (Object as any).assign(this, init); }
 }
@@ -336,9 +350,9 @@ export class TechnologyStackView
 
 export class PostComment
 {
-    public id?: number;
-    public postId?: number;
-    public userId?: number;
+    public id: number;
+    public postId: number;
+    public userId: number;
     // @Ignore()
     public userProfileUrl: string;
 
@@ -349,17 +363,17 @@ export class PostComment
     // @StringLength(2147483647)
     public contentHtml: string;
 
-    public score?: number;
-    public rank?: number;
-    public upVotes?: number;
-    public downVotes?: number;
-    public favorites?: number;
-    public wordCount?: number;
-    public reportCount?: number;
+    public score: number;
+    public rank: number;
+    public upVotes: number;
+    public downVotes: number;
+    public favorites: number;
+    public wordCount: number;
+    public reportCount: number;
     public deleted?: string;
     public hidden?: string;
-    public modified?: string;
-    public created?: string;
+    public modified: string;
+    public created: string;
     public createdBy: string;
     public refId?: number;
     public refSource: string;
@@ -409,7 +423,7 @@ export class ResponseStatus
 
 export class Organization
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public slug: string;
     public description: string;
@@ -426,17 +440,17 @@ export class Organization
     public defaultSubscriptionPostTypes: string[] = [];
     public postTypes: string[] = [];
     public moderatorPostTypes: string[] = [];
-    public deletePostsWithReportCount?: number;
+    public deletePostsWithReportCount: number;
     public disableInvites?: boolean;
-    public upVotes?: number;
-    public downVotes?: number;
-    public views?: number;
-    public favorites?: number;
-    public subscribers?: number;
-    public commentsCount?: number;
-    public postsCount?: number;
-    public score?: number;
-    public rank?: number;
+    public upVotes: number;
+    public downVotes: number;
+    public views: number;
+    public favorites: number;
+    public subscribers: number;
+    public commentsCount: number;
+    public postsCount: number;
+    public score: number;
+    public rank: number;
     public refId?: number;
     public refSource: string;
     public hidden?: string;
@@ -445,9 +459,9 @@ export class Organization
     public lockedBy: string;
     public deleted?: string;
     public deletedBy: string;
-    public created?: string;
+    public created: string;
     public createdBy: string;
-    public modified?: string;
+    public modified: string;
     public modifiedBy: string;
 
     public constructor(init?: Partial<Organization>) { (Object as any).assign(this, init); }
@@ -456,7 +470,7 @@ export class Organization
 export class OrganizationLabel
 {
     public slug: string;
-    public organizationId?: number;
+    public organizationId: number;
     public description: string;
     public color: string;
 
@@ -465,32 +479,32 @@ export class OrganizationLabel
 
 export class Category
 {
-    public id?: number;
-    public organizationId?: number;
+    public id: number;
+    public organizationId: number;
     public name: string;
     public slug: string;
     public description: string;
     public color: string;
     public technologyIds: number[] = [];
-    public commentsCount?: number;
-    public postsCount?: number;
-    public score?: number;
-    public rank?: number;
+    public commentsCount: number;
+    public postsCount: number;
+    public score: number;
+    public rank: number;
 
     public constructor(init?: Partial<Category>) { (Object as any).assign(this, init); }
 }
 
 export class OrganizationMember
 {
-    public id?: number;
-    public organizationId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public userId: number;
     public userName: string;
-    public isOwner?: boolean;
-    public isModerator?: boolean;
-    public denyAll?: boolean;
-    public denyPosts?: boolean;
-    public denyComments?: boolean;
+    public isOwner: boolean;
+    public isModerator: boolean;
+    public denyAll: boolean;
+    public denyPosts: boolean;
+    public denyComments: boolean;
     public notes: string;
 
     public constructor(init?: Partial<OrganizationMember>) { (Object as any).assign(this, init); }
@@ -498,9 +512,9 @@ export class OrganizationMember
 
 export class OrganizationMemberInvite
 {
-    public id?: number;
-    public organizationId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public userId: number;
     public userName: string;
     public dismissed?: string;
 
@@ -509,20 +523,20 @@ export class OrganizationMemberInvite
 
 export class PostReportInfo
 {
-    public id?: number;
-    public organizationId?: number;
-    public postId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public postId: number;
+    public userId: number;
     public userName: string;
-    public flagType?: FlagType;
+    public flagType: FlagType;
     public reportNotes: string;
-    public created?: string;
+    public created: string;
     public acknowledged?: string;
     public acknowledgedBy: string;
     public dismissed?: string;
     public dismissedBy: string;
     public title: string;
-    public reportCount?: number;
+    public reportCount: number;
     public createdBy: string;
 
     public constructor(init?: Partial<PostReportInfo>) { (Object as any).assign(this, init); }
@@ -530,21 +544,21 @@ export class PostReportInfo
 
 export class PostCommentReportInfo
 {
-    public id?: number;
-    public organizationId?: number;
-    public postId?: number;
-    public postCommentId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public postId: number;
+    public postCommentId: number;
+    public userId: number;
     public userName: string;
-    public flagType?: FlagType;
+    public flagType: FlagType;
     public reportNotes: string;
-    public created?: string;
+    public created: string;
     public acknowledged?: string;
     public acknowledgedBy: string;
     public dismissed?: string;
     public dismissedBy: string;
     public contentHtml: string;
-    public reportCount?: number;
+    public reportCount: number;
     public createdBy: string;
 
     public constructor(init?: Partial<PostCommentReportInfo>) { (Object as any).assign(this, init); }
@@ -554,10 +568,10 @@ export class PostCommentReportInfo
 export class QueryResponse<T>
 {
     // @DataMember(Order=1)
-    public offset?: number;
+    public offset: number;
 
     // @DataMember(Order=2)
-    public total?: number;
+    public total: number;
 
     // @DataMember(Order=3)
     public results: T[] = [];
@@ -573,7 +587,7 @@ export class QueryResponse<T>
 
 export class UserRef
 {
-    public id?: number;
+    public id: number;
     public userName: string;
     public email: string;
     public refId?: number;
@@ -585,44 +599,44 @@ export class UserRef
 
 export class OrganizationSubscription
 {
-    public id?: number;
-    public organizationId?: number;
-    public userId?: number;
+    public id: number;
+    public organizationId: number;
+    public userId: number;
     public userName: string;
     public postTypes: string[] = [];
     public frequencyDays?: number;
     public lastSyncedId?: number;
     public lastSynced?: string;
-    public created?: string;
+    public created: string;
 
     public constructor(init?: Partial<OrganizationSubscription>) { (Object as any).assign(this, init); }
 }
 
 export class UserActivity
 {
-    public id?: number;
+    public id: number;
     public userName: string;
-    public karma?: number;
-    public technologyCount?: number;
-    public techStacksCount?: number;
-    public postsCount?: number;
-    public postUpVotes?: number;
-    public postDownVotes?: number;
-    public commentUpVotes?: number;
-    public commentDownVotes?: number;
-    public postCommentsCount?: number;
-    public pinnedCommentCount?: number;
-    public postReportCount?: number;
-    public postCommentReportCount?: number;
-    public created?: string;
-    public modified?: string;
+    public karma: number;
+    public technologyCount: number;
+    public techStacksCount: number;
+    public postsCount: number;
+    public postUpVotes: number;
+    public postDownVotes: number;
+    public commentUpVotes: number;
+    public commentDownVotes: number;
+    public postCommentsCount: number;
+    public pinnedCommentCount: number;
+    public postReportCount: number;
+    public postCommentReportCount: number;
+    public created: string;
+    public modified: string;
 
     public constructor(init?: Partial<UserActivity>) { (Object as any).assign(this, init); }
 }
 
 export class TechnologyHistory extends TechnologyBase
 {
-    public technologyId?: number;
+    public technologyId: number;
     public operation: string;
 
     public constructor(init?: Partial<TechnologyHistory>) { super(init); (Object as any).assign(this, init); }
@@ -630,7 +644,7 @@ export class TechnologyHistory extends TechnologyBase
 
 export class TechnologyStackHistory extends TechnologyStackBase
 {
-    public technologyStackId?: number;
+    public technologyStackId: number;
     public operation: string;
     public technologyIds: number[] = [];
 
@@ -641,26 +655,26 @@ export class UserInfo
 {
     public userName: string;
     public avatarUrl: string;
-    public stacksCount?: number;
+    public stacksCount: number;
 
     public constructor(init?: Partial<UserInfo>) { (Object as any).assign(this, init); }
 }
 
 export class TechnologyInfo
 {
-    public tier?: TechnologyTier;
+    public tier: TechnologyTier;
     public slug: string;
     public name: string;
     public logoUrl: string;
-    public stacksCount?: number;
+    public stacksCount: number;
 
     public constructor(init?: Partial<TechnologyInfo>) { (Object as any).assign(this, init); }
 }
 
 export class TechnologyInStack extends TechnologyBase
 {
-    public technologyId?: number;
-    public technologyStackId?: number;
+    public technologyId: number;
+    public technologyStackId: number;
     public justification: string;
 
     public constructor(init?: Partial<TechnologyInStack>) { super(init); (Object as any).assign(this, init); }
@@ -683,7 +697,7 @@ export class LabelInfo
 
 export class CategoryInfo
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public slug: string;
 
@@ -692,15 +706,15 @@ export class CategoryInfo
 
 export class OrganizationInfo
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public slug: string;
     public refId?: number;
     public refSource: string;
     public upVotes?: number;
     public downVotes?: number;
-    public membersCount?: number;
-    public rank?: number;
+    public membersCount: number;
+    public rank: number;
     public disableInvites?: boolean;
     public lang: string;
     public postTypes: string[] = [];
@@ -737,15 +751,15 @@ export class HelloResponse
 
 export class GetOrganizationResponse
 {
-    public cache?: number;
-    public id?: number;
+    public cache: number;
+    public id: number;
     public slug: string;
     public organization: Organization;
     public labels: OrganizationLabel[] = [];
     public categories: Category[] = [];
     public owners: OrganizationMember[] = [];
     public moderators: OrganizationMember[] = [];
-    public membersCount?: number;
+    public membersCount: number;
     public responseStatus: ResponseStatus;
 
     public constructor(init?: Partial<GetOrganizationResponse>) { (Object as any).assign(this, init); }
@@ -753,7 +767,7 @@ export class GetOrganizationResponse
 
 export class GetOrganizationMembersResponse
 {
-    public organizationId?: number;
+    public organizationId: number;
     public results: OrganizationMember[] = [];
     public responseStatus: ResponseStatus;
 
@@ -774,9 +788,9 @@ export class GetOrganizationAdminResponse
 
 export class CreateOrganizationForTechnologyResponse
 {
-    public organizationId?: number;
+    public organizationId: number;
     public organizationSlug: string;
-    public commentsPostId?: number;
+    public commentsPostId: number;
     public commentsPostSlug: string;
     public responseStatus: ResponseStatus;
 
@@ -785,7 +799,7 @@ export class CreateOrganizationForTechnologyResponse
 
 export class CreateOrganizationResponse
 {
-    public id?: number;
+    public id: number;
     public slug: string;
     public responseStatus: ResponseStatus;
 
@@ -808,7 +822,7 @@ export class OrganizationLabelResponse
 
 export class AddOrganizationCategoryResponse
 {
-    public id?: number;
+    public id: number;
     public slug: string;
     public responseStatus: ResponseStatus;
 
@@ -855,7 +869,7 @@ export class GetOrganizationMemberInvitesResponse
 
 export class RequestOrganizationMemberInviteResponse
 {
-    public organizationId?: number;
+    public organizationId: number;
     public responseStatus: ResponseStatus;
 
     public constructor(init?: Partial<RequestOrganizationMemberInviteResponse>) { (Object as any).assign(this, init); }
@@ -870,7 +884,7 @@ export class UpdateOrganizationMemberInviteResponse
 
 export class GetPostResponse
 {
-    public cache?: number;
+    public cache: number;
     public post: Post;
     public comments: PostComment[] = [];
     public responseStatus: ResponseStatus;
@@ -880,7 +894,7 @@ export class GetPostResponse
 
 export class CreatePostResponse
 {
-    public id?: number;
+    public id: number;
     public slug: string;
     public responseStatus: ResponseStatus;
 
@@ -896,7 +910,7 @@ export class UpdatePostResponse
 
 export class DeletePostResponse
 {
-    public id?: number;
+    public id: number;
     public responseStatus: ResponseStatus;
 
     public constructor(init?: Partial<DeletePostResponse>) { (Object as any).assign(this, init); }
@@ -904,8 +918,8 @@ export class DeletePostResponse
 
 export class CreatePostCommentResponse
 {
-    public id?: number;
-    public postId?: number;
+    public id: number;
+    public postId: number;
     public responseStatus: ResponseStatus;
 
     public constructor(init?: Partial<CreatePostCommentResponse>) { (Object as any).assign(this, init); }
@@ -920,8 +934,8 @@ export class UpdatePostCommentResponse
 
 export class DeletePostCommentResponse
 {
-    public id?: number;
-    public postId?: number;
+    public id: number;
+    public postId: number;
     public responseStatus: ResponseStatus;
 
     public constructor(init?: Partial<DeletePostCommentResponse>) { (Object as any).assign(this, init); }
@@ -929,7 +943,7 @@ export class DeletePostCommentResponse
 
 export class GetUserPostCommentVotesResponse
 {
-    public postId?: number;
+    public postId: number;
     public upVotedCommentIds: number[] = [];
     public downVotedCommentIds: number[] = [];
 
@@ -1007,7 +1021,7 @@ export class UserPostCommentReportResponse
 
 export class SessionInfoResponse
 {
-    public created?: string;
+    public created: string;
     public id: string;
     public referrerUrl: string;
     public userAuthId: string;
@@ -1017,11 +1031,11 @@ export class SessionInfoResponse
     public firstName: string;
     public lastName: string;
     public email: string;
-    public createdAt?: string;
-    public lastModified?: string;
+    public createdAt: string;
+    public lastModified: string;
     public roles: string[] = [];
     public permissions: string[] = [];
-    public isAuthenticated?: boolean;
+    public isAuthenticated: boolean;
     public authProvider: string;
     public profileUrl: string;
     public githubProfileUrl: string;
@@ -1050,14 +1064,14 @@ export class GetTechnologyPreviousVersionsResponse
 export class GetAllTechnologiesResponse
 {
     public results: Technology[] = [];
-    public total?: number;
+    public total: number;
 
     public constructor(init?: Partial<GetAllTechnologiesResponse>) { (Object as any).assign(this, init); }
 }
 
 export class GetTechnologyResponse
 {
-    public created?: string;
+    public created: string;
     public technology: Technology;
     public technologyStacks: TechnologyStack[] = [];
     public responseStatus: ResponseStatus;
@@ -1068,7 +1082,7 @@ export class GetTechnologyResponse
 export class GetTechnologyFavoriteDetailsResponse
 {
     public users: string[] = [];
-    public favoriteCount?: number;
+    public favoriteCount: number;
 
     public constructor(init?: Partial<GetTechnologyFavoriteDetailsResponse>) { (Object as any).assign(this, init); }
 }
@@ -1108,8 +1122,8 @@ export class GetPageStatsResponse
 {
     public type: string;
     public slug: string;
-    public viewCount?: number;
-    public favCount?: number;
+    public viewCount: number;
+    public favCount: number;
 
     public constructor(init?: Partial<GetPageStatsResponse>) { (Object as any).assign(this, init); }
 }
@@ -1124,7 +1138,7 @@ export class HourlyTaskResponse
 
 export class OverviewResponse
 {
-    public created?: string;
+    public created: string;
     public topUsers: UserInfo[] = [];
     public topTechnologies: TechnologyInfo[] = [];
     public latestTechStacks: TechStackDetails[] = [];
@@ -1138,7 +1152,7 @@ export class OverviewResponse
 
 export class AppOverviewResponse
 {
-    public created?: string;
+    public created: string;
     public allTiers: Option[] = [];
     public topTechnologies: TechnologyInfo[] = [];
     public responseStatus: ResponseStatus;
@@ -1149,14 +1163,14 @@ export class AppOverviewResponse
 export class GetAllTechnologyStacksResponse
 {
     public results: TechnologyStack[] = [];
-    public total?: number;
+    public total: number;
 
     public constructor(init?: Partial<GetAllTechnologyStacksResponse>) { (Object as any).assign(this, init); }
 }
 
 export class GetTechnologyStackResponse
 {
-    public created?: string;
+    public created: string;
     public result: TechStackDetails;
     public responseStatus: ResponseStatus;
 
@@ -1166,7 +1180,7 @@ export class GetTechnologyStackResponse
 export class GetTechnologyStackFavoriteDetailsResponse
 {
     public users: string[] = [];
-    public favoriteCount?: number;
+    public favoriteCount: number;
 
     public constructor(init?: Partial<GetTechnologyStackFavoriteDetailsResponse>) { (Object as any).assign(this, init); }
 }
@@ -1249,9 +1263,9 @@ export class GetUsersKarmaResponse
 
 export class GetUserInfoResponse
 {
-    public id?: number;
+    public id: number;
     public userName: string;
-    public created?: string;
+    public created: string;
     public avatarUrl: string;
     public techStacks: TechnologyStack[] = [];
     public favoriteTechStacks: TechnologyStack[] = [];
@@ -1418,7 +1432,7 @@ export class GetOrganizationBySlug implements IReturn<GetOrganizationResponse>, 
 // @Route("/orgs/{Id}/members", "GET")
 export class GetOrganizationMembers implements IReturn<GetOrganizationMembersResponse>, IGet
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<GetOrganizationMembers>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetOrganizationMembers'; }
@@ -1429,7 +1443,7 @@ export class GetOrganizationMembers implements IReturn<GetOrganizationMembersRes
 // @Route("/orgs/{Id}/admin", "GET")
 export class GetOrganizationAdmin implements IReturn<GetOrganizationAdminResponse>, IGet
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<GetOrganizationAdmin>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetOrganizationAdmin'; }
@@ -1468,7 +1482,7 @@ export class CreateOrganization implements IReturn<CreateOrganizationResponse>, 
 // @Route("/orgs/{Id}", "PUT")
 export class UpdateOrganization implements IReturn<UpdateOrganizationResponse>, IPut
 {
-    public id?: number;
+    public id: number;
     public slug: string;
     public name: string;
     public description: string;
@@ -1480,7 +1494,7 @@ export class UpdateOrganization implements IReturn<UpdateOrganizationResponse>, 
     public logoUrl: string;
     public heroUrl: string;
     public lang: string;
-    public deletePostsWithReportCount?: number;
+    public deletePostsWithReportCount: number;
     public disableInvites?: boolean;
     public defaultPostType: string;
     public defaultSubscriptionPostTypes: string[] = [];
@@ -1497,7 +1511,7 @@ export class UpdateOrganization implements IReturn<UpdateOrganizationResponse>, 
 // @Route("/orgs/{Id}", "DELETE")
 export class DeleteOrganization implements IReturnVoid, IDelete
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<DeleteOrganization>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeleteOrganization'; }
@@ -1508,8 +1522,8 @@ export class DeleteOrganization implements IReturnVoid, IDelete
 // @Route("/orgs/{Id}/lock", "PUT")
 export class LockOrganization implements IReturnVoid, IPut
 {
-    public id?: number;
-    public lock?: boolean;
+    public id: number;
+    public lock: boolean;
     public reason: string;
 
     public constructor(init?: Partial<LockOrganization>) { (Object as any).assign(this, init); }
@@ -1521,7 +1535,7 @@ export class LockOrganization implements IReturnVoid, IPut
 // @Route("/orgs/{OrganizationId}/labels", "POST")
 export class AddOrganizationLabel implements IReturn<OrganizationLabelResponse>, IPost
 {
-    public organizationId?: number;
+    public organizationId: number;
     public slug: string;
     public description: string;
     public color: string;
@@ -1535,7 +1549,7 @@ export class AddOrganizationLabel implements IReturn<OrganizationLabelResponse>,
 // @Route("/orgs/{OrganizationId}/members/{Slug}", "PUT")
 export class UpdateOrganizationLabel implements IReturn<OrganizationLabelResponse>, IPut
 {
-    public organizationId?: number;
+    public organizationId: number;
     public slug: string;
     public description: string;
     public color: string;
@@ -1549,7 +1563,7 @@ export class UpdateOrganizationLabel implements IReturn<OrganizationLabelRespons
 // @Route("/orgs/{OrganizationId}/labels/{Slug}", "DELETE")
 export class RemoveOrganizationLabel implements IReturnVoid, IDelete
 {
-    public organizationId?: number;
+    public organizationId: number;
     public slug: string;
 
     public constructor(init?: Partial<RemoveOrganizationLabel>) { (Object as any).assign(this, init); }
@@ -1561,7 +1575,7 @@ export class RemoveOrganizationLabel implements IReturnVoid, IDelete
 // @Route("/orgs/{OrganizationId}/categories", "POST")
 export class AddOrganizationCategory implements IReturn<AddOrganizationCategoryResponse>, IPost
 {
-    public organizationId?: number;
+    public organizationId: number;
     public slug: string;
     public name: string;
     public description: string;
@@ -1576,8 +1590,8 @@ export class AddOrganizationCategory implements IReturn<AddOrganizationCategoryR
 // @Route("/orgs/{OrganizationId}/categories/{Id}", "PUT")
 export class UpdateOrganizationCategory implements IReturn<UpdateOrganizationCategoryResponse>, IPut
 {
-    public organizationId?: number;
-    public id?: number;
+    public organizationId: number;
+    public id: number;
     public name: string;
     public slug: string;
     public description: string;
@@ -1592,8 +1606,8 @@ export class UpdateOrganizationCategory implements IReturn<UpdateOrganizationCat
 // @Route("/orgs/{OrganizationId}/categories/{Id}", "DELETE")
 export class DeleteOrganizationCategory implements IReturnVoid, IDelete
 {
-    public organizationId?: number;
-    public id?: number;
+    public organizationId: number;
+    public id: number;
 
     public constructor(init?: Partial<DeleteOrganizationCategory>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeleteOrganizationCategory'; }
@@ -1604,13 +1618,13 @@ export class DeleteOrganizationCategory implements IReturnVoid, IDelete
 // @Route("/orgs/{OrganizationId}/members", "POST")
 export class AddOrganizationMember implements IReturn<AddOrganizationMemberResponse>, IPost
 {
-    public organizationId?: number;
+    public organizationId: number;
     public userName: string;
-    public isOwner?: boolean;
-    public isModerator?: boolean;
-    public denyPosts?: boolean;
-    public denyComments?: boolean;
-    public denyAll?: boolean;
+    public isOwner: boolean;
+    public isModerator: boolean;
+    public denyPosts: boolean;
+    public denyComments: boolean;
+    public denyAll: boolean;
     public notes: string;
 
     public constructor(init?: Partial<AddOrganizationMember>) { (Object as any).assign(this, init); }
@@ -1622,13 +1636,13 @@ export class AddOrganizationMember implements IReturn<AddOrganizationMemberRespo
 // @Route("/orgs/{OrganizationId}/members/{Id}", "PUT")
 export class UpdateOrganizationMember implements IReturn<UpdateOrganizationMemberResponse>, IPut
 {
-    public organizationId?: number;
-    public userId?: number;
-    public isOwner?: boolean;
-    public isModerator?: boolean;
-    public denyPosts?: boolean;
-    public denyComments?: boolean;
-    public denyAll?: boolean;
+    public organizationId: number;
+    public userId: number;
+    public isOwner: boolean;
+    public isModerator: boolean;
+    public denyPosts: boolean;
+    public denyComments: boolean;
+    public denyAll: boolean;
     public notes: string;
 
     public constructor(init?: Partial<UpdateOrganizationMember>) { (Object as any).assign(this, init); }
@@ -1640,8 +1654,8 @@ export class UpdateOrganizationMember implements IReturn<UpdateOrganizationMembe
 // @Route("/orgs/{OrganizationId}/members/{UserId}", "DELETE")
 export class RemoveOrganizationMember implements IReturnVoid, IDelete
 {
-    public organizationId?: number;
-    public userId?: number;
+    public organizationId: number;
+    public userId: number;
 
     public constructor(init?: Partial<RemoveOrganizationMember>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'RemoveOrganizationMember'; }
@@ -1652,16 +1666,16 @@ export class RemoveOrganizationMember implements IReturnVoid, IDelete
 // @Route("/orgs/{OrganizationId}/members/set", "POST")
 export class SetOrganizationMembers implements IReturn<SetOrganizationMembersResponse>, IPost
 {
-    public organizationId?: number;
+    public organizationId: number;
     public githubUserNames: string[] = [];
     public twitterUserNames: string[] = [];
     public emails: string[] = [];
-    public removeUnspecifiedMembers?: boolean;
-    public isOwner?: boolean;
-    public isModerator?: boolean;
-    public denyPosts?: boolean;
-    public denyComments?: boolean;
-    public denyAll?: boolean;
+    public removeUnspecifiedMembers: boolean;
+    public isOwner: boolean;
+    public isModerator: boolean;
+    public denyPosts: boolean;
+    public denyComments: boolean;
+    public denyAll: boolean;
 
     public constructor(init?: Partial<SetOrganizationMembers>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'SetOrganizationMembers'; }
@@ -1672,7 +1686,7 @@ export class SetOrganizationMembers implements IReturn<SetOrganizationMembersRes
 // @Route("/orgs/{OrganizationId}/invites", "GET")
 export class GetOrganizationMemberInvites implements IReturn<GetOrganizationMemberInvitesResponse>, IGet
 {
-    public organizationId?: number;
+    public organizationId: number;
 
     public constructor(init?: Partial<GetOrganizationMemberInvites>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetOrganizationMemberInvites'; }
@@ -1683,7 +1697,7 @@ export class GetOrganizationMemberInvites implements IReturn<GetOrganizationMemb
 // @Route("/orgs/{OrganizationId}/invites", "POST")
 export class RequestOrganizationMemberInvite implements IReturn<RequestOrganizationMemberInviteResponse>, IPost
 {
-    public organizationId?: number;
+    public organizationId: number;
 
     public constructor(init?: Partial<RequestOrganizationMemberInvite>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'RequestOrganizationMemberInvite'; }
@@ -1694,10 +1708,10 @@ export class RequestOrganizationMemberInvite implements IReturn<RequestOrganizat
 // @Route("/orgs/{OrganizationId}/invites/{UserId}", "PUT")
 export class UpdateOrganizationMemberInvite implements IReturn<UpdateOrganizationMemberInviteResponse>, IPut
 {
-    public organizationId?: number;
+    public organizationId: number;
     public userName: string;
-    public approve?: boolean;
-    public dismiss?: boolean;
+    public approve: boolean;
+    public dismiss: boolean;
 
     public constructor(init?: Partial<UpdateOrganizationMemberInvite>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UpdateOrganizationMemberInvite'; }
@@ -1723,7 +1737,7 @@ export class QueryPosts extends QueryDb_1<Post> implements IReturn<QueryResponse
 
 export class GetPost implements IReturn<GetPostResponse>, IGet
 {
-    public id?: number;
+    public id: number;
     public include: string;
 
     public constructor(init?: Partial<GetPost>) { (Object as any).assign(this, init); }
@@ -1732,11 +1746,44 @@ export class GetPost implements IReturn<GetPostResponse>, IGet
     public createResponse() { return new GetPostResponse(); }
 }
 
+export class ImportNewsPost implements IReturn<CreatePostResponse>
+{
+    public id: number;
+    // @Validate(Validator="NotEmpty")
+    public title: string;
+
+    public type: PostType;
+    public technologies?: string[];
+    // @DataMember(Name="relevance_score")
+    public relevance_score: number;
+
+    // @Validate(Validator="NotEmpty")
+    public summary: string;
+
+    // @Validate(Validator="NotEmpty")
+    public url: string;
+
+    public slug?: string;
+    public points: number;
+    public comments: number;
+    // @DataMember(Name="comments_url")
+    public comments_url?: string;
+
+    public sentiment?: string;
+    // @DataMember(Name="top_comment")
+    public top_comment?: HackerNewsComment;
+
+    public constructor(init?: Partial<ImportNewsPost>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'ImportNewsPost'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new CreatePostResponse(); }
+}
+
 export class CreatePost implements IReturn<CreatePostResponse>, IPost
 {
-    public organizationId?: number;
-    public type?: PostType;
-    public categoryId?: number;
+    public organizationId: number;
+    public type: PostType;
+    public categoryId: number;
     public title: string;
     public url: string;
     public imageUrl: string;
@@ -1749,8 +1796,8 @@ export class CreatePost implements IReturn<CreatePostResponse>, IPost
     public metaType: string;
     public meta: string;
     public refId?: number;
-    public refSource: string;
-    public refUrn: string;
+    public refSource?: string;
+    public refUrn?: string;
 
     public constructor(init?: Partial<CreatePost>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'CreatePost'; }
@@ -1760,10 +1807,10 @@ export class CreatePost implements IReturn<CreatePostResponse>, IPost
 
 export class UpdatePost implements IReturn<UpdatePostResponse>, IPut
 {
-    public id?: number;
-    public organizationId?: number;
-    public type?: PostType;
-    public categoryId?: number;
+    public id: number;
+    public organizationId: number;
+    public type: PostType;
+    public categoryId: number;
     public title: string;
     public url: string;
     public imageUrl: string;
@@ -1784,7 +1831,7 @@ export class UpdatePost implements IReturn<UpdatePostResponse>, IPut
 
 export class DeletePost implements IReturn<DeletePostResponse>, IDelete
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<DeletePost>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeletePost'; }
@@ -1794,8 +1841,8 @@ export class DeletePost implements IReturn<DeletePostResponse>, IDelete
 
 export class LockPost implements IReturnVoid, IPut
 {
-    public id?: number;
-    public lock?: boolean;
+    public id: number;
+    public lock: boolean;
     public reason: string;
 
     public constructor(init?: Partial<LockPost>) { (Object as any).assign(this, init); }
@@ -1806,8 +1853,8 @@ export class LockPost implements IReturnVoid, IPut
 
 export class HidePost implements IReturnVoid, IPut
 {
-    public id?: number;
-    public hide?: boolean;
+    public id: number;
+    public hide: boolean;
     public reason: string;
 
     public constructor(init?: Partial<HidePost>) { (Object as any).assign(this, init); }
@@ -1818,7 +1865,7 @@ export class HidePost implements IReturnVoid, IPut
 
 export class ChangeStatusPost implements IReturnVoid, IPut
 {
-    public id?: number;
+    public id: number;
     public status: string;
     public reason: string;
 
@@ -1830,9 +1877,9 @@ export class ChangeStatusPost implements IReturnVoid, IPut
 
 export class ActionPostReport implements IReturnVoid, IPost
 {
-    public postId?: number;
-    public id?: number;
-    public reportAction?: ReportAction;
+    public postId: number;
+    public id: number;
+    public reportAction: ReportAction;
 
     public constructor(init?: Partial<ActionPostReport>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'ActionPostReport'; }
@@ -1842,7 +1889,7 @@ export class ActionPostReport implements IReturnVoid, IPost
 
 export class CreatePostComment implements IReturn<CreatePostCommentResponse>, IPost
 {
-    public postId?: number;
+    public postId: number;
     public replyId?: number;
     public content: string;
 
@@ -1854,8 +1901,8 @@ export class CreatePostComment implements IReturn<CreatePostCommentResponse>, IP
 
 export class UpdatePostComment implements IReturn<UpdatePostCommentResponse>, IPut
 {
-    public id?: number;
-    public postId?: number;
+    public id: number;
+    public postId: number;
     public content: string;
 
     public constructor(init?: Partial<UpdatePostComment>) { (Object as any).assign(this, init); }
@@ -1866,8 +1913,8 @@ export class UpdatePostComment implements IReturn<UpdatePostCommentResponse>, IP
 
 export class DeletePostComment implements IReturn<DeletePostCommentResponse>, IDelete
 {
-    public id?: number;
-    public postId?: number;
+    public id: number;
+    public postId: number;
 
     public constructor(init?: Partial<DeletePostComment>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeletePostComment'; }
@@ -1877,10 +1924,10 @@ export class DeletePostComment implements IReturn<DeletePostCommentResponse>, ID
 
 export class ActionPostCommentReport implements IReturnVoid, IPost
 {
-    public id?: number;
-    public postCommentId?: number;
-    public postId?: number;
-    public reportAction?: ReportAction;
+    public id: number;
+    public postCommentId: number;
+    public postId: number;
+    public reportAction: ReportAction;
 
     public constructor(init?: Partial<ActionPostCommentReport>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'ActionPostCommentReport'; }
@@ -1890,7 +1937,7 @@ export class ActionPostCommentReport implements IReturnVoid, IPost
 
 export class GetUserPostCommentVotes implements IReturn<GetUserPostCommentVotesResponse>, IGet
 {
-    public postId?: number;
+    public postId: number;
 
     public constructor(init?: Partial<GetUserPostCommentVotes>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetUserPostCommentVotes'; }
@@ -1900,9 +1947,9 @@ export class GetUserPostCommentVotes implements IReturn<GetUserPostCommentVotesR
 
 export class PinPostComment implements IReturn<PinPostCommentResponse>, IPut
 {
-    public id?: number;
-    public postId?: number;
-    public pin?: boolean;
+    public id: number;
+    public postId: number;
+    public pin: boolean;
 
     public constructor(init?: Partial<PinPostComment>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'PinPostComment'; }
@@ -1941,8 +1988,8 @@ export class GetUserOrganizations implements IReturn<GetUserOrganizationsRespons
 
 export class UserPostVote implements IReturn<UserPostVoteResponse>, IPut
 {
-    public id?: number;
-    public weight?: number;
+    public id: number;
+    public weight: number;
 
     public constructor(init?: Partial<UserPostVote>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UserPostVote'; }
@@ -1952,7 +1999,7 @@ export class UserPostVote implements IReturn<UserPostVoteResponse>, IPut
 
 export class UserPostFavorite implements IReturn<UserPostFavoriteResponse>, IPut
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<UserPostFavorite>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UserPostFavorite'; }
@@ -1962,8 +2009,8 @@ export class UserPostFavorite implements IReturn<UserPostFavoriteResponse>, IPut
 
 export class UserPostReport implements IReturn<UserPostReportResponse>, IPut
 {
-    public id?: number;
-    public flagType?: FlagType;
+    public id: number;
+    public flagType: FlagType;
     public reportNotes: string;
 
     public constructor(init?: Partial<UserPostReport>) { (Object as any).assign(this, init); }
@@ -1974,9 +2021,9 @@ export class UserPostReport implements IReturn<UserPostReportResponse>, IPut
 
 export class UserPostCommentVote implements IReturn<UserPostCommentVoteResponse>, IPut
 {
-    public id?: number;
-    public postId?: number;
-    public weight?: number;
+    public id: number;
+    public postId: number;
+    public weight: number;
 
     public constructor(init?: Partial<UserPostCommentVote>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UserPostCommentVote'; }
@@ -1986,9 +2033,9 @@ export class UserPostCommentVote implements IReturn<UserPostCommentVoteResponse>
 
 export class UserPostCommentReport implements IReturn<UserPostCommentReportResponse>, IPut
 {
-    public id?: number;
-    public postId?: number;
-    public flagType?: FlagType;
+    public id: number;
+    public postId: number;
+    public flagType: FlagType;
     public reportNotes: string;
 
     public constructor(init?: Partial<UserPostCommentReport>) { (Object as any).assign(this, init); }
@@ -2034,7 +2081,7 @@ export class SessionInfo implements IReturn<SessionInfoResponse>, IGet
 // @Route("/orgs/{OrganizationId}/subscribe", "PUT")
 export class SubscribeToOrganization implements IReturnVoid, IPut
 {
-    public organizationId?: number;
+    public organizationId: number;
     public postTypes: PostType[] = [];
     public frequency?: Frequency;
 
@@ -2047,7 +2094,7 @@ export class SubscribeToOrganization implements IReturnVoid, IPut
 // @Route("/posts/{PostId}/subscribe", "PUT")
 export class SubscribeToPost implements IReturnVoid, IPut
 {
-    public postId?: number;
+    public postId: number;
 
     public constructor(init?: Partial<SubscribeToPost>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'SubscribeToPost'; }
@@ -2058,7 +2105,7 @@ export class SubscribeToPost implements IReturnVoid, IPut
 // @Route("/orgs/{OrganizationId}/subscribe", "DELETE")
 export class DeleteOrganizationSubscription implements IReturnVoid, IDelete
 {
-    public organizationId?: number;
+    public organizationId: number;
 
     public constructor(init?: Partial<DeleteOrganizationSubscription>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeleteOrganizationSubscription'; }
@@ -2069,7 +2116,7 @@ export class DeleteOrganizationSubscription implements IReturnVoid, IDelete
 // @Route("/posts/{PostId}/subscribe", "DELETE")
 export class DeletePostSubscription implements IReturnVoid, IDelete
 {
-    public postId?: number;
+    public postId: number;
 
     public constructor(init?: Partial<DeletePostSubscription>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeletePostSubscription'; }
@@ -2119,6 +2166,7 @@ export class FindTechnologies extends QueryDb_2<Technology, TechnologyView> impl
 export class QueryTechnology extends QueryDb_2<Technology, TechnologyView> implements IReturn<QueryResponse<TechnologyView>>
 {
     public ids: number[];
+    public search: string;
     public name: string;
     public vendorName: string;
     public nameContains: string;
@@ -2163,8 +2211,8 @@ export class CreateTechnology implements IReturn<CreateTechnologyResponse>, IPos
     public productUrl: string;
     public logoUrl: string;
     public description: string;
-    public isLocked?: boolean;
-    public tier?: TechnologyTier;
+    public isLocked: boolean;
+    public tier: TechnologyTier;
 
     public constructor(init?: Partial<CreateTechnology>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'CreateTechnology'; }
@@ -2175,15 +2223,15 @@ export class CreateTechnology implements IReturn<CreateTechnologyResponse>, IPos
 // @Route("/technology/{Id}", "PUT")
 export class UpdateTechnology implements IReturn<UpdateTechnologyResponse>, IPut
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public vendorName: string;
     public vendorUrl: string;
     public productUrl: string;
     public logoUrl: string;
     public description: string;
-    public isLocked?: boolean;
-    public tier?: TechnologyTier;
+    public isLocked: boolean;
+    public tier: TechnologyTier;
 
     public constructor(init?: Partial<UpdateTechnology>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UpdateTechnology'; }
@@ -2194,7 +2242,7 @@ export class UpdateTechnology implements IReturn<UpdateTechnologyResponse>, IPut
 // @Route("/technology/{Id}", "DELETE")
 export class DeleteTechnology implements IReturn<DeleteTechnologyResponse>, IDelete
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<DeleteTechnology>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeleteTechnology'; }
@@ -2239,7 +2287,7 @@ export class ClearCache implements IReturn<string>, IGet
 // @Route("/tasks/hourly")
 export class HourlyTask implements IReturn<HourlyTaskResponse>, IGet
 {
-    public force?: boolean;
+    public force: boolean;
 
     public constructor(init?: Partial<HourlyTask>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'HourlyTask'; }
@@ -2283,7 +2331,7 @@ export class QueryTechStacks extends QueryDb_2<TechnologyStack, TechnologyStackV
 // @Route("/overview")
 export class Overview implements IReturn<OverviewResponse>, IGet
 {
-    public reload?: boolean;
+    public reload: boolean;
 
     public constructor(init?: Partial<Overview>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'Overview'; }
@@ -2294,7 +2342,7 @@ export class Overview implements IReturn<OverviewResponse>, IGet
 // @Route("/app-overview")
 export class AppOverview implements IReturn<AppOverviewResponse>, IGet
 {
-    public reload?: boolean;
+    public reload: boolean;
 
     public constructor(init?: Partial<AppOverview>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'AppOverview'; }
@@ -2354,7 +2402,7 @@ export class CreateTechnologyStack implements IReturn<CreateTechnologyStackRespo
     public screenshotUrl: string;
     public description: string;
     public details: string;
-    public isLocked?: boolean;
+    public isLocked: boolean;
     public technologyIds: number[] = [];
 
     public constructor(init?: Partial<CreateTechnologyStack>) { (Object as any).assign(this, init); }
@@ -2366,14 +2414,14 @@ export class CreateTechnologyStack implements IReturn<CreateTechnologyStackRespo
 // @Route("/techstacks/{Id}", "PUT")
 export class UpdateTechnologyStack implements IReturn<UpdateTechnologyStackResponse>, IPut
 {
-    public id?: number;
+    public id: number;
     public name: string;
     public vendorName: string;
     public appUrl: string;
     public screenshotUrl: string;
     public description: string;
     public details: string;
-    public isLocked?: boolean;
+    public isLocked: boolean;
     public technologyIds: number[] = [];
 
     public constructor(init?: Partial<UpdateTechnologyStack>) { (Object as any).assign(this, init); }
@@ -2385,7 +2433,7 @@ export class UpdateTechnologyStack implements IReturn<UpdateTechnologyStackRespo
 // @Route("/techstacks/{Id}", "DELETE")
 export class DeleteTechnologyStack implements IReturn<DeleteTechnologyStackResponse>, IDelete
 {
-    public id?: number;
+    public id: number;
 
     public constructor(init?: Partial<DeleteTechnologyStack>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'DeleteTechnologyStack'; }
@@ -2396,7 +2444,7 @@ export class DeleteTechnologyStack implements IReturn<DeleteTechnologyStackRespo
 // @Route("/favorites/techtacks", "GET")
 export class GetFavoriteTechStack implements IReturn<GetFavoriteTechStackResponse>, IGet
 {
-    public technologyStackId?: number;
+    public technologyStackId: number;
 
     public constructor(init?: Partial<GetFavoriteTechStack>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetFavoriteTechStack'; }
@@ -2407,7 +2455,7 @@ export class GetFavoriteTechStack implements IReturn<GetFavoriteTechStackRespons
 // @Route("/favorites/techtacks/{TechnologyStackId}", "PUT")
 export class AddFavoriteTechStack implements IReturn<FavoriteTechStackResponse>, IPut
 {
-    public technologyStackId?: number;
+    public technologyStackId: number;
 
     public constructor(init?: Partial<AddFavoriteTechStack>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'AddFavoriteTechStack'; }
@@ -2418,7 +2466,7 @@ export class AddFavoriteTechStack implements IReturn<FavoriteTechStackResponse>,
 // @Route("/favorites/techtacks/{TechnologyStackId}", "DELETE")
 export class RemoveFavoriteTechStack implements IReturn<FavoriteTechStackResponse>, IDelete
 {
-    public technologyStackId?: number;
+    public technologyStackId: number;
 
     public constructor(init?: Partial<RemoveFavoriteTechStack>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'RemoveFavoriteTechStack'; }
@@ -2429,7 +2477,7 @@ export class RemoveFavoriteTechStack implements IReturn<FavoriteTechStackRespons
 // @Route("/favorites/technology", "GET")
 export class GetFavoriteTechnologies implements IReturn<GetFavoriteTechnologiesResponse>, IGet
 {
-    public technologyId?: number;
+    public technologyId: number;
 
     public constructor(init?: Partial<GetFavoriteTechnologies>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'GetFavoriteTechnologies'; }
@@ -2440,7 +2488,7 @@ export class GetFavoriteTechnologies implements IReturn<GetFavoriteTechnologiesR
 // @Route("/favorites/technology/{TechnologyId}", "PUT")
 export class AddFavoriteTechnology implements IReturn<FavoriteTechnologyResponse>, IPut
 {
-    public technologyId?: number;
+    public technologyId: number;
 
     public constructor(init?: Partial<AddFavoriteTechnology>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'AddFavoriteTechnology'; }
@@ -2451,7 +2499,7 @@ export class AddFavoriteTechnology implements IReturn<FavoriteTechnologyResponse
 // @Route("/favorites/technology/{TechnologyId}", "DELETE")
 export class RemoveFavoriteTechnology implements IReturn<FavoriteTechnologyResponse>, IDelete
 {
-    public technologyId?: number;
+    public technologyId: number;
 
     public constructor(init?: Partial<RemoveFavoriteTechnology>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'RemoveFavoriteTechnology'; }
@@ -2484,7 +2532,7 @@ export class GetUsersKarma implements IReturn<GetUsersKarmaResponse>, IGet
 // @Route("/userinfo/{Id}")
 export class GetUserInfo implements IReturn<GetUserInfoResponse>, IGet
 {
-    public id?: number;
+    public id: number;
     public userName: string;
 
     public constructor(init?: Partial<GetUserInfo>) { (Object as any).assign(this, init); }
@@ -2496,7 +2544,7 @@ export class GetUserInfo implements IReturn<GetUserInfoResponse>, IGet
 // @Route("/users/{UserId}/avatar", "GET")
 export class UserAvatar implements IGet
 {
-    public userId?: number;
+    public userId: number;
 
     public constructor(init?: Partial<UserAvatar>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'UserAvatar'; }
@@ -2504,51 +2552,11 @@ export class UserAvatar implements IGet
     public createResponse() {}
 }
 
-// @Route("/mq/start")
-export class MqStart implements IReturn<string>
-{
-
-    public constructor(init?: Partial<MqStart>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'MqStart'; }
-    public getMethod() { return 'POST'; }
-    public createResponse() { return ''; }
-}
-
-// @Route("/mq/stop")
-export class MqStop implements IReturn<string>
-{
-
-    public constructor(init?: Partial<MqStop>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'MqStop'; }
-    public getMethod() { return 'POST'; }
-    public createResponse() { return ''; }
-}
-
-// @Route("/mq/stats")
-export class MqStats implements IReturn<string>
-{
-
-    public constructor(init?: Partial<MqStats>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'MqStats'; }
-    public getMethod() { return 'POST'; }
-    public createResponse() { return ''; }
-}
-
-// @Route("/mq/status")
-export class MqStatus implements IReturn<string>
-{
-
-    public constructor(init?: Partial<MqStatus>) { (Object as any).assign(this, init); }
-    public getTypeName() { return 'MqStatus'; }
-    public getMethod() { return 'POST'; }
-    public createResponse() { return ''; }
-}
-
 // @Route("/admin/technology/{TechnologyId}/logo")
 export class LogoUrlApproval implements IReturn<LogoUrlApprovalResponse>, IPut
 {
-    public technologyId?: number;
-    public approved?: boolean;
+    public technologyId: number;
+    public approved: boolean;
 
     public constructor(init?: Partial<LogoUrlApproval>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'LogoUrlApproval'; }
@@ -2561,9 +2569,9 @@ export class LogoUrlApproval implements IReturn<LogoUrlApprovalResponse>, IPut
 export class LockTechStack implements IReturn<LockStackResponse>, IPut
 {
     // @Validate(Validator="GreaterThan(0)")
-    public technologyStackId?: number;
+    public technologyStackId: number;
 
-    public isLocked?: boolean;
+    public isLocked: boolean;
 
     public constructor(init?: Partial<LockTechStack>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'LockTechStack'; }
@@ -2577,9 +2585,9 @@ export class LockTechStack implements IReturn<LockStackResponse>, IPut
 export class LockTech implements IReturn<LockStackResponse>, IPut
 {
     // @Validate(Validator="GreaterThan(0)")
-    public technologyId?: number;
+    public technologyId: number;
 
-    public isLocked?: boolean;
+    public isLocked: boolean;
 
     public constructor(init?: Partial<LockTech>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'LockTech'; }

@@ -138,8 +138,8 @@ export const getTechnologyTiers = async () => {
 
 export const getPopularTechnologies = async (take: number = 50) => {
   const request = new dtos.QueryTechnology({
-    orderBy: '-viewCount,-favCount',
-    fields: 'id,name,slug,logoUrl,favCount,viewCount',
+    orderBy: '-postsCount,-viewCount,-favCount',
+    fields: 'id,name,slug,logoUrl,favCount,viewCount,postsCount',
     take,
   });
   return (await client.get(request, { jsconfig: 'edv' })).results;

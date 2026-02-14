@@ -87,11 +87,11 @@ function TechStacksContent() {
     try {
       if (query) {
         const response = await gateway.queryTechStacks(query);
-        setStacks(response.results || []);
+        setStacks(response.results.map(x => x as TechnologyStack));
         setTotal(response.total || 0);
       } else {
         const response = await gateway.getAllTechStacks();
-        setStacks(response.results || []);
+        setStacks(response.results);
         setTotal(response.total || 0);
       }
     } catch (err) {

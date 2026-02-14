@@ -412,7 +412,7 @@ function HomePageContent() {
                         key={tech.id}
                         href={`/tech/${tech.slug}`}
                         className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        title={`${tech.name} (${tech.favCount || 0} favorites)`}
+                        title={`${tech.name} (${tech.postsCount || 0} posts)`}
                       >
                         {tech.name}
                       </Link>

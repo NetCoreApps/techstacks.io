@@ -114,6 +114,9 @@ public abstract class TechnologyBase
 
     [Default(0)]
     public int FavCount { get; set; }
+
+    [Default(0)]
+    public int PostsCount { get; set; }
 }
 
 public class Technology : TechnologyBase {}
@@ -203,4 +206,5 @@ public class TechnologyView
     public long? CommentsPostId { get; set; }
     public int? ViewCount { get; set; }
     public int? FavCount { get; set; }
+    public int? PostsCount { get; set; }
 }

@@ -82,6 +82,9 @@ public class PostServicesBase(IMarkdownProvider markdown) : Service
         db.ExecuteSql(@"update post 
                 set points = GREATEST(1 + (up_votes - down_votes) + points_modifier, 0)");
 
+        db.ExecuteSql(@"update technology set 
+                posts_count = (select count(*) from post where technology.id = ANY (post.technology_ids))");
+
         db.ExecuteSql(@"update organization set  
                 posts_count = (select count(*) from post p where organization_id = organization.id or (organization.ref_source = 'Technology' and p.technology_ids @> ARRAY[organization.ref_id]::int[])),
                 comments_count = (select count(*) from post_comment c join post p on (c.post_id = p.id) where p.organization_id = organization.id),

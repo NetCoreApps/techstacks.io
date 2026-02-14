@@ -824,6 +824,9 @@ public class Migration1000 : MigrationBase
 
         [Default(0)]
         public int FavCount { get; set; }
+
+        [Default(0)]
+        public int PostsCount { get; set; }
     }
 
     public class Technology : TechnologyBase {}

@@ -95,7 +95,7 @@ class TechnologyCache {
         // Start a new fetch-all request
         this.fetchAllPromise = gateway.queryTechnology({
           fields: 'id,name,slug'
-        }).then(res => res.results || []);
+        }).then(res => (res.results as Technology[]) || []);
 
         try {
           technologies = await this.fetchAllPromise;
@@ -108,7 +108,7 @@ class TechnologyCache {
           ids: ids.join(','),
           fields: 'id,name,slug'
         });
-        technologies = response.results || [];
+        technologies = response.results as Technology[] || [];
       }
 
       const now = Date.now();
