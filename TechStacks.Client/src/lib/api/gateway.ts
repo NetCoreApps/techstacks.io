@@ -135,7 +135,7 @@ export const getTechnology = async (slug: string) => {
 
 export const getAllTechnologies = async () => {
   if (!allTechnologiesCache) {
-    allTechnologiesCache = await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
+    allTechnologiesCache = await client.get(new dtos.GetAllTechnologies(), { take:1000, include: 'total' });
   }
   return allTechnologiesCache;
 };
