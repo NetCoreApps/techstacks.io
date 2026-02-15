@@ -135,7 +135,7 @@ export const getTechnology = async (slug: string) => {
 
 export const getAllTechnologies = async () => {
   if (!allTechnologiesCache) {
-    allTechnologiesCache = await client.get(new dtos.GetAllTechnologies(), { take:1000, include: 'total' });
+    allTechnologiesCache = await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
   }
   return allTechnologiesCache;
 };
@@ -146,12 +146,8 @@ export const queryTechnology = async (query: any) => {
 
 export const getTechnologyTiers = async () => {
   if (technologyTiersCache) return technologyTiersCache;
-  const request = new dtos.QueryTechnology();
-  technologyTiersCache = (await client.get(request, {
-    orderBy: 'tier,name',
-    fields: 'id,name,tier,slug',
-    jsconfig: 'edv'
-  })).results;
+  const request = new dtos.QueryTechnology({ take: 1000, fields: 'id,name,tier,slug', orderBy: 'tier,name' });
+  technologyTiersCache = (await client.get(request, { jsconfig: 'edv' })).results;
   return technologyTiersCache;
 };
 

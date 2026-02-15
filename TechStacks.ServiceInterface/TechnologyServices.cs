@@ -33,7 +33,7 @@ public class TechnologyServices : Service
     {
         return new GetAllTechnologiesResponse
         {
-            Results = Db.Select(Db.From<Technology>().OrderByDescending(x => x.LastModified).Take(100)).ToList(),
+            Results = Db.Select(Db.From<Technology>().OrderByDescending(x => x.LastModified)).ToList(),
             Total = Db.Count<Technology>(),
         };
     }
