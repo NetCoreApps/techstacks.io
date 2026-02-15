@@ -124,7 +124,7 @@ export function PostsList({ posts }: PostsListProps) {
             <div className="flex gap-4">
               {/* Voting */}
               <div className="flex flex-col items-center space-y-1 text-gray-500">
-                <button
+                <button type="button"
                   onClick={(e) => handleVote(postId, 1, e)}
                   className={`text-2xl transition-colors ${
                     isUpVoted
@@ -136,7 +136,7 @@ export function PostsList({ posts }: PostsListProps) {
                   ▲
                 </button>
                 <span className="font-semibold text-xl">{displayPoints}</span>
-                <button
+                <button type="button"
                   onClick={(e) => handleVote(postId, -1, e)}
                   className={`text-2xl transition-colors ${
                     isDownVoted
