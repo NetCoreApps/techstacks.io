@@ -109,18 +109,36 @@ export const logout = async () => {
 // TECHNOLOGIES
 // ============================================
 
+let allTechnologiesCache: dtos.Technology[] | null = null;
+let technologyTiersCache: any[] | null = null;
+const technologyCache = new Map<string, any>();
+
+function clearTechnologiesCache() {
+  allTechnologiesCache = null;
+  technologyTiersCache = null;
+  technologyCache.clear();
+}
+
 export const getTechnology = async (slug: string) => {
+  const cached = technologyCache.get(slug);
+  if (cached) return cached;
   const request = new dtos.GetTechnology();
   request.slug = slug;
   const response = await client.get(request);
-  return {
+  const fullTechnology = {
     ...response.technology,
     technologyStacks: response.technologyStacks
   };
+  technologyCache.set(slug, fullTechnology);
+  return fullTechnology;
 };
 
 export const getAllTechnologies = async () => {
-  return await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
+  if (!allTechnologiesCache) {
+    const response = await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
+    allTechnologiesCache = response.results ?? [];
+  }
+  return allTechnologiesCache;
 };
 
 export const queryTechnology = async (query: any) => {
@@ -128,21 +146,21 @@ export const queryTechnology = async (query: any) => {
 };
 
 export const getTechnologyTiers = async () => {
+  if (technologyTiersCache) return technologyTiersCache;
   const request = new dtos.QueryTechnology();
-  return (await client.get(request, {
+  technologyTiersCache = (await client.get(request, {
     orderBy: 'tier,name',
     fields: 'id,name,tier,slug',
     jsconfig: 'edv'
   })).results;
+  return technologyTiersCache;
 };
 
 export const getPopularTechnologies = async (take: number = 50) => {
-  const request = new dtos.QueryTechnology({
-    orderBy: '-postsCount,-viewCount,-favCount',
-    fields: 'id,name,slug,logoUrl,favCount,viewCount,postsCount',
-    take,
-  });
-  return (await client.get(request, { jsconfig: 'edv' })).results;
+  const all = await getAllTechnologies();
+  const results = [...all];
+  results.sort((a, b) => (b.postsCount ?? 0) - (a.postsCount ?? 0));
+  return results.slice(0, take);
 };
 
 export const getTechnologyPreviousVersions = async (slug: string) => {
@@ -154,17 +172,23 @@ export const getTechnologyPreviousVersions = async (slug: string) => {
 export const createTechnology = async (args: any, logo?: File) => {
   const request = new dtos.CreateTechnology();
   const body = toFormData({ ...args, logo });
-  return (await client.postBody(request, body)).result;
+  const result = (await client.postBody(request, body)).result;
+  clearTechnologiesCache();
+  return result;
 };
 
 export const updateTechnology = async (args: any, logo?: File) => {
   const request = new dtos.UpdateTechnology();
   const body = toFormData({ ...args, logo });
-  return (await client.putBody(request, body)).result;
+  const result = (await client.putBody(request, body)).result;
+  clearTechnologiesCache();
+  return result;
 };
 
 export const deleteTechnology = async (id: number) => {
-  return await client.delete(new dtos.DeleteTechnology({ id }));
+  const result = await client.delete(new dtos.DeleteTechnology({ id }));
+  clearTechnologiesCache();
+  return result;
 };
 
 // ============================================
