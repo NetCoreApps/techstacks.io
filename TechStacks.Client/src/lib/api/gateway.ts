@@ -194,14 +194,29 @@ export const deleteTechnology = async (id: number) => {
 // TECH STACKS
 // ============================================
 
+let allTechStacksCache: dtos.GetAllTechnologyStacksResponse | null = null;
+const techStackCache = new Map<string, dtos.GetTechnologyStackResponse>();
+
+function clearTechStacksCache() {
+  allTechStacksCache = null;
+  techStackCache.clear();
+}
+
 export const getTechnologyStack = async (slug: string) => {
+  const cached = techStackCache.get(slug);
+  if (cached) return cached;
   const request = new dtos.GetTechnologyStack();
   request.slug = slug;
-  return await client.get(request);
+  const response = await client.get(request);
+  techStackCache.set(slug, response);
+  return response;
 };
 
 export const getAllTechStacks = async () => {
-  return await client.get(new dtos.GetAllTechnologyStacks(), { include: 'total' });
+  if (!allTechStacksCache) {
+    allTechStacksCache = await client.get(new dtos.GetAllTechnologyStacks(), { include: 'total' });
+  }
+  return allTechStacksCache;
 };
 
 export const queryTechStacks = async (query: any) => {
@@ -217,17 +232,23 @@ export const getTechStackPreviousVersions = async (slug: string) => {
 export const createTechStack = async (args: any, logo?: File) => {
   const request = new dtos.CreateTechnologyStack();
   const body = toFormData({ ...args, logo });
-  return (await client.postBody(request, body)).result;
+  const result = (await client.postBody(request, body)).result;
+  clearTechStacksCache();
+  return result;
 };
 
 export const updateTechStack = async (args: any, logo?: File) => {
   const request = new dtos.UpdateTechnologyStack();
   const body = toFormData({ ...args, logo });
-  return (await client.putBody(request, body)).result;
+  const result = (await client.putBody(request, body)).result;
+  clearTechStacksCache();
+  return result;
 };
 
 export const deleteTechStack = async (id: number) => {
-  return await client.delete(new dtos.DeleteTechnologyStack({ id }));
+  const result = await client.delete(new dtos.DeleteTechnologyStack({ id }));
+  clearTechStacksCache();
+  return result;
 };
 
 // ============================================
