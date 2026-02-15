@@ -98,7 +98,7 @@ function TechnologiesContent() {
       } else {
         response = await gateway.getAllTechnologies();
       }
-      setTechnologies(response.results || []);
+      setTechnologies(response.results);
       setTotal(response.total || response.results?.length || 0);
     } catch (err) {
       console.error('Failed to load technologies:', err);

@@ -109,7 +109,7 @@ export const logout = async () => {
 // TECHNOLOGIES
 // ============================================
 
-let allTechnologiesCache: dtos.Technology[] | null = null;
+let allTechnologiesCache: dtos.GetAllTechnologiesResponse | null = null;
 let technologyTiersCache: any[] | null = null;
 const technologyCache = new Map<string, any>();
 
@@ -135,8 +135,7 @@ export const getTechnology = async (slug: string) => {
 
 export const getAllTechnologies = async () => {
   if (!allTechnologiesCache) {
-    const response = await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
-    allTechnologiesCache = response.results ?? [];
+    allTechnologiesCache = await client.get(new dtos.GetAllTechnologies(), { include: 'total' });
   }
   return allTechnologiesCache;
 };
@@ -157,10 +156,10 @@ export const getTechnologyTiers = async () => {
 };
 
 export const getPopularTechnologies = async (take: number = 50) => {
-  const all = await getAllTechnologies();
-  const results = [...all];
-  results.sort((a, b) => (b.postsCount ?? 0) - (a.postsCount ?? 0));
-  return results.slice(0, take);
+  const { results } = await getAllTechnologies();
+  const sorted = [...results];
+  sorted.sort((a, b) => (b.postsCount ?? 0) - (a.postsCount ?? 0));
+  return sorted.slice(0, take);
 };
 
 export const getTechnologyPreviousVersions = async (slug: string) => {
