@@ -149,6 +149,7 @@ export function TechStackForm({ slug, onDone }: TechStackFormProps) {
       }
 
       if (api.succeeded) {
+        gateway.clearTechStacksCache();
         if (onDone) {
           onDone();
         } else {

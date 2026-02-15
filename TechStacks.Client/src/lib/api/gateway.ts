@@ -113,7 +113,7 @@ let allTechnologiesCache: dtos.GetAllTechnologiesResponse | null = null;
 let technologyTiersCache: any[] | null = null;
 const technologyCache = new Map<string, any>();
 
-function clearTechnologiesCache() {
+export function clearTechnologiesCache() {
   allTechnologiesCache = null;
   technologyTiersCache = null;
   technologyCache.clear();
@@ -197,7 +197,7 @@ export const deleteTechnology = async (id: number) => {
 let allTechStacksCache: dtos.GetAllTechnologyStacksResponse | null = null;
 const techStackCache = new Map<string, dtos.GetTechnologyStackResponse>();
 
-function clearTechStacksCache() {
+export function clearTechStacksCache() {
   allTechStacksCache = null;
   techStackCache.clear();
 }

@@ -115,6 +115,7 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
       }
 
       if (api.succeeded) {
+        gateway.clearTechnologiesCache();
         if (onDone) {
           onDone();
         } else {
