@@ -122,7 +122,7 @@ services.Configure<UserAgentBlockingOptions>(options =>
         "semrushbot",
         "dataforseobot",
         "WhatsApp Bot",
-        "HeadlessChrome",
+        // "HeadlessChrome",
         "PetalBot",
     ]);
 
