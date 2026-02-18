@@ -4,6 +4,12 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Custom
+chat*.json
+QueryTechnology.json
+hn_top.json
+reddit_top.json
+completed/
+failed/
 *.xml
 dist/
 App_Data/
