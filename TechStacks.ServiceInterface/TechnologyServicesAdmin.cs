@@ -128,6 +128,7 @@ public class TechnologyServicesAdmin(ILogger<TechnologyServicesAdmin> log, IConf
                 throw HttpError.Unauthorized("Only the Owner or Admins can delete this Technology");
         }
 
+        Db.Delete<UserFavoriteTechnology>(q => q.TechnologyId == request.Id);
         Db.DeleteById<Technology>(request.Id);
 
         var history = existingTech.ConvertTo<TechnologyHistory>();

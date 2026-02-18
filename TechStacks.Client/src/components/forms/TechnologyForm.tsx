@@ -132,14 +132,14 @@ export function TechnologyForm({ slug, onDone }: TechnologyFormProps) {
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this technology?')) return;
 
-    try {
-      setLoading(true);
-      await gateway.deleteTechnology(formData.id!);
+    setLoading(true);
+    const api = await gateway.deleteTechnology(formData.id!);
+    if (api.succeeded) {
       router.push(routes.tech());
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete technology');
-      setLoading(false);
+    } else {
+      setError(api.error);
     }
+    setLoading(false);
   };
 
   if (!isAuthenticated) {

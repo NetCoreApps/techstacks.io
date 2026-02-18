@@ -181,7 +181,7 @@ export const updateTechnology = async (args: any, logo?: File) => {
 };
 
 export const deleteTechnology = async (id: number) => {
-  const result = await client.delete(new dtos.DeleteTechnology({ id }));
+  const result = await client.api(new dtos.DeleteTechnology({ id }));
   clearTechnologiesCache();
   return result;
 };
