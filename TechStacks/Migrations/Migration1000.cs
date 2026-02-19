@@ -403,9 +403,9 @@ public class Migration1000 : MigrationBase
         public DateTime Modified { get; set; }
         public string ModifiedBy { get; set; }
 
-        public long? RefId { get; set; }
-        public string RefSource { get; set; }
-        public string RefUrn { get; set; }
+        public string? RefId { get; set; }
+        public string? RefSource { get; set; }
+        public string? RefUrn { get; set; }
     }
 
     public class PostChangeHistory

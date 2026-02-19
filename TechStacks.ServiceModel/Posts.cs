@@ -71,7 +71,7 @@ public class CreatePost : IReturn<CreatePostResponse>, IPost
 
     public string Meta { get; set; }
 
-    public long? RefId { get; set; }
+     public string? RefId { get; set; }
     public string? RefSource { get; set; }
     public string? RefUrn { get; set; }
 
