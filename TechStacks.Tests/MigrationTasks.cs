@@ -233,10 +233,10 @@ public class MigrationTasks : DbTasksBase
                 OrganizationId = info.OrganizationId,
                 Type = PostType.Post,
                 Title = postTitle,
-                Slug = postTitle.GenerateSlug(),
+                Slug = postTitle.GenerateSlug() ?? throw new Exception("Could not generate slug from post title"),
                 Content = postContent,
                 ContentHtml = $"<div class='gfm ssfm'>{MarkdownConfig.Transform(postContent)}</div>",
-                RefId = info.Id,
+                RefId = info.Id.ToString(),
                 RefSource = nameof(Technology),
                 RefUrn = $"urn:{nameof(Technology)}:{info.Id}",
                 Created = now,
@@ -246,7 +246,7 @@ public class MigrationTasks : DbTasksBase
                 UserId = userId,
                 UpVotes = 0,
                 Rank = 0,
-                TechnologyIds = new[] { info.Id },
+                TechnologyIds = [info.Id],
             };
 
             var postId = db.Insert(post, selectIdentity:true);

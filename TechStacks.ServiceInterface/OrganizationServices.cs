@@ -167,10 +167,10 @@ public class OrganizationServices(IMarkdownProvider markdown, UserManager<Applic
                 OrganizationId = organization.Id,
                 Type = PostType.Post,
                 Title = postTitle,
-                Slug = postTitle.GenerateSlug(),
+                Slug = postTitle.GenerateSlug() ?? throw new Exception("Could not generate slug from post title"),
                 Content = postContent,
                 ContentHtml = $"<div class='gfm ssfm'>{MarkdownConfig.Transform(postContent)}</div>",
-                RefId = organization.RefId,
+                RefId = organization.RefId?.ToString(),
                 RefSource = organization.RefSource,
                 RefUrn = organization.RefUrn,
                 Created = now,
@@ -182,7 +182,7 @@ public class OrganizationServices(IMarkdownProvider markdown, UserManager<Applic
                 UserId = userId,
                 UpVotes = 0,
                 Rank = 0,                    
-                TechnologyIds = technology != null ? new[] { (int)technology.Id } : null,
+                TechnologyIds = technology != null ? [(int)technology.Id] : [],
             };
             post.Id = await Db.InsertAsync(post, selectIdentity: true);
 

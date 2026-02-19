@@ -1,5 +1,5 @@
 /* Options:
-Date: 2026-02-14 21:34:33
+Date: 2026-02-19 20:21:21
 Version: 10.06
 Tip: To override a DTO option, remove "//" prefix before updating
 BaseUrl: https://localhost:5001
@@ -159,9 +159,9 @@ export class Post
     public createdBy: string;
     public modified: string;
     public modifiedBy: string;
-    public refId?: number;
-    public refSource: string;
-    public refUrn: string;
+    public refId?: string;
+    public refSource?: string;
+    public refUrn?: string;
 
     public constructor(init?: Partial<Post>) { (Object as any).assign(this, init); }
 }
@@ -1087,6 +1087,21 @@ export class GetTechnologyFavoriteDetailsResponse
     public constructor(init?: Partial<GetTechnologyFavoriteDetailsResponse>) { (Object as any).assign(this, init); }
 }
 
+// @DataContract
+export class StringResponse
+{
+    // @DataMember(Order=1)
+    public result: string;
+
+    // @DataMember(Order=2)
+    public meta?: { [index:string]: string; };
+
+    // @DataMember(Order=3)
+    public responseStatus?: ResponseStatus;
+
+    public constructor(init?: Partial<StringResponse>) { (Object as any).assign(this, init); }
+}
+
 export class CreateTechnologyResponse
 {
     public result: Technology;
@@ -1748,7 +1763,7 @@ export class GetPost implements IReturn<GetPostResponse>, IGet
 
 export class ImportNewsPost implements IReturn<CreatePostResponse>
 {
-    public id: number;
+    public id: string;
     // @Validate(Validator="NotEmpty")
     public title: string;
 
@@ -1784,7 +1799,9 @@ export class CreatePost implements IReturn<CreatePostResponse>, IPost
     public organizationId: number;
     public type: PostType;
     public categoryId: number;
+    // @Validate(Validator="NotEmpty")
     public title: string;
+
     public url: string;
     public imageUrl: string;
     public content: string;
@@ -1795,7 +1812,7 @@ export class CreatePost implements IReturn<CreatePostResponse>, IPost
     public toDate?: string;
     public metaType: string;
     public meta: string;
-    public refId?: number;
+    public refId?: string;
     public refSource?: string;
     public refUrn?: string;
 
@@ -2199,6 +2216,17 @@ export class GetTechnologyFavoriteDetails implements IReturn<GetTechnologyFavori
     public getTypeName() { return 'GetTechnologyFavoriteDetails'; }
     public getMethod() { return 'GET'; }
     public createResponse() { return new GetTechnologyFavoriteDetailsResponse(); }
+}
+
+// @Route("/tasks/syncstats")
+// @ValidateRequest(Validator="IsAdmin")
+export class SyncStats implements IReturn<StringResponse>, IPost
+{
+
+    public constructor(init?: Partial<SyncStats>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'SyncStats'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new StringResponse(); }
 }
 
 // @Route("/technology", "POST")
