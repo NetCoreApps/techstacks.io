@@ -19,6 +19,7 @@ node_modules/
 appsettings.Production.*
 Configure.secrets.cs
 appsettings.txt
+wwwroot/
 
 # User-specific files
 *.suo
