@@ -8,7 +8,7 @@ namespace TechStacks.ServiceModel;
 [SystemJson(UseSystemJson.Never)]
 public class ImportNewsPost : IReturn<CreatePostResponse>
 {
-    public long Id { get; set; }
+    public string Id { get; set; }
     [ValidateNotEmpty]
     public string Title { get; set; }
     public PostType Type { get; set; }
