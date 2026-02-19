@@ -5,6 +5,7 @@
 
 # Custom
 .DS_Store
+all-technologies.json
 chat*.json
 QueryTechnology.json
 hn_top.json
