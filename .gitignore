@@ -5,6 +5,7 @@
 
 # Custom
 .DS_Store
+scripts/*.txt
 all-technologies.json
 chat*.json
 QueryTechnology.json

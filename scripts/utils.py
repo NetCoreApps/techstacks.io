@@ -21,6 +21,10 @@ TOP_REDDIT_LIMIT = 100
 
 PYTHON = sys.executable
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+POSTS_DIR = os.path.join(SCRIPT_DIR, "posts")
+COMPLETED_DIR = os.path.join(SCRIPT_DIR, "done", "completed")
+FAILED_DIR = os.path.join(SCRIPT_DIR, "done", "failed")
+
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
 LLMS_SH = shutil.which("llms")
 LLMS_MODEL = os.getenv("LLMS_MODEL", "MiniMax-M2.1")
@@ -29,6 +33,20 @@ LLMS_ANALYTICS_MODEL = os.getenv("LLMS_ANALYTICS_MODEL", "moonshotai/kimi-k2.5")
 
 if not LLMS_SH:
     raise RuntimeError("llms command not found in PATH. Please ensure llms is installed and available.")
+
+def file_set(ids_file):
+    """Return a set of post IDs from an ids_*.txt file."""
+    if os.path.exists(ids_file):
+        with open(ids_file, "r") as f:
+            return set(line.strip() for line in f)
+    return set()
+
+def append_to_file(file_path, symbol: str):
+    """Append a post ID to ids_*.txt if not already present."""
+    existing_symbols = file_set(file_path)
+    if symbol not in existing_symbols:
+        with open(file_path, "a") as f:
+            f.write(f"{symbol}\n")
 
 def create_cookie_jar():
     parsed = urlparse(TECHSTACKS_BASE)

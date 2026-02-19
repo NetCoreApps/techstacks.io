@@ -16,11 +16,7 @@ import sys
 from pathlib import Path
 
 import requests
-from utils import TECHSTACKS_BASE, SCRIPT_DIR, create_cookie_jar
-
-POSTS_DIR = os.path.join(SCRIPT_DIR, "posts")
-COMPLETED_DIR = os.path.join(SCRIPT_DIR, "completed")
-FAILED_DIR = os.path.join(SCRIPT_DIR, "failed")
+from utils import TECHSTACKS_BASE, SCRIPT_DIR, POSTS_DIR, COMPLETED_DIR, FAILED_DIR, create_cookie_jar, append_to_file
 
 IMPORT_POST_URL = f"{TECHSTACKS_BASE}/api/ImportNewsPost"
 SYNC_POST_URL = f"{TECHSTACKS_BASE}/api/SyncStats"
@@ -41,11 +37,18 @@ def import_post(post_file):
         verify=False,
     )
 
+    post_url = post_data.get("url", "")
+
     if resp.ok:
         print(f"  Success: {resp.status_code}")
         os.makedirs(COMPLETED_DIR, exist_ok=True)
         dest = os.path.join(COMPLETED_DIR, f"{post_id}.json")
         shutil.move(post_file, dest)
+        
+        append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(post_id))
+        if post_url:
+            append_to_file(os.path.join(SCRIPT_DIR, "urls_completed.txt"), post_url.rstrip('/'))
+
         print(f"  Moved to {dest}")
         return True
     else:
@@ -57,6 +60,11 @@ def import_post(post_file):
         with open(failed_dest, "w") as f:
             json.dump(post_data, f, indent=2)
         os.remove(post_file)
+
+        append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), str(post_id))
+        if post_url:
+            append_to_file(os.path.join(SCRIPT_DIR, "urls_failed.txt"), post_url.rstrip('/'))
+
         print(f"  Moved to {failed_dest}")
         return False
 

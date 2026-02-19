@@ -16,35 +16,35 @@ import subprocess
 import sys
 from pathlib import Path
 
-from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS, SCRIPT_DIR, PYTHON
+from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS, POSTS_DIR, SCRIPT_DIR, FAILED_DIR, PYTHON, append_to_file, file_set
 
-def load_done_urls() -> set:
-    urls = set()
-    for d in ["completed", "failed"]:
-        urls_path = Path(SCRIPT_DIR) / d / "urls.txt"
-        if urls_path.exists():
-            urls.update(line.strip().rstrip('/') for line in urls_path.read_text().splitlines() if line.strip())
-    return urls
-
-
-def load_done() -> set:
+def load_urls() -> set:
     done = set()
-    for d in ["posts", "completed", "failed"]:
-        dir_path = Path(SCRIPT_DIR) / d
-        if dir_path.is_dir():
-            for f in dir_path.glob("*.json"):
-                done.add(f.stem)
+    done.update(file_set(os.path.join(SCRIPT_DIR, "urls_completed.txt")))
+    done.update(file_set(os.path.join(SCRIPT_DIR, "urls_failed.txt")))
+    return done
+
+
+def load_ids() -> set:
+    done = set()
+    done.update(file_set(os.path.join(SCRIPT_DIR, "ids_completed.txt")))
+    done.update(file_set(os.path.join(SCRIPT_DIR, "ids_failed.txt")))
     return done
 
 
 def mark_failed(post: dict, error_msg: str):
-    failed_dir = Path(SCRIPT_DIR) / "failed"
-    failed_dir.mkdir(exist_ok=True)
-    failed_path = failed_dir / f"{post['id']}.json"
+    post_id = str(post["id"])
+    append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), post_id)
+    post_url = post.get("url", "")
+    if post_url:
+        append_to_file(os.path.join(SCRIPT_DIR, "urls_failed.txt"), post_url.rstrip('/'))
+
+    failed_path = os.path.join(FAILED_DIR, f"{post_id}.json")
     failed_data = {**post, "error": error_msg}
-    failed_path.write_text(json.dumps(failed_data, indent=2))
+    with open(failed_path, "w") as f:
+        json.dump(failed_data, f, indent=2)
     # Remove from posts if it exists there
-    posts_path = Path(SCRIPT_DIR) / "posts" / f"{post['id']}.json"
+    posts_path = Path(POSTS_DIR) / f"{post_id}.json"
     if posts_path.exists():
         posts_path.unlink()
 
@@ -105,8 +105,8 @@ def main():
     def is_content_url(url: str) -> bool:
         return url.startswith("http") and not is_image_url(url) and not is_video_url(url) and not is_blacklisted_url(url)
 
-    done = load_done()
-    done_urls = load_done_urls()
+    done = load_ids()
+    done_urls = load_urls()
     to_process = [p for p in eligible if str(p["id"]) not in done and p.get("url", "").rstrip('/') not in done_urls and is_content_url(p.get("url", ""))]
     print(f"Already processed: {len(eligible) - len(to_process)}, remaining: {len(to_process)}")
 
