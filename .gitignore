@@ -10,6 +10,7 @@ chat*.json
 QueryTechnology.json
 hn_top.json
 reddit_top.json
+posts/
 completed/
 failed/
 *.xml
