@@ -16,12 +16,7 @@ import sys
 import aiohttp
 from yarl import URL
 
-from utils import COOKIES
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
-LLMS_SH = os.path.join(REPO_ROOT, "llms.sh")
-LLMS_MODEL = os.getenv("LLMS_MODEL", "MiniMax-M2.1")
+from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_MODEL, COOKIES, parse_json_response
 
 TECHSTACKS_BASE = "https://techstacks.io"
 SEARCH_TECH_URL = f"{TECHSTACKS_BASE}/api/QueryTechnology"
@@ -131,31 +126,6 @@ def extract_json(text: str) -> str:
         text = re.sub(r"^```(?:json)?\s*\n", "", text)
         text = re.sub(r"\n```\s*$", "", text)
     return text.strip()
-
-
-def parse_json_response(text):
-    # Try direct parse first
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # Strip markdown fences
-    cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip())
-    cleaned = re.sub(r"\s*```$", "", cleaned)
-
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        pass
-
-    # Try to extract JSON object/array
-    match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", text)
-    if match:
-        return json.loads(match.group(1))
-
-    raise ValueError("Could not parse JSON from response")
-
 
 def generate_posts_json(stories: list[dict], model: str) -> list[dict]:
     """Use llms.sh to filter HN stories and generate CreatePost entries."""

@@ -16,9 +16,8 @@ import sys
 from pathlib import Path
 
 import requests
-from utils import TECHSTACKS_BASE, create_cookie_jar
+from utils import TECHSTACKS_BASE, SCRIPT_DIR, create_cookie_jar
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 POSTS_DIR = os.path.join(SCRIPT_DIR, "posts")
 COMPLETED_DIR = os.path.join(SCRIPT_DIR, "completed")
 FAILED_DIR = os.path.join(SCRIPT_DIR, "failed")

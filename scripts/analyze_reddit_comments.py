@@ -20,12 +20,7 @@ import subprocess
 import sys
 from urllib.request import urlopen, Request
 
-from utils import USER_AGENT
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
-LLMS_SH = os.path.join(REPO_ROOT, "llms.sh")
-LLMS_MODEL = os.getenv("LLMS_MODEL", "moonshotai/kimi-k2.5")
+from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, parse_json_response
 
 def fetch_reddit_comments(comments_url: str) -> tuple[dict, list[dict]]:
     """Fetch post data and comment trees from a Reddit comments URL.
@@ -146,24 +141,6 @@ Rules:
 - Return ONLY valid JSON"""
 
 
-def parse_json_response(text: str) -> dict:
-    """Parse JSON from an LLM response."""
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip())
-    cleaned = re.sub(r"\s*```$", "", cleaned)
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        pass
-    match = re.search(r"(\{[\s\S]*\})", text)
-    if match:
-        return json.loads(match.group(1))
-    raise ValueError("Could not parse JSON from LLM response")
-
-
 def analyze_sentiment(post_title: str, comments_text: str, model: str) -> str:
     """Use LLM to generate sentiment analysis markdown."""
     user_message = f"Post Title: {post_title}\n\n--- COMMENTS ---\n{comments_text}"
@@ -205,7 +182,7 @@ def analyze_sentiment(post_title: str, comments_text: str, model: str) -> str:
 def main():
     parser = argparse.ArgumentParser(description="Analyze comments from a Reddit post.")
     parser.add_argument("post_id", help="Reddit post ID (e.g. 1r1zlqx)")
-    parser.add_argument("--model", default=LLMS_MODEL, help=f"Model name (default: {LLMS_MODEL})")
+    parser.add_argument("--model", default=LLMS_ANALYTICS_MODEL, help=f"Model name (default: {LLMS_ANALYTICS_MODEL})")
     parser.add_argument(
         "--max-chars", type=int, default=30000, help="Max chars of comments to send to LLM (default: 30000)"
     )

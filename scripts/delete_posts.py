@@ -5,11 +5,11 @@ Delete Posts
 ================
 Usage: delete_posts.py <search>
 """
+import sys
+import requests
+from utils import TECHSTACKS_BASE, create_cookie_jar
 
 async def main():
-    import sys
-    import requests
-    from utils import TECHSTACKS_BASE, create_cookie_jar
 
     if len(sys.argv) < 2:
         print("Usage: delete_posts.py <search>")

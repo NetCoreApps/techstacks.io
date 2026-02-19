@@ -16,11 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PYTHON = sys.executable
-
+from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS, SCRIPT_DIR, PYTHON
 
 def load_done_urls() -> set:
     urls = set()

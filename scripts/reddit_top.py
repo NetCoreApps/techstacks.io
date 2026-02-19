@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-from utils import MIN_REDDIT_POINTS, TOP_REDDIT_LIMIT, USER_AGENT, create_slug, parse_json_response
+from utils import MIN_REDDIT_POINTS, TOP_REDDIT_LIMIT, USER_AGENT, create_slug
 
 SUBREDDITS = [
     "r/react",

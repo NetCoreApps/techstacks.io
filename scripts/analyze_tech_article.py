@@ -24,14 +24,7 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup, Comment
 from markdownify import markdownify as md
-from utils import USER_AGENT, parse_json_response
-
-PYTHON = sys.executable
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
-LLMS_SH = os.path.join(REPO_ROOT, "llms.sh")
-# LLMS_MODEL = os.getenv("LLMS_MODEL","MiniMax-M2.1")
-LLMS_MODEL = os.getenv("LLMS_MODEL", "moonshotai/kimi-k2.5")  # moonshotai/kimi-k2.5
+from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, parse_json_response
 
 # ── Content Extraction ───────────────────────────────────────────────────────
 
@@ -297,8 +290,8 @@ def main():
     parser.add_argument("url", help="URL of the technology article to analyze")
     parser.add_argument(
         "--model",
-        default=LLMS_MODEL,
-        help=f"Model name (default: $LLMS_MODEL or ${LLMS_MODEL})",
+        default=LLMS_ANALYTICS_MODEL,
+        help=f"Model name (default: $LLMS_MODEL or ${LLMS_ANALYTICS_MODEL})",
     )
     parser.add_argument(
         "--max-chars",

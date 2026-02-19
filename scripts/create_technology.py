@@ -11,17 +11,10 @@ import subprocess
 import sys
 
 import aiohttp
-from utils import parse_json_response
 from yarl import URL
 
-from utils import create_slug, COOKIES
+from utils import TECHSTACKS_BASE, SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_TECH_MODEL, COOKIES, parse_json_response, create_slug
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
-LLMS_SH = os.path.join(REPO_ROOT, "llms.sh")
-LLMS_MODEL = os.getenv("LLMS_MODEL", "glm-4.7")
-
-TECHSTACKS_BASE = "https://techstacks.io"
 CREATE_URL = f"{TECHSTACKS_BASE}/api/CreateTechnology"
 
 TECHNOLOGY_TIERS = [
@@ -133,7 +126,7 @@ async def create_technology(session: aiohttp.ClientSession, tech: dict) -> dict:
 async def main():
     parser = argparse.ArgumentParser(description="Create missing technologies on techstacks.io")
     parser.add_argument("names", nargs="+", help="Names of the technologies to search for / create")
-    parser.add_argument("--model", default=LLMS_MODEL, help=f"OpenAI model to use (default: {LLMS_MODEL})")
+    parser.add_argument("--model", default=LLMS_TECH_MODEL, help=f"OpenAI model to use (default: {LLMS_TECH_MODEL})")
     parser.add_argument("--dry-run", action="store_true", help="Generate JSON but don't create the technology")
     args = parser.parse_args()
 
