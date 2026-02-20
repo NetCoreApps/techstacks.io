@@ -6,9 +6,10 @@ Fetches from r/programming, r/technology, and Reddit front page.
 """
 
 import json
+import requests
 import sys
 from pathlib import Path
-from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 from utils import MIN_REDDIT_POINTS, TOP_REDDIT_LIMIT, USER_AGENT, create_slug
 
@@ -35,13 +36,22 @@ SUBREDDITS = [
 
 # SUBREDDITS = ["r/dotnet", "r/csharp"]
 
+REDDIT_COOKIES = json.loads(Path(__file__).parent.joinpath("reddit_cookies.json").read_text())
+
+def create_cookie_jar():
+    parsed = urlparse("https://www.reddit.com")
+    jar = requests.cookies.RequestsCookieJar()
+    for name, value in REDDIT_COOKIES.items():
+        jar.set(name, value, domain=parsed.hostname, path="/")
+    return jar
 
 def fetch_subreddit_posts(subreddit: str, limit: int = 50) -> list[dict]:
     """Fetch top posts from a subreddit using Reddit's JSON API."""
     url = f"https://www.reddit.com/{subreddit}/hot.json?limit={limit}"
-    req = Request(url, headers={"User-Agent": USER_AGENT})
-    with urlopen(req, timeout=10) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    resp = requests.get(url, headers={"user-agent": USER_AGENT},
+                        cookies=create_cookie_jar(), timeout=30, allow_redirects=True)
+    resp.raise_for_status()
+    data = resp.json()
 
     posts = []
     for child in data.get("data", {}).get("children", []):

@@ -5,6 +5,7 @@
 
 # Custom
 .DS_Store
+reddit_cookies.json
 scripts/*.txt
 all-technologies.json
 chat*.json
