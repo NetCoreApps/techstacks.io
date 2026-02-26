@@ -8,6 +8,7 @@ Fetches from r/programming, r/technology, and Reddit front page.
 import json
 import requests
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -32,6 +33,15 @@ SUBREDDITS = [
     "r/programming",
     "r/technology",
     "r/webdev",
+    "r/linux",
+    "r/mac",
+    "r/apple",
+    "r/windows",
+    "r/cybersecurity",
+    "/r/ArtificialInteligence",
+    "/r/technews",
+    "r/gadgets",
+    "r/hardware",
 ]
 
 # SUBREDDITS = ["r/dotnet", "r/csharp"]
@@ -85,12 +95,14 @@ def fetch_subreddit_posts(subreddit: str, limit: int = 50) -> list[dict]:
 def fetch_reddit_top(limit: int = TOP_REDDIT_LIMIT) -> list[dict]:
     """Fetch and aggregate top posts across multiple subreddits."""
     all_posts = []
-    for subreddit in SUBREDDITS:
-        try:
-            posts = fetch_subreddit_posts(subreddit)
-            all_posts.extend(posts)
-        except Exception as e:
-            print(f"Warning: failed to fetch {subreddit}: {e}", file=sys.stderr)
+    with ThreadPoolExecutor(max_workers=len(SUBREDDITS)) as executor:
+        futures = {executor.submit(fetch_subreddit_posts, subreddit): subreddit for subreddit in SUBREDDITS}
+        for future in as_completed(futures):
+            subreddit = futures[future]
+            try:
+                all_posts.extend(future.result())
+            except Exception as e:
+                print(f"Warning: failed to fetch {subreddit}: {e}", file=sys.stderr)
 
     # Deduplicate by id
     seen = set()
