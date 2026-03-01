@@ -335,6 +335,9 @@ def main():
     post_url = post_ref.get("url") if post_ref else args.url
     post_id = post_ref.get("id") if post_ref else None
 
+    if post_url.startswith("https://twitter.com") or post_url.startswith("https://x.com"):
+        post_url = "https://xcancel.com" + post_url[post_url.index("/", 8):]
+
     if not post_url.startswith("http"):
         print(f"Error: URL must start with http:// or https://", file=sys.stderr)
         sys.exit(1)
