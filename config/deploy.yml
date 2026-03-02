@@ -74,7 +74,7 @@ accessories:
         POSTGRES_USER: techstacks
         POSTGRES_DB: techstacks
         # Optional: only listens inside container
-        PGDATA: /var/lib/postgresql/data
+        PGDATA: /var/lib/postgresql/data/pgdata
       # secrets from ./kamal/secrets
       secret:
         - POSTGRES_PASSWORD
