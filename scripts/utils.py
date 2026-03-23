@@ -29,7 +29,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
 LLMS_SH = shutil.which("llms")
 LLMS_MODEL = os.getenv("LLMS_MODEL", "MiniMax-M2.1")
 LLMS_TECH_MODEL = os.getenv("LLMS_TECH_MODEL", "glm-4.7")
-LLMS_ANALYTICS_MODEL = os.getenv("LLMS_ANALYTICS_MODEL", "moonshotai/kimi-k2.5")  # moonshotai/kimi-k2.5
+LLMS_ANALYTICS_MODEL = os.getenv("LLMS_ANALYTICS_MODEL", "accounts/fireworks/models/kimi-k2p5")  # moonshotai/kimi-k2.5
 
 if not LLMS_SH:
     raise RuntimeError("llms command not found in PATH. Please ensure llms is installed and available.")
