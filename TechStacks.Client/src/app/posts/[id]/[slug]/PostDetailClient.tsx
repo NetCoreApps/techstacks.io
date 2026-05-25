@@ -282,7 +282,7 @@ export default function PostDetailClient() {
             >
               ▲
             </button>
-            <span className="font-semibold text-sm">{displayPoints}</span>
+            <span className="font-semibold text-sm">{displayPoints || ''}</span>
             <button type="button"
               onClick={(e) => handleCommentVote(comment.id, -1, e)}
               className={`text-xl transition-colors ${
