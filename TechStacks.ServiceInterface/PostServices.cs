@@ -153,7 +153,10 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             || titleLower.Contains("marketing services") 
             || titleLower.Contains("fast cash")
             || titleLower.Contains("loan")
+            || titleLower.Contains("payday")
+            || titleLower.Contains("lucre")
             || titleLower.Contains("gambling")
+            || titleLower.Contains("same day")
             || titleLower.Contains("casino"))
         {
             log.LogInformation("Banning post with title: {Title}", request.Title);
