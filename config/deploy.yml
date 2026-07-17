@@ -64,20 +64,31 @@ volumes:
 
 accessories:
   postgres:
-    image: postgres
+    # Always pin the major version. An unpinned `postgres` tracks :latest, so a new
+    # release silently becomes a major upgrade on the next container recreation —
+    # and Postgres refuses to start against a data dir from an older major.
+    # Bumping this is a migration (pg_upgrade or dump/restore), never a redeploy.
+    image: postgres:18
     # IP address of server to deploy accessory to. (e.g. 100.100.100.100)
     host: <%= ENV['KAMAL_DEPLOY_IP'] %>
-    port: "5433:5432"
+    # Bound to loopback so the DB is not exposed to the public internet
+    # (the host has no firewall). This is the *host* port only — app containers
+    # reach the DB over the `kamal` network on 5432, unaffected by this.
+    port: "127.0.0.1:5433:5432"
     env:
       clear:
         # Database username and database name (e.g. example/example)
         POSTGRES_USER: techstacks
         POSTGRES_DB: techstacks
-        # Optional: only listens inside container
-        PGDATA: /var/lib/postgresql/data/pgdata
       # secrets from ./kamal/secrets
       secret:
         - POSTGRES_PASSWORD
     directories:
-      - /opt/docker/<%= ENV['SERVICE'] %>/postgres:/var/lib/postgresql/data
+      # PG18+ layout: mount /var/lib/postgresql itself — which is also the VOLUME
+      # the image declares, so Docker no longer auto-creates an anonymous volume
+      # for the parent (the "volume conflict"). Data lives in a major-version
+      # subdir via the image default PGDATA=/var/lib/postgresql/18/docker, so do
+      # NOT override PGDATA: pointing it at a non-existent path silently initdb's
+      # an empty cluster and orphans the real data.
+      - /opt/docker/<%= ENV['SERVICE'] %>/postgres18:/var/lib/postgresql
       - /opt/docker/<%= ENV['SERVICE'] %>/initdb.d:/docker-entrypoint-initdb.d
