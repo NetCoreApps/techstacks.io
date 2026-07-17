@@ -27,9 +27,9 @@ FAILED_DIR = os.path.join(SCRIPT_DIR, "done", "failed")
 
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # llms repo root
 LLMS_SH = shutil.which("llms")
-LLMS_MODEL = os.getenv("LLMS_MODEL", "MiniMax-M2.7")
-LLMS_TECH_MODEL = os.getenv("LLMS_TECH_MODEL", "glm-5.1")
-LLMS_ANALYTICS_MODEL = os.getenv("LLMS_ANALYTICS_MODEL", "accounts/fireworks/models/kimi-k2p5")  # moonshotai/kimi-k2.5
+LLMS_MODEL = os.getenv("LLMS_MODEL", "DeepSeek V4 Flash")
+LLMS_TECH_MODEL = os.getenv("LLMS_TECH_MODEL", "GLM-5.2")
+LLMS_ANALYTICS_MODEL = os.getenv("LLMS_ANALYTICS_MODEL", "MiMo-V2.5-Pro")  # moonshotai/kimi-k2.5 / Kimi K2.5
 
 if not LLMS_SH:
     raise RuntimeError("llms command not found in PATH. Please ensure llms is installed and available.")
