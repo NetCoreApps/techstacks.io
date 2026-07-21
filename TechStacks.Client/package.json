@@ -9,7 +9,7 @@
     "dtos": "npx get-dtos ts",
     "generate-data": "node scripts/generate-static-data.mjs",
     "build": "next build",
-    "copy-www": "rm -rf ../TechStacks/wwwroot/ && cp -rf dist ../TechStacks/wwwroot && cp dist/_next/static/chunks/*.css ../TechStacks/wwwroot/css/app.css",
+    "copy-www": "rm -rf ../TechStacks/wwwroot/ && cp -rf dist ../TechStacks/wwwroot && mkdir -p ../TechStacks/wwwroot/css && cp dist/static/chunks/*.css ../TechStacks/wwwroot/css/app.css",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
