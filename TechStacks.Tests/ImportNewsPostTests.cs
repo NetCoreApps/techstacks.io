@@ -107,4 +107,92 @@ public class ImportNewsPostTests : DbTasksBase
 
         post.PrintDump();
     }
+
+    string EnrichedPostJson = """
+    {
+        "title": "Announcing Rust 1.81.0",
+        "type": "Announcement",
+        "technologies": ["Rust"],
+        "tags": ["release", "performance"],
+        "level": "intermediate",
+        "primary_source": true,
+        "relevance_score": 95,
+        "summary": "Rust 1.81 stabilizes the new sort implementations.",
+        "url": "https://blog.rust-lang.org/2024/09/05/Rust-1.81.0/",
+        "source": "blog.rust-lang.org",
+        "published": "2024-09-05T00:00:00+00:00",
+        "reading_time": 6,
+        "paywalled": false,
+        "points": 208,
+        "comments": 43,
+        "controversy": 0.21,
+        "comments_url": "https://news.ycombinator.com/item?id=46942864",
+        "sentiment": "## Overall Sentiment\nPositive.",
+        "mood": "mostly_positive",
+        "sentiment_confidence": "high",
+        "alternatives": ["Salsa", "Differential Dataflow"],
+        "related_discussions": [
+            {
+                "source": "Reddit",
+                "url": "https://www.reddit.com/r/rust/comments/abc/rust_181/",
+                "points": 320,
+                "comments": 88,
+                "subreddit": "r/rust"
+            }
+        ],
+        "top_comment": {
+            "id": 1,
+            "by": "alice",
+            "text": "Nice release",
+            "time": 1770853629,
+            "score": 240,
+            "children": []
+        }
+    }
+    """;
+
+    [Test]
+    public void Import_NewsPost_populates_enriched_fields()
+    {
+        var post = EnrichedPostJson.FromJson<ServiceModel.ImportNewsPost>();
+
+        // snake_case names come from the Python analyzers, so a mismatched
+        // DataMember name here silently drops the field
+        Assert.That(post.Source, Is.EqualTo("blog.rust-lang.org"));
+        Assert.That(post.Published, Is.EqualTo("2024-09-05T00:00:00+00:00"));
+        Assert.That(post.ReadingTime, Is.EqualTo(6));
+        Assert.That(post.PrimarySource, Is.True);
+        Assert.That(post.Paywalled, Is.False);
+        Assert.That(post.Level, Is.EqualTo("intermediate"));
+        Assert.That(post.Tags, Is.EquivalentTo(new[] { "release", "performance" }));
+        Assert.That(post.Controversy, Is.EqualTo(0.21).Within(0.001));
+        Assert.That(post.Mood, Is.EqualTo("mostly_positive"));
+        Assert.That(post.SentimentConfidence, Is.EqualTo("high"));
+        Assert.That(post.Alternatives, Is.EquivalentTo(new[] { "Salsa", "Differential Dataflow" }));
+
+        Assert.That(post.RelatedDiscussions, Is.Not.Null);
+        Assert.That(post.RelatedDiscussions!.Count, Is.EqualTo(1));
+        var related = post.RelatedDiscussions[0];
+        Assert.That(related.Source, Is.EqualTo("Reddit"));
+        Assert.That(related.Subreddit, Is.EqualTo("r/rust"));
+        Assert.That(related.Points, Is.EqualTo(320));
+        Assert.That(related.Comments, Is.EqualTo(88));
+
+        Assert.That(post.TopComment!.Score, Is.EqualTo(240));
+    }
+
+    [Test]
+    public void Import_NewsPost_tolerates_missing_enriched_fields()
+    {
+        // Posts analyzed before these fields existed must still import
+        var post = PostJson.FromJson<ServiceModel.ImportNewsPost>();
+
+        Assert.That(post.Source, Is.Null);
+        Assert.That(post.Tags, Is.Null);
+        Assert.That(post.Alternatives, Is.Null);
+        Assert.That(post.RelatedDiscussions, Is.Null);
+        Assert.That(post.ReadingTime, Is.EqualTo(0));
+        Assert.That(post.PrimarySource, Is.False);
+        Assert.That(post.TopComment!.Score, Is.Null);
+    }
 }

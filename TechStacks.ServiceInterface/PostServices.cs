@@ -72,26 +72,107 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             }
         }
 
+        var byline = BuildByline(request);
+        if (byline != null)
+            post.Content += $"\n\n{byline}";
+
         if (request.Sentiment != null)
         {
             post.Content += $"""
-            
+
                 ---
                 sentiment from [comments]({request.CommentsUrl}):
-                
+
                 {request.Sentiment}
                 """;
+
+            if (request.Alternatives?.Count > 0)
+                post.Content += $"\n\n**Alternatives raised in the discussion:** {string.Join(", ", request.Alternatives)}";
+        }
+
+        if (request.RelatedDiscussions?.Count > 0)
+        {
+            var links = request.RelatedDiscussions
+                .Where(x => !string.IsNullOrEmpty(x.Url))
+                .Select(x => $"[{(!string.IsNullOrEmpty(x.Subreddit) ? x.Subreddit : x.Source)}]({x.Url}) ({x.Points} points, {x.Comments} comments)");
+            post.Content += $"\n\n**Also discussed on:** {string.Join(" · ", links)}";
         }
 
         log.LogInformation("Importing HackerNews post: {Title} with technologies {Technologies}, top comment: {TopComment}", 
             post.Title, string.Join(", ", techIds), request.TopComment?.Text);  
         var ret = await Post(post);
 
+        // Expression trees can't contain null-propagation, so these are hoisted out
+        var tags = request.Tags?.ToArray();
+        var alternatives = request.Alternatives?.ToArray();
+        var published = ParseDate(request.Published);
+        var relatedJson = request.RelatedDiscussions?.Count > 0
+            ? request.RelatedDiscussions.ToJson()
+            : null;
+
+        // Written separately rather than through CreatePost: these are analysis
+        // outputs from the import scripts, not fields any user should be able to set.
+        await Db.UpdateOnlyAsync(() => new Post
+        {
+            RelevanceScore = request.RelevanceScore,
+            Source = request.Source,
+            Published = published,
+            ReadingTime = request.ReadingTime,
+            Tags = tags,
+            Level = request.Level,
+            PrimarySource = request.PrimarySource,
+            Paywalled = request.Paywalled,
+            ArchiveUrl = request.ArchiveUrl,
+            Controversy = request.Controversy,
+            Mood = request.Mood,
+            SentimentConfidence = request.SentimentConfidence,
+            Alternatives = alternatives,
+            RelatedDiscussions = relatedJson,
+        }, where: x => x.Id == ret.Id);
+
         if (request.TopComment != null)
         {
             await InsertCommentTreeAsync(ret.Id, request.TopComment, replyId: null);
         }
         return ret;
+    }
+
+    private static DateTime? ParseDate(string? date) =>
+        !string.IsNullOrEmpty(date) && DateTime.TryParse(date, out var parsed)
+            ? parsed.ToUniversalTime()
+            : null;
+
+    /// <summary>
+    /// Compact provenance line under the summary: where it came from, when it was
+    /// published (HN and Reddit routinely resurface years-old articles), how long it
+    /// is, and whether it's the primary source or secondary coverage.
+    /// </summary>
+    private static string? BuildByline(ImportNewsPost request)
+    {
+        var parts = new List<string>();
+
+        if (!string.IsNullOrEmpty(request.Source))
+            parts.Add(request.PrimarySource ? $"{request.Source} (primary source)" : request.Source);
+
+        if (!string.IsNullOrEmpty(request.Published) &&
+            DateTime.TryParse(request.Published, out var published))
+            parts.Add($"published {published:yyyy-MM-dd}");
+
+        if (request.ReadingTime > 0)
+            parts.Add($"{request.ReadingTime} min read");
+
+        if (!string.IsNullOrEmpty(request.Level))
+            parts.Add(request.Level);
+
+        if (request.Paywalled && !string.IsNullOrEmpty(request.ArchiveUrl))
+            parts.Add($"paywalled — [archived copy]({request.ArchiveUrl})");
+        else if (request.Paywalled)
+            parts.Add("paywalled");
+
+        if (request.Tags?.Count > 0)
+            parts.Add(string.Join(", ", request.Tags));
+
+        return parts.Count > 0 ? $"*{string.Join(" · ", parts)}*" : null;
     }
 
     private async Task InsertCommentTreeAsync(long postId, HackerNewsComment comment, long? replyId)
@@ -110,7 +191,9 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             CreatedBy = comment.By ?? "unknown",
             Created = created,
             Modified = created,
-            UpVotes = 0,
+            // Reddit gives us the real comment score; HN's API does not expose one
+            Score = comment.Score ?? 0,
+            UpVotes = comment.Score > 0 ? comment.Score.Value : 0,
             RefId = comment.Id,
             RefSource = "HackerNews",
             RefUrn = $"urn:post:{comment.Id}",

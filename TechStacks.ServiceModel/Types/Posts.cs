@@ -154,6 +154,35 @@ public class Post
     public string? RefId { get; set; }
     public string? RefSource { get; set; }
     public string? RefUrn { get; set; }
+
+    // News analysis metadata, populated on ImportNewsPost by the HN/Reddit
+    // scanning scripts. Not settable via CreatePost. See Migration1001.
+    [Index]
+    [Default(0)]
+    public int RelevanceScore { get; set; }
+    public string? Source { get; set; }
+    /// <summary>Publication date of the source article, distinct from Created</summary>
+    public DateTime? Published { get; set; }
+    [Default(0)]
+    public int ReadingTime { get; set; }
+    [PgSqlTextArray]
+    public string[]? Tags { get; set; }
+    public string? Level { get; set; }
+    [Default(typeof(bool), "false")]
+    public bool PrimarySource { get; set; }
+    [Default(typeof(bool), "false")]
+    public bool Paywalled { get; set; }
+    public string? ArchiveUrl { get; set; }
+    /// <summary>Comments per point. Higher means more contentious.</summary>
+    [Default(0)]
+    public double Controversy { get; set; }
+    [Index]
+    public string? Mood { get; set; }
+    public string? SentimentConfidence { get; set; }
+    [PgSqlTextArray]
+    public string[]? Alternatives { get; set; }
+    [PgSqlJsonB]
+    public string? RelatedDiscussions { get; set; }
 }
 
 public class PostChangeHistory
