@@ -56,6 +56,17 @@ def create_cookie_jar():
     return jar
 
 
+def create_reddit_cookie_jar():
+    """Cookie jar loaded from reddit_cookies.json, needed to avoid Reddit's 403 on anonymous requests."""
+    with open(os.path.join(SCRIPT_DIR, "reddit_cookies.json")) as f:
+        reddit_cookies = json.load(f)
+    parsed = urlparse("https://www.reddit.com")
+    jar = requests.cookies.RequestsCookieJar()
+    for name, value in reddit_cookies.items():
+        jar.set(name, value, domain=parsed.hostname, path="/")
+    return jar
+
+
 def parse_json_response(text):
     # Try direct parse first
     try:

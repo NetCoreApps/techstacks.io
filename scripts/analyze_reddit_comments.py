@@ -18,9 +18,10 @@ import os
 import re
 import subprocess
 import sys
-from urllib.request import urlopen, Request
 
-from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, parse_json_response
+import requests
+
+from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, create_reddit_cookie_jar, parse_json_response
 
 def fetch_reddit_comments(comments_url: str) -> tuple[dict, list[dict]]:
     """Fetch post data and comment trees from a Reddit comments URL.
@@ -30,9 +31,11 @@ def fetch_reddit_comments(comments_url: str) -> tuple[dict, list[dict]]:
     """
     # Ensure URL ends with .json
     json_url = comments_url.rstrip("/") + ".json"
-    req = Request(json_url, headers={"User-Agent": USER_AGENT})
-    with urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    resp = requests.get(
+        json_url, headers={"User-Agent": USER_AGENT}, cookies=create_reddit_cookie_jar(), timeout=30
+    )
+    resp.raise_for_status()
+    data = resp.json()
 
     # Reddit returns a 2-element array: [post_listing, comments_listing]
     post_listing = data[0]["data"]["children"][0]["data"]
