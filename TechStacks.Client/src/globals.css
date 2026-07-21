@@ -1,6 +1,31 @@
 @import "tailwindcss";
-@source "../../node_modules/@servicestack/react/dist/servicestack-react.mjs";
-@source "../**/*.{ts,tsx}";
+@source "../node_modules/@servicestack/react/dist/servicestack-react.mjs";
+@source "./app/*.{ts,tsx}";
+@source "./app/account/*.{ts,tsx}";
+@source "./app/favorites/*.{ts,tsx}";
+@source "./app/signin/*.{ts,tsx}";
+@source "./app/signup/*.{ts,tsx}";
+@source "./app/signup-confirm/*.{ts,tsx}";
+@source "./app/stacks/*.{ts,tsx}";
+@source "./app/stacks/[slug]/*.{ts,tsx}";
+@source "./app/stacks/[slug]/edit/*.{ts,tsx}";
+@source "./app/stacks/new/*.{ts,tsx}";
+@source "./app/tech/*.{ts,tsx}";
+@source "./app/tech/[slug]/*.{ts,tsx}";
+@source "./app/tech/[slug]/edit/*.{ts,tsx}";
+@source "./app/tech/new/*.{ts,tsx}";
+@source "./app/top/*.{ts,tsx}";
+@source "./app/posts/[id]/[slug]/*.{ts,tsx}";
+@source "./app/posts/[id]/[slug]/edit/*.{ts,tsx}";
+
+@source "./components/*.{ts,tsx}";
+@source "./components/forms/*.{ts,tsx}";
+@source "./components/layout/*.{ts,tsx}";
+@source "./components/posts/*.{ts,tsx}";
+@source "./components/ui/*.{ts,tsx}";
+
+@source "./providers.tsx";
+@source "./lib/auth/*.{ts,tsx}";
 
 @variant dark (.dark &);
 
