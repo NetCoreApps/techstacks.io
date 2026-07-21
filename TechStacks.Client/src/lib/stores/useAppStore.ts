@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import * as gateway from '@/lib/api/gateway';
 
+interface HeaderTitle {
+  title: string;
+  pathname: string;
+}
+
 interface AppState {
   // Loading state
   loading: boolean;
@@ -16,6 +21,10 @@ interface AppState {
   overview: any;
   setConfig: (config: any) => void;
   setOverview: (overview: any) => void;
+
+  // Header Title
+  headerTitle: HeaderTitle | null;
+  setHeaderTitle: (title: string, pathname: string) => void;
 
   // Cached data
   technologies: any[];
@@ -52,6 +61,7 @@ export const useAppStore = create<AppState>()(
       sessionInfo: null,
       config: null,
       overview: null,
+      headerTitle: null,
       technologies: [],
       techStacks: [],
       posts: {},
@@ -74,6 +84,7 @@ export const useAppStore = create<AppState>()(
       },
       setConfig: (config) => set({ config }),
       setOverview: (overview) => set({ overview }),
+      setHeaderTitle: (title, pathname) => set({ headerTitle: { title, pathname } }),
 
       // Initialize app
       initialize: async () => {

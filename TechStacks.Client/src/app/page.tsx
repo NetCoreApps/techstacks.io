@@ -8,6 +8,7 @@ import { PostForm } from '@/components/forms/PostForm';
 import { WatchListDialog } from '@/components/WatchListDialog';
 import * as gateway from '@/lib/api/gateway';
 import { useAppStore } from '@/lib/stores/useAppStore';
+import { useHeaderTitle } from '@/lib/hooks/useHeaderTitle';
 import Link from 'next/link';
 import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 import { formatDistanceToNow } from 'date-fns';
@@ -493,6 +494,7 @@ function PortalSkeleton() {
 }
 
 function HomePageContent() {
+  useHeaderTitle('Latest Tech News');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -922,7 +924,6 @@ function HomePageContent() {
         {/* Top Header Section */}
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 pb-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Latest Tech News</h1>
             {mounted && (
               <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
                 <button

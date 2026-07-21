@@ -7,11 +7,14 @@ import { useAuth } from '@servicestack/react';
 import { appAuth } from '@/lib/auth';
 import routes from '@/lib/utils/routes';
 
+import { useAppStore } from '@/lib/stores/useAppStore';
+
 export function Header() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { signOut } = appAuth();
   const [mounted, setMounted] = useState(false);
+  const headerTitle = useAppStore((state) => state.headerTitle);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +26,10 @@ export function Header() {
     await signOut('/');
   };
 
+  const activeTitle = (mounted && headerTitle?.pathname === pathname)
+    ? headerTitle.title
+    : 'TechStacks';
+
   return (
     <header className="bg-gray-900 text-white sticky top-0 z-50 shadow-md">
       <div className="container mx-auto">
@@ -30,7 +37,7 @@ export function Header() {
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <Link href={routes.home()} className="text-2xl font-bold hover:text-gray-300">
-              TechStacks
+              {activeTitle}
             </Link>
           </div>
 
