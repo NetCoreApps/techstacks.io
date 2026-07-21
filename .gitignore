@@ -15,6 +15,7 @@ reddit_top.json
 posts/
 completed/
 failed/
+skipped/
 *.xml
 dist/
 App_Data/

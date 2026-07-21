@@ -16,7 +16,17 @@ import sys
 from pathlib import Path
 
 import requests
-from utils import TECHSTACKS_BASE, SCRIPT_DIR, POSTS_DIR, COMPLETED_DIR, FAILED_DIR, create_cookie_jar, append_to_file
+from utils import (
+    TECHSTACKS_BASE,
+    SCRIPT_DIR,
+    POSTS_DIR,
+    COMPLETED_DIR,
+    FAILED_DIR,
+    SKIPPED_DIR,
+    MIN_RELEVANCE_SCORE,
+    create_cookie_jar,
+    append_to_file,
+)
 
 IMPORT_POST_URL = f"{TECHSTACKS_BASE}/api/ImportNewsPost"
 SYNC_POST_URL = f"{TECHSTACKS_BASE}/api/SyncStats"
@@ -27,6 +37,20 @@ def import_post(post_file):
 
     with open(post_file) as f:
         post_data = json.load(f)
+
+    # The analyzer already judged how dev-relevant this is; publishing the low
+    # scorers is what fills the feed with tech-adjacent general news.
+    score = post_data.get("relevance_score", 0)
+    if score < MIN_RELEVANCE_SCORE:
+        print(f"  Skipping post {post_id}: relevance {score} < {MIN_RELEVANCE_SCORE}")
+        os.makedirs(SKIPPED_DIR, exist_ok=True)
+        shutil.move(post_file, os.path.join(SKIPPED_DIR, f"{post_id}.json"))
+        # Recorded as done so it isn't re-analyzed on the next run
+        append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(post_id))
+        post_url = post_data.get("url", "")
+        if post_url:
+            append_to_file(os.path.join(SCRIPT_DIR, "urls_completed.txt"), post_url.rstrip("/"))
+        return "skipped"
 
     print(f"  Importing post {post_id}: {post_data.get('title', 'N/A')}")
 
@@ -94,12 +118,16 @@ def main():
         return
 
     print(f"Importing {len(post_files)} post{'s' if len(post_files) != 1 else ''}...")
-    failures = 0
+    failures = skipped = 0
     for pf in post_files:
-        if not import_post(str(pf)):
+        outcome = import_post(str(pf))
+        if outcome == "skipped":
+            skipped += 1
+        elif not outcome:
             failures += 1
 
-    print(f"Publishing complete. {len(post_files) - failures} succeeded, {failures} failed.")
+    succeeded = len(post_files) - failures - skipped
+    print(f"Publishing complete. {succeeded} succeeded, {failures} failed, {skipped} skipped as low relevance.")
 
 
 if __name__ == "__main__":

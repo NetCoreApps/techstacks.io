@@ -49,6 +49,47 @@ def mark_failed(post: dict, error_msg: str):
         posts_path.unlink()
 
 
+def discussion_source(comments_url: str) -> str:
+    if "reddit.com" in comments_url:
+        return "Reddit"
+    if "ycombinator.com" in comments_url:
+        return "HN"
+    return "Other"
+
+
+def merge_cross_posts(posts: list[dict]) -> list[dict]:
+    """Collapse the same article appearing on both HN and Reddit into one post.
+
+    The duplicate used to be silently dropped, losing the second community's
+    discussion. Instead the most-upvoted copy becomes the post and the others are
+    attached as related_discussions.
+    """
+    groups: dict[str, list[dict]] = {}
+    for p in posts:
+        groups.setdefault(p.get("url", "").rstrip("/"), []).append(p)
+
+    merged = []
+    for url, group in groups.items():
+        group.sort(key=lambda p: p.get("points", 0), reverse=True)
+        primary, others = group[0], group[1:]
+        if others:
+            primary["related_discussions"] = [
+                {
+                    "source": discussion_source(o.get("comments_url", "")),
+                    "url": o.get("comments_url", ""),
+                    "points": o.get("points", 0),
+                    "comments": o.get("comments", 0),
+                    "subreddit": o.get("subreddit", ""),
+                }
+                for o in others
+                if o.get("comments_url")
+            ]
+            titles = ", ".join(f"{discussion_source(o.get('comments_url', ''))}:{o['id']}" for o in others)
+            print(f"Cross-posted: {url} also discussed at {titles}")
+        merged.append(primary)
+    return merged
+
+
 def run_comments_analyzer(post: dict, comments_url: str, model: str | None):
     is_reddit = "reddit.com" in comments_url
     analyzer = "analyze_reddit_comments.py" if is_reddit else "analyze_hn_comments.py"
@@ -110,6 +151,8 @@ def main():
     to_process = [p for p in eligible if str(p["id"]) not in done and p.get("url", "").rstrip('/') not in done_urls and is_content_url(p.get("url", ""))]
     print(f"Already processed: {len(eligible) - len(to_process)}, remaining: {len(to_process)}")
 
+    to_process = merge_cross_posts(to_process)
+
     # Find posts that have article analysis but are missing comments analysis
     needs_comments = []
     posts_dir = Path(SCRIPT_DIR) / "posts"
@@ -148,6 +191,16 @@ def main():
             continue
         if result.stdout:
             print(result.stdout, end="")
+
+        # Step 1b: analyze_tech_article writes the post file from the source feed
+        # entry, so cross-post links have to be patched in afterwards.
+        related = post.get("related_discussions")
+        if related:
+            post_path = Path(POSTS_DIR) / f"{post_id}.json"
+            if post_path.exists():
+                post_data = json.loads(post_path.read_text())
+                post_data["related_discussions"] = related
+                post_path.write_text(json.dumps(post_data, indent=2), encoding="utf-8")
 
         # Step 2: Analyze the post comments
         if comments_url:

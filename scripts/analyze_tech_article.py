@@ -13,6 +13,7 @@ Requirements:
 """
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -24,7 +25,18 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup, Comment
 from markdownify import markdownify as md
-from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, parse_json_response
+from prompts import ARTICLE_PROMPT, ARTICLE_SCHEMA, EXTRACTION_FAILED
+from utils import (
+    SCRIPT_DIR,
+    REPO_ROOT,
+    LLMS_SH,
+    LLMS_ANALYTICS_MODEL,
+    USER_AGENT,
+    controversy_ratio,
+    extract_domain,
+    parse_json_response,
+    reading_time_mins,
+)
 
 # ── Content Extraction ───────────────────────────────────────────────────────
 
@@ -63,10 +75,99 @@ ARTICLE_SELECTORS = [
 
 
 def load_done_urls() -> set:
-    urls_path = Path(SCRIPT_DIR) / "completed" / "urls.txt"
-    if urls_path.exists():
-        return {line.strip().rstrip("/") for line in urls_path.read_text().splitlines() if line.strip()}
-    return set()
+    done = set()
+    for name in ("urls_completed.txt", "urls_failed.txt"):
+        urls_path = Path(SCRIPT_DIR) / name
+        if urls_path.exists():
+            done.update(
+                line.strip().rstrip("/") for line in urls_path.read_text().splitlines() if line.strip()
+            )
+    return done
+
+
+# Pages that render as a wall rather than an article. Checked against the
+# extracted body so a summary is never generated from a paywall notice.
+PAYWALL_MARKERS = [
+    r"subscribe to (?:continue|read)",
+    r"subscribers? only",
+    r"this (?:article|content) is for subscribers",
+    r"create a free account to (?:continue|read)",
+    r"sign in to (?:continue|read)",
+    r"you have reached your (?:free )?article limit",
+    r"enable javascript",
+    r"please turn on javascript",
+    r"verify you are (?:a )?human",
+    r"checking your browser",
+    r"access denied",
+    r"are you a robot",
+    r"accept (?:all )?cookies to continue",
+]
+
+MIN_CONTENT_CHARS = 600
+
+
+WALL_PREFIX = "paywall/blocked"
+
+
+def detect_extraction_failure(extracted: dict) -> str | None:
+    """Return a reason if the extracted page has no usable article body, else None.
+
+    Reasons starting with WALL_PREFIX mean the page is positively identified as a
+    wall; anything else is only a suspicion (a terse README is short but valid).
+    """
+    text = extracted.get("text_plain", "")
+    # Only look at the head of the page: the markers routinely appear in footers
+    # and cookie banners of pages that did extract fine.
+    head = text[:1500].lower()
+    for marker in PAYWALL_MARKERS:
+        if re.search(marker, head):
+            return f"{WALL_PREFIX} marker matched: {marker!r}"
+    if len(text) < MIN_CONTENT_CHARS:
+        return f"content too short ({len(text)} chars)"
+    return None
+
+
+PUBLISHED_META = [
+    ("meta", {"property": "article:published_time"}, "content"),
+    ("meta", {"property": "og:published_time"}, "content"),
+    ("meta", {"name": "publish_date"}, "content"),
+    ("meta", {"name": "publication_date"}, "content"),
+    ("meta", {"name": "date"}, "content"),
+    ("meta", {"itemprop": "datePublished"}, "content"),
+    ("meta", {"name": "DC.date.issued"}, "content"),
+    ("time", {"itemprop": "datePublished"}, "datetime"),
+]
+
+
+def extract_published_date(soup: BeautifulSoup) -> str:
+    """Best-effort publication date as an ISO-8601 string, or '' if not found.
+
+    HN and Reddit routinely resurface years-old articles, so the date is often the
+    single most useful thing a reader is missing.
+    """
+    for tag, attrs, key in PUBLISHED_META:
+        el = soup.find(tag, attrs=attrs)
+        if el and el.get(key):
+            return el[key].strip()
+
+    # JSON-LD is the common fallback on news sites
+    for script in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(script.string or "")
+        except (json.JSONDecodeError, TypeError):
+            continue
+        candidates = data if isinstance(data, list) else [data]
+        for entry in candidates:
+            if isinstance(entry, dict):
+                date = entry.get("datePublished") or entry.get("dateCreated")
+                if date and isinstance(date, str):
+                    return date.strip()
+
+    # Bare <time datetime="..."> as a last resort
+    el = soup.find("time")
+    if el and el.get("datetime"):
+        return el["datetime"].strip()
+    return ""
 
 
 def fetch_page(url: str) -> str:
@@ -102,6 +203,9 @@ def extract_content(html: str, url: str) -> dict:
     if meta_desc and meta_desc.get("content"):
         description = meta_desc["content"].strip()
 
+    # Publication date, read before the noisy elements (incl. <time> in headers) are stripped
+    published = extract_published_date(soup)
+
     # Remove noisy elements
     for tag_name in REMOVE_TAGS:
         for tag in soup.find_all(tag_name):
@@ -131,6 +235,7 @@ def extract_content(html: str, url: str) -> dict:
     return {
         "title": title,
         "description": description,
+        "published": published,
         "url": url,
         "text_markdown": text_md,
         "text_plain": text_plain,
@@ -138,46 +243,6 @@ def extract_content(html: str, url: str) -> dict:
 
 
 # ── LLM Integration ─────────────────────────────────────────────────────────
-
-SYSTEM_PROMPT = """\
-You are a technology content analyst. You will receive the extracted content \
-of a web page about technology. Analyze it and return a JSON object with \
-exactly this schema (no markdown fences, just raw JSON):
-
-{
-  "title": "string — the page/article title",
-  "type": "string — one of: Announcement, Showcase, Question, Post",
-  "technologies": [
-    "string — top referenced technology #1",
-    "string — top referenced technology #2",
-    "string — top referenced technology #3"
-  ],
-  "relevance_score": <number 0-100 — how relevant this page is to developer \
-technology, a programming language, framework, or library. 100 = entirely \
-about a dev technology, 0 = completely unrelated>,
-  "summary": "string — a concise summary in markdown format highlighting the \
-most important insights, key takeaways, and notable technical details. Use \
-bullet points for key insights. Keep it under 300 words."
-}
-
-Rules:
-- technologies: Pick the top 3 most prominently referenced technologies, \
-frameworks, languages, or libraries. Be specific (e.g. "React" not "JavaScript framework"). \
-Use concise names: prefer well-known acronyms (e.g. "AI" not "Artificial Intelligence", \
-"LLM" not "Large Language Model"). \
-Use the broad technology name without version numbers (e.g. "Python" not "Python 3", \
-"React" not "React 19", ".NET" not ".NET 9").
-- relevance_score: Score strictly based on how much the content is about a \
-developer-facing technology, programming language, framework, or library.
-- summary: Focus on what matters most to a developer audience. Include \
-concrete details like version numbers, benchmarks, or migration paths if present.
-- type: Classify the post into exactly one of these categories:
-  - "Announcement" — Official news, product updates, releases, and important notices from the team or organization.
-  - "Showcase" — Demonstrations of projects, builds, integrations, or creative work to share with the community.
-  - "Question" - Requests for help, advice, troubleshooting, or general inquiries seeking answers from others.
-  - "Post" — General discussion, opinions, tutorials, articles, and content that doesn't fit the other categories.
-- Return ONLY valid JSON. No explanation, no markdown code fences."""
-
 
 def build_user_message(extracted: dict, max_chars: int = 12000) -> str:
     """Build the user message from extracted content, truncated to fit context."""
@@ -187,10 +252,13 @@ def build_user_message(extracted: dict, max_chars: int = 12000) -> str:
 
     parts = [
         f"URL: {extracted['url']}",
+        f"Source: {extract_domain(extracted['url'])}",
         f"Page Title: {extracted['title']}",
     ]
-    if extracted["description"]:
+    if extracted.get("description"):
         parts.append(f"Meta Description: {extracted['description']}")
+    if extracted.get("published"):
+        parts.append(f"Published: {extracted['published']}")
     parts.append(f"\n--- PAGE CONTENT ---\n{body}")
     return "\n".join(parts)
 
@@ -202,46 +270,12 @@ def call_llm(user_message: str, model: str) -> dict:
         "model": model,
         "temperature": 0.2,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": ARTICLE_PROMPT},
             {"role": "user", "content": user_message},
         ],
         "response_format": {
             "type": "json_schema",
-            "json_schema": {
-                "name": "tech_article_analysis",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "The page or article title",
-                        },
-                        "type": {
-                            "type": "string",
-                            "enum": ["Announcement", "Showcase", "Post"],
-                            "description": "The type of post: Announcement, Showcase, or Post",
-                        },
-                        "technologies": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "minItems": 1,
-                            "maxItems": 3,
-                            "description": "Top 3 most prominently referenced technologies, frameworks, languages, or libraries. Use concise names with well-known acronyms (e.g. AI, ML, K8s, JS) and broad names without version numbers (e.g. Python not Python 3)",
-                        },
-                        "relevance_score": {
-                            "type": "integer",
-                            "description": "0-100 score for how relevant the page is to developer technology, a programming language, framework, or library",
-                        },
-                        "summary": {
-                            "type": "string",
-                            "description": "Concise summary in markdown format highlighting the most important insights and key takeaways",
-                        },
-                    },
-                    "required": ["title", "type", "technologies", "relevance_score", "summary"],
-                    "additionalProperties": False,
-                },
-            },
+            "json_schema": ARTICLE_SCHEMA,
         },
     }
 
@@ -366,6 +400,38 @@ def main():
         file=sys.stderr,
     )
 
+    # Step 2b: If the page is a paywall/wall rather than an article, retry via
+    # archive.is before giving up — otherwise the LLM summarizes the wall itself.
+    paywalled = False
+    archive_url = ""
+    failure = detect_extraction_failure(extracted)
+    if failure:
+        print(f"⚠️  No usable article body ({failure}), trying archive.is ...", file=sys.stderr)
+        try:
+            from archive_is_fetch import fetch_latest
+
+            # fetch_latest prints progress to stdout, which would corrupt our JSON
+            with contextlib.redirect_stdout(sys.stderr):
+                archive_url, archive_html = fetch_latest(post_url)
+            archived = extract_content(archive_html, post_url)
+            archive_failure = detect_extraction_failure(archived)
+            if archive_failure:
+                # Fall through with the original: a short page may still be a real
+                # article (a terse README), and the model is told to report
+                # EXTRACTION_FAILED if it truly gets handed a wall.
+                print(f"   Archive also looks unusable ({archive_failure}), letting the model decide",
+                      file=sys.stderr)
+                archive_url = ""
+            else:
+                extracted = archived
+                # Only now is it certain the original was actually walled
+                paywalled = failure.startswith(WALL_PREFIX)
+                print(f"   Recovered from {archive_url} ({len(extracted['text_markdown']):,} chars)",
+                      file=sys.stderr)
+        except Exception as e:
+            print(f"   Archive fetch failed ({e}), letting the model decide", file=sys.stderr)
+            archive_url = ""
+
     # Step 3: Build the LLM request
     user_message = build_user_message(extracted, max_chars=args.max_chars)
 
@@ -375,12 +441,28 @@ def main():
     # result["slug"] = create_slug(result.get("title"))
     result["url"] = post_url
 
+    # The model is told to emit this when handed a page with no article body
+    if result.get("summary", "").strip() == EXTRACTION_FAILED:
+        print(f"❌ Model reported no usable article body at {post_url}", file=sys.stderr)
+        sys.exit(1)
+
+    # Step 4b: Metadata the reader wants that doesn't need an LLM
+    result["source"] = extract_domain(post_url)
+    result["published"] = extracted.get("published", "")
+    result["reading_time"] = reading_time_mins(extracted["text_plain"])
+    result["paywalled"] = paywalled
+    if archive_url:
+        result["archive_url"] = archive_url
+
     # Step 5: Output
     post_json = json.dumps(result, indent=2)
     print(post_json)
 
     if post_ref:
         result.update(post_ref)
+        # Comments per point: a 300-point post with 400 comments is an argument,
+        # one with 20 comments is a consensus.
+        result["controversy"] = controversy_ratio(result.get("comments", 0), result.get("points", 0))
         post_json = json.dumps(result, indent=2)
         post_path.write_text(post_json, encoding="utf-8")
 

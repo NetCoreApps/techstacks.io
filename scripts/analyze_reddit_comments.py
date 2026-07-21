@@ -21,16 +21,29 @@ import sys
 
 import requests
 
-from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_ANALYTICS_MODEL, USER_AGENT, create_reddit_cookie_jar, parse_json_response
+from prompts import SENTIMENT_SCHEMA, sentiment_prompt, sentiment_user_message
+from utils import (
+    SCRIPT_DIR,
+    REPO_ROOT,
+    LLMS_SH,
+    LLMS_ANALYTICS_MODEL,
+    USER_AGENT,
+    count_comments,
+    create_reddit_cookie_jar,
+    parse_json_response,
+    sample_comments,
+)
+
 
 def fetch_reddit_comments(comments_url: str) -> tuple[dict, list[dict]]:
     """Fetch post data and comment trees from a Reddit comments URL.
 
     Returns (post_data, comment_trees) where each comment tree is a dict with
-    keys: by, text, children.
+    keys: by, text, score, children.
     """
-    # Ensure URL ends with .json
-    json_url = comments_url.rstrip("/") + ".json"
+    # Ask for the top-voted comments and a deep tree: the default page returns a
+    # shallow slice and leaves most of the discussion behind "more" stubs.
+    json_url = comments_url.rstrip("/") + ".json?limit=500&sort=top&depth=10"
     resp = requests.get(
         json_url, headers={"User-Agent": USER_AGENT}, cookies=create_reddit_cookie_jar(), timeout=30
     )
@@ -67,6 +80,9 @@ def parse_comment(thing: dict, max_depth: int = 50) -> dict | None:
         "id": comment_data.get("id", ""),
         "by": comment_data.get("author", "[deleted]"),
         "text": comment_data.get("body", ""),
+        # Score is the strongest relevance signal Reddit gives us; it lets the
+        # model weight consensus by what the crowd actually endorsed.
+        "score": comment_data.get("score"),
         "time": int(comment_data.get("created_utc", 0)),
         "children": [],
     }
@@ -82,79 +98,24 @@ def parse_comment(thing: dict, max_depth: int = 50) -> dict | None:
     return comment
 
 
-def flatten_comments(tree: dict, depth: int = 0) -> list[dict]:
-    """Flatten a comment tree into a list with depth info."""
-    result = [{"by": tree["by"], "text": tree["text"], "depth": depth}]
-    for child in tree.get("children", []):
-        result.extend(flatten_comments(child, depth + 1))
-    return result
-
-
-def comments_to_text(comments: list[dict], max_comments: int = 200, max_chars: int = 30000) -> str:
-    """Convert comment trees into a readable text block for the LLM."""
-    lines = []
-    count = 0
-    for tree in comments:
-        for c in flatten_comments(tree):
-            if count >= max_comments:
-                break
-            indent = "  " * c["depth"]
-            lines.append(f"{indent}[{c['by']}]: {c['text']}")
-            lines.append("")
-            count += 1
-        if count >= max_comments:
-            break
-    text = "\n".join(lines)
-    if len(text) > max_chars:
-        text = text[:max_chars] + "\n\n[...comments truncated...]"
-    return text
-
-
-SENTIMENT_PROMPT = """\
-You are an expert at analyzing online discussion threads. You will receive \
-the full comment thread from a Reddit post. Analyze the overall sentiment \
-and key themes, then produce a markdown summary.
-
-Your output must be a JSON object with exactly this schema (no markdown fences, just raw JSON):
-
-{
-  "sentiment": "string — markdown-formatted sentiment analysis"
-}
-
-The "sentiment" field should contain well-structured markdown with these sections:
-
-## Overall Sentiment
-A 1-2 sentence summary of the overall tone (positive, negative, mixed, etc.) \
-with an approximate breakdown (e.g. "~60% negative, ~30% neutral, ~10% positive").
-
-## Key Themes
-Bullet points covering the main topics and arguments being discussed.
-
-## Notable Perspectives
-2-4 standout comments or viewpoints that represent the range of opinions, \
-paraphrased and attributed by username.
-
-## Consensus & Disagreements
-What do commenters generally agree on? Where are the main fault lines?
-
-Rules:
-- Be objective and balanced — represent all sides fairly
-- Use specific examples and usernames from the comments
-- Keep the total output under 500 words
-- Return ONLY valid JSON"""
-
-
-def analyze_sentiment(post_title: str, comments_text: str, model: str) -> str:
-    """Use LLM to generate sentiment analysis markdown."""
-    user_message = f"Post Title: {post_title}\n\n--- COMMENTS ---\n{comments_text}"
+def analyze_sentiment(post_title: str, comments_text: str, model: str,
+                      article_summary: str = "", selftext: str = "") -> dict:
+    """Use LLM to generate the sentiment analysis, returning the parsed result."""
+    user_message = sentiment_user_message(post_title, comments_text, article_summary, selftext)
 
     chat_request = {
         "model": model,
-        "temperature": 0.3,
+        # Low temperature: this is an extraction and attribution task, not a
+        # creative one, and quotes must be verbatim.
+        "temperature": 0.1,
         "messages": [
-            {"role": "system", "content": SENTIMENT_PROMPT},
+            {"role": "system", "content": sentiment_prompt("Reddit")},
             {"role": "user", "content": user_message},
         ],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": SENTIMENT_SCHEMA,
+        },
     }
 
     chat_json_path = os.path.join(SCRIPT_DIR, "chat.reddit.comments.json")
@@ -178,8 +139,7 @@ def analyze_sentiment(post_title: str, comments_text: str, model: str) -> str:
         print("Error: llms.sh returned empty response", file=sys.stderr)
         sys.exit(1)
 
-    parsed = parse_json_response(content)
-    return parsed.get("sentiment", content)
+    return parse_json_response(content)
 
 
 def main():
@@ -217,25 +177,40 @@ def main():
     post_data, all_comments = fetch_reddit_comments(comments_url)
     post_title = post_data.get("title") or post_info.get("title", f"Reddit Post {post_id}")
 
-    total_flat = sum(len(flatten_comments(c)) for c in all_comments)
+    total_flat = sum(count_comments(c) for c in all_comments)
     print(f"Post: {post_title} ({len(all_comments)} top-level comments, {total_flat} total)", file=sys.stderr)
 
     # First comment tree for top_comment
     first_tree = all_comments[0] if all_comments else None
 
-    sentiment_count = min(total_flat, 200)
-    comments_text = comments_to_text(all_comments, max_comments=200, max_chars=args.max_chars)
-    print(f"Using first {sentiment_count} comments for sentiment analysis", file=sys.stderr)
+    # Sampled breadth-first across threads: a depth-first cap would spend the whole
+    # budget inside the first thread and misrepresent the discussion.
+    comments_text, stats = sample_comments(all_comments, max_chars=args.max_chars)
+    print(
+        f"Sampled {stats['sampled_comments']} of {stats['total_comments']} comments "
+        f"across {stats['total_threads']} threads",
+        file=sys.stderr,
+    )
+
+    # On a self-post the body IS the article, so it must reach the model
+    selftext = post_data.get("selftext", "")
+    article_summary = post_info.get("summary", "")
 
     # LLM sentiment analysis
     print(f"Analyzing sentiment with {args.model} ...", file=sys.stderr)
-    sentiment_md = analyze_sentiment(post_title, comments_text, args.model)
+    analysis = analyze_sentiment(post_title, comments_text, args.model, article_summary, selftext)
+
+    sentiment_md = analysis.get("sentiment", "")
 
     # Add sentiment and top_comment to existing post info
     post_info["sentiment"] = sentiment_md
+    post_info["mood"] = analysis.get("mood", "")
+    post_info["sentiment_confidence"] = analysis.get("confidence", "")
+    post_info["alternatives"] = analysis.get("alternatives", [])
+    post_info["discussion_stats"] = stats
     post_info["top_comment"] = first_tree
 
-    print(json.dumps({"sentiment": sentiment_md, "top_comment": first_tree}, indent=2))
+    print(json.dumps({**analysis, "top_comment": first_tree}, indent=2))
 
     with open(post_path, "w", encoding="utf-8") as f:
         json.dump(post_info, f, indent=2)
