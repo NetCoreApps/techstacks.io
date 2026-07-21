@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 import { formatDistanceToNow } from 'date-fns';
 import routes from '@/lib/utils/routes';
+import { postDomain } from '@/lib/utils/domain';
 import { TechnologyTags } from '@/components/TechnologyTags';
 import {
   Brain,
@@ -261,6 +262,11 @@ function FeaturedStory({
 
             <h2 className="text-lg md:text-xl font-extrabold text-gray-900 group-hover:text-indigo-600 transition-colors leading-snug">
               {post.title}
+              {postDomain(post.url) && (
+                <span className="ml-2 text-xs font-normal text-gray-500">
+                  {postDomain(post.url)}
+                </span>
+              )}
             </h2>
 
             {post.content && (
@@ -331,6 +337,11 @@ function TrendingDiscussions({
                   <h3 className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2 leading-relaxed">
                     {post.title}
                   </h3>
+                  {postDomain(post.url) && (
+                    <div className="text-[10px] text-gray-500 truncate">
+                      {postDomain(post.url)}
+                    </div>
+                  )}
                 </div>
               </article>
             );
@@ -449,6 +460,9 @@ function CategoryBlock({
                         {post.title}
                       </h4>
                       <div className="flex items-center gap-3 text-[10px] text-gray-500">
+                        {postDomain(post.url) && (
+                          <span className="truncate max-w-[10rem]">{postDomain(post.url)}</span>
+                        )}
                         <span>{formatDistanceToNow(new Date(post.created!), { addSuffix: true })}</span>
                         <span className="flex items-center gap-0.5"><MessageSquare className="size-2.5" /> {post.commentsCount || 0}</span>
                         <span>▲ {localPoints[post.id!] ?? post.points ?? 0}</span>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import routes from '@/lib/utils/routes';
+import { postDomain } from '@/lib/utils/domain';
 import * as gateway from '@/lib/api/gateway';
 import { appAuth } from '@/lib/auth';
 import { TechnologyTags } from '@/components/TechnologyTags';
@@ -162,6 +163,11 @@ export function PostsList({ posts }: PostsListProps) {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
                     {post.title}
+                    {postDomain(post.url) && (
+                      <span className="ml-2 text-xs font-normal text-gray-500">
+                        {postDomain(post.url)}
+                      </span>
+                    )}
                   </h3>
                   <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
                     <span className="bg-gray-100 px-2 py-1 rounded text-xs font-medium">

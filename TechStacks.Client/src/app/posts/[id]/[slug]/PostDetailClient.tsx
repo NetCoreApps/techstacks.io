@@ -9,6 +9,7 @@ import { useAuthorization } from '@/lib/hooks/useAuthorization';
 import { useAppStore } from '@/lib/stores/useAppStore';
 import { appAuth } from '@/lib/auth';
 import routes from '@/lib/utils/routes';
+import { postDomain } from '@/lib/utils/domain';
 import * as gateway from '@/lib/api/gateway';
 import { TechnologyTags } from '@/components/TechnologyTags';
 import { Avatar } from '@/components/ui/Avatar';
@@ -482,6 +483,11 @@ export default function PostDetailClient() {
                   </a>
                 ) : (
                   post.title
+                )}
+                {postDomain(post.url) && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    {postDomain(post.url)}
+                  </span>
                 )}
               </h1>
               {canEditPost(post) && (
