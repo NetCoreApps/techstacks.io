@@ -79,7 +79,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
         });
 
         using var db = GetDbConnection();
-        Plugins.Add(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
+        // Plugins.Add(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
 
         RegisterTypedRequestFilterAsync<IRegisterStats>(async (req, res, dto) =>
         {
