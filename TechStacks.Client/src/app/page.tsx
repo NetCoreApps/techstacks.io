@@ -70,7 +70,7 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
     name: 'Mobile',
     icon: Smartphone,
     tags: ['iOS', 'Android', 'Fuchsia', 'Swift', 'Kotlin', 'React Native', 'Flutter', 'Stripe', 'Payments', 'Apple Pay', 'Google Pay', 'Apple News', 'Smart Device', 'Smart Glasses', 'Virtual Reality', 'F-Droid', 'Bluetooth'],
-    color: 'border-violet-500 text-violet-600 bg-violet-50 hover:bg-violet-100'
+    color: 'border-orange-500 text-orange-600 bg-orange-50 hover:bg-orange-100'
   },
   programming: {
     name: 'Programming',
@@ -94,7 +94,7 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
     name: 'Hardware & Electronics',
     icon: CircuitBoard,
     tags: ['Hardware', 'Smart Device', 'Embedded', 'Firmware', 'PC', 'CPU', 'GPU', 'RISC', 'Arm', 'Intel', 'AMD', 'NVIDIA', 'Display', 'Robotics', 'Manufacturing', '3D Printing', 'Materials', 'Disk Storage', 'Automotive', 'System on Chip', 'Semiconductors', 'Memory', 'Electric Vehicle', 'Smart Home', 'Ring'],
-    color: 'border-orange-500 text-orange-600 bg-orange-50 hover:bg-orange-100'
+    color: 'border-violet-500 text-violet-600 bg-violet-50 hover:bg-violet-100'
   },
   clientFrameworks: {
     name: 'Client Frameworks',
@@ -187,14 +187,14 @@ function getCategoryGradient(categoryKey: string) {
     case 'nosql':
       return 'from-red-500 to-rose-700';
     case 'mobile':
-      return 'from-purple-600 to-fuchsia-600';
+      return 'from-orange-500 to-red-600';
     case 'cloud':
       return 'from-cyan-500 to-sky-600';
     case 'graphics':
       // yellow-green start keeps it clear of Programming/Productivity's greens
       return 'from-lime-400 to-emerald-600';
     case 'hardware':
-      return 'from-orange-500 to-red-600';
+      return 'from-purple-600 to-fuchsia-600';
     case 'media':
       // magenta into deep blue, so it doesn't read as Mobile's purple-to-magenta
       return 'from-fuchsia-600 to-indigo-700';
@@ -473,8 +473,23 @@ function CategoryBlock({
   const borderClass = config.color.split(' ')[0] || 'border-gray-200';
   const badgeColors = config.color.split(' ').slice(1).join(' ') || 'text-gray-600 bg-gray-50';
 
+  // The accent is applied inline rather than via `border-{hue}-500`, for two reasons:
+  //  1. Tailwind emits border-colour utilities alphabetically at equal specificity, so
+  //     the class was silently overridden by this element's `border-gray-200` for every
+  //     hue sorting before "gray" (amber, blue, cyan, emerald, fuchsia) — those cards
+  //     rendered a fully grey border.
+  //  2. When the class did win it coloured all four sides, not just the top, so cards
+  //     looked inconsistent depending on which hue they happened to use.
+  // Inline wins outright and only touches the top edge. Tailwind still emits the
+  // --color-{hue}-500 variable because the literal class strings live in the config above.
+  const hue = borderClass.slice('border-'.length, borderClass.lastIndexOf('-'));
+  const accentColor = `var(--color-${hue}-500)`;
+
   return (
-    <section className={`bg-white rounded-lg shadow-sm border-t-4 ${borderClass} border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col h-full overflow-hidden`}>
+    <section
+      style={{ borderTopColor: accentColor }}
+      className="bg-white rounded-lg shadow-sm border-t-4 border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col h-full overflow-hidden"
+    >
       <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <span className={`p-1.5 rounded-lg ${badgeColors}`}>
@@ -496,8 +511,9 @@ function CategoryBlock({
             {primaryPost && (
               <article
                 onClick={() => onPostClick(primaryPost.id!, primaryPost.slug)}
+                style={!primaryPost.imageUrl ? { borderLeftColor: accentColor } : undefined}
                 className={`group cursor-pointer block border border-gray-100 rounded-lg overflow-hidden hover:border-gray-200 transition-all ${
-                  !primaryPost.imageUrl ? `border-l-4 ${borderClass} bg-gray-50/20` : ''
+                  !primaryPost.imageUrl ? 'border-l-4 bg-gray-50/20' : ''
                 }`}
               >
                 {primaryPost.imageUrl && (
