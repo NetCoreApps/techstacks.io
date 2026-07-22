@@ -422,10 +422,15 @@ function CategoryBlock({
                   </h3>
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span className="flex items-center gap-1 font-medium bg-gray-50 px-1.5 py-0.5 rounded text-gray-600">
-                      {primaryPost.type}
-                    </span>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex items-center gap-1 font-medium bg-gray-50 px-1.5 py-0.5 rounded text-gray-600 shrink-0">
+                        {primaryPost.type}
+                      </span>
+                      {postDomain(primaryPost.url) && (
+                        <span className="truncate">{postDomain(primaryPost.url)}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
                       <span className="flex items-center gap-1">
                         <MessageSquare className="size-3" /> {primaryPost.commentsCount || 0}
                       </span>
