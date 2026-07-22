@@ -108,12 +108,6 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
     tags: ['node.js', 'Django', 'FastAPI', 'Flask', 'Ruby on Rails', 'Laravel', 'Spring', 'ASP.NET Core', 'ASP.NET MVC', 'ServiceStack', 'Express', 'NestJS', 'Phoenix', 'Sinatra', 'Play Framework', 'Docker', 'Kubernetes', 'Nginx', 'Caddy', 'HAProxy', 'RabbitMQ', 'gRPC', 'Apache Kafka', 'Apache Tomcat', 'Finangle', 'Apache Jena', 'MessageFormt', 'Bun', 'MQTT', 'Apache Spark', 'React Server Components'],
     color: 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100'
   },
-  graphics: {
-    name: 'Graphics, UI & Design',
-    icon: Palette,
-    tags: ['Tailwind CSS', 'CSS', 'Three.js', 'WebGL', 'GLSL', 'WebGPU', 'Canvas', 'shadcn/ui', 'Design', '3D', 'Graphics', 'Fonts', 'Qt', 'React Native', 'Flutter', 'Godot', 'OpenGL', 'TUI', 'Bubble Tea', 'Electron', 'Animation', 'Sketch', 'Figma'],
-    color: 'border-lime-500 text-lime-600 bg-lime-50 hover:bg-lime-100'
-  },
   sql: {
     name: 'SQL Databases',
     icon: Database,
@@ -126,17 +120,23 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
     tags: ['NoSQL', 'Redis', 'MongoDB', 'mongoDB', 'Cassandra', 'LevelDB', 'Elasticsearch', 'CouchDB', 'Apache CouchDB', 'DynamoDB', 'Amazon DynamoDB', 'Neo4j', 'RocksDB', 'InfluxDB', 'Memcached', 'FoundationDB'],
     color: 'border-red-500 text-red-600 bg-red-50 hover:bg-red-100'
   },
-  media: {
-    name: 'Media & Entertainment',
-    icon: Clapperboard,
-    tags: ['Media', 'Streaming', 'Music', 'Audio', 'Video', 'Netflix', 'YouTube', 'Spotify', 'Entertainment', 'Steam', 'Games', 'Social Media', 'UpScrolled', 'BitTorrent', 'FFmpeg'],
-    color: 'border-fuchsia-500 text-fuchsia-600 bg-fuchsia-50 hover:bg-fuchsia-100'
-  },
   science: {
     name: 'Science & Mathematics',
     icon: Atom,
     tags: ['Science', 'Rocket Science', 'Physics', 'Solar', 'Energy', 'Energy Storage', 'Biotechnology', 'Algorithms', 'Mathematics', 'Quantum Mechanics', 'Engineering', 'LaTex', 'Lidar', 'Matplotlib', 'NumPy', 'scikit-learn'],
     color: 'border-teal-500 text-teal-600 bg-teal-50 hover:bg-teal-100'
+  },
+  graphics: {
+    name: 'Graphics, UI & Design',
+    icon: Palette,
+    tags: ['Tailwind CSS', 'CSS', 'Three.js', 'WebGL', 'GLSL', 'WebGPU', 'Canvas', 'shadcn/ui', 'Design', '3D', 'Graphics', 'Fonts', 'Qt', 'React Native', 'Flutter', 'Godot', 'OpenGL', 'TUI', 'Bubble Tea', 'Electron', 'Animation', 'Sketch', 'Figma'],
+    color: 'border-lime-500 text-lime-600 bg-lime-50 hover:bg-lime-100'
+  },
+  media: {
+    name: 'Media & Entertainment',
+    icon: Clapperboard,
+    tags: ['Media', 'Streaming', 'Music', 'Audio', 'Video', 'Netflix', 'YouTube', 'Spotify', 'Entertainment', 'Steam', 'Games', 'Social Media', 'UpScrolled', 'BitTorrent', 'FFmpeg'],
+    color: 'border-fuchsia-500 text-fuchsia-600 bg-fuchsia-50 hover:bg-fuchsia-100'
   },
   health: {
     name: 'Health & Medicine',
@@ -144,17 +144,17 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
     tags: ['Health', 'Medical', 'Biotechnology', 'Environment'],
     color: 'border-rose-500 text-rose-600 bg-rose-50 hover:bg-rose-100'
   },
-  startups: {
-    name: 'Companies & Finance',
-    icon: TrendingUp,
-    tags: ['Startups', 'SaaS', 'Finance', 'Web3', 'Cryptocurrency', 'Bitcoin', 'Blockchain', 'Netflix', 'Google', 'Apple', 'Microsoft', 'Amazon', 'Meta', 'Tesla', 'IBM', 'Xiaomi', 'E-commerce', 'Atlassian', 'Uber'],
-    color: 'border-indigo-500 text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
-  },
   productivity: {
     name: 'Productivity & Apps',
     icon: AppWindow,
     tags: ['Office', 'Apps', 'Text Editors', 'VS Code', 'Maps', 'OpenStreetMap', 'Gmail', 'Visual Studio', 'Google Maps', 'Google Earth', 'Blog', 'GIS', 'GPS', 'Markdown', 'Google Workspace'],
     color: 'border-green-500 text-green-600 bg-green-50 hover:bg-green-100'
+  },
+  startups: {
+    name: 'Companies & Finance',
+    icon: TrendingUp,
+    tags: ['Startups', 'SaaS', 'Finance', 'Web3', 'Cryptocurrency', 'Bitcoin', 'Blockchain', 'Netflix', 'Google', 'Apple', 'Microsoft', 'Amazon', 'Meta', 'Tesla', 'IBM', 'Xiaomi', 'E-commerce', 'Atlassian', 'Uber'],
+    color: 'border-indigo-500 text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
   },
   security: {
     name: 'Security & Privacy',
