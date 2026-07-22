@@ -25,6 +25,7 @@ import {
   Database,
   Cloud,
   Layers,
+  Palette,
   CircuitBoard,
   Clapperboard,
   Atom,
@@ -80,7 +81,7 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
   os: {
     name: 'Operating Systems',
     icon: Cpu,
-    tags: ['Linux', 'Mac', 'macOS', 'Ubuntu', 'Windows', 'CoreOS', 'CentOS', 'FreeBSD', 'Wayland', 'WebKit', 'QEMU', 'KVM', 'io_uring', 'Arch Linux', 'Red Hat Linux', 'Telnet', 'CLI', 'Terminal', 'TUI', 'Bubble Tea', 'Networks', 'Proxmox VE', 'LXC', 'Wire Guard'],
+    tags: ['Linux', 'Mac', 'macOS', 'Ubuntu', 'Windows', 'CoreOS', 'CentOS', 'FreeBSD', 'Wayland', 'WebKit', 'QEMU', 'KVM', 'io_uring', 'Arch Linux', 'Red Hat Linux', 'Telnet', 'CLI', 'Terminal', 'Networks', 'Proxmox VE', 'LXC', 'Wire Guard'],
     color: 'border-sky-500 text-sky-600 bg-sky-50 hover:bg-sky-100'
   },
   cloud: {
@@ -98,14 +99,20 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
   clientFrameworks: {
     name: 'Client Frameworks',
     icon: Layout,
-    tags: ['React', 'Vue', 'Angular', 'AngularJS', 'Svelte', 'Next.js', 'TanStack Start', 'vite', 'npm', 'Blazor', 'React Native', 'Flutter', 'jQuery', 'Tailwind CSS', 'CSS', 'Bootstrap', 'Backbone.js', 'Ember', 'Astro', 'Remix', 'Nuxt', 'Three.js', 'WebGL', 'GLSL', 'WebGPU', 'Canvas', 'shadcn/ui', 'HTML', 'Web Development', 'WebKit', 'Safari', 'Chrome', 'Firefox', 'Opera', 'Design', '3D', 'Graphics', 'Fonts', 'Browser Extension', 'Qt', 'Grand Central Dispatch', 'Electron'],
+    tags: ['React', 'Vue', 'Angular', 'AngularJS', 'Svelte', 'Next.js', 'TanStack Start', 'vite', 'npm', 'Blazor', 'jQuery', 'Bootstrap', 'Backbone.js', 'Ember', 'Astro', 'Remix', 'Nuxt', 'HTML', 'Web Development', 'WebKit', 'Safari', 'Chrome', 'Firefox', 'Opera', 'Browser Extension', 'Grand Central Dispatch'],
     color: 'border-pink-500 text-pink-600 bg-pink-50 hover:bg-pink-100'
   },
   serverFrameworks: {
     name: 'Server Frameworks',
     icon: Server,
-    tags: ['node.js', 'Django', 'FastAPI', 'Flask', 'Ruby on Rails', 'Laravel', 'Spring', 'ASP.NET Core', 'ASP.NET MVC', 'ServiceStack', 'Express', 'NestJS', 'Phoenix', 'Sinatra', 'Play Framework', 'Docker', 'Kubernetes', 'Nginx', 'Caddy', 'HAProxy', 'RabbitMQ', 'gRPC', 'Apache Kafka', 'Apache Tomcat', 'Finangle', 'Apache Jena', 'MessageFormt', 'Bun', 'Data Analytics', 'MQTT', 'Apache Spark', 'React Server Components'],
+    tags: ['node.js', 'Django', 'FastAPI', 'Flask', 'Ruby on Rails', 'Laravel', 'Spring', 'ASP.NET Core', 'ASP.NET MVC', 'ServiceStack', 'Express', 'NestJS', 'Phoenix', 'Sinatra', 'Play Framework', 'Docker', 'Kubernetes', 'Nginx', 'Caddy', 'HAProxy', 'RabbitMQ', 'gRPC', 'Apache Kafka', 'Apache Tomcat', 'Finangle', 'Apache Jena', 'MessageFormt', 'Bun', 'MQTT', 'Apache Spark', 'React Server Components'],
     color: 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100'
+  },
+  graphics: {
+    name: 'Graphics, UI & Design',
+    icon: Palette,
+    tags: ['Tailwind CSS', 'CSS', 'Three.js', 'WebGL', 'GLSL', 'WebGPU', 'Canvas', 'shadcn/ui', 'Design', '3D', 'Graphics', 'Fonts', 'Qt', 'React Native', 'Flutter', 'Godot', 'OpenGL', 'TUI', 'Bubble Tea', 'Electron', 'Animation', 'Sketch', 'Figma'],
+    color: 'border-lime-500 text-lime-600 bg-lime-50 hover:bg-lime-100'
   },
   sql: {
     name: 'SQL Databases',
@@ -122,7 +129,7 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
   media: {
     name: 'Media & Entertainment',
     icon: Clapperboard,
-    tags: ['Media', 'Streaming', 'Music', 'Audio', 'Video', 'Netflix', 'YouTube', 'Spotify', 'Entertainment', 'Steam', 'Games', 'Social Media', 'Godot', 'OpenGL', 'UpScrolled', 'BitTorrent', 'FFmpeg', 'Animation'],
+    tags: ['Media', 'Streaming', 'Music', 'Audio', 'Video', 'Netflix', 'YouTube', 'Spotify', 'Entertainment', 'Steam', 'Games', 'Social Media', 'UpScrolled', 'BitTorrent', 'FFmpeg'],
     color: 'border-fuchsia-500 text-fuchsia-600 bg-fuchsia-50 hover:bg-fuchsia-100'
   },
   science: {
@@ -146,19 +153,19 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
   productivity: {
     name: 'Productivity & Apps',
     icon: AppWindow,
-    tags: ['Office', 'Apps', 'Text Editors', 'VS Code', 'Maps', 'OpenStreetMap', 'Gmail', 'Visual Studio', 'Google Maps', 'Google Earth', 'Blog', 'GIS', 'GPS', 'Markdown', 'Sketch', 'Figma', 'Google Workspace'],
+    tags: ['Office', 'Apps', 'Text Editors', 'VS Code', 'Maps', 'OpenStreetMap', 'Gmail', 'Visual Studio', 'Google Maps', 'Google Earth', 'Blog', 'GIS', 'GPS', 'Markdown', 'Google Workspace'],
     color: 'border-green-500 text-green-600 bg-green-50 hover:bg-green-100'
   },
   security: {
     name: 'Security & Privacy',
     icon: ShieldCheck,
-    tags: ['Security', 'Privacy', 'Encryption', 'Identity', 'Surveillance', 'Biometrics', 'SSL', 'CVE', 'DRM', 'Ads', 'Search', 'VPN', 'X', 'WhatsApp', 'Signal', 'Telegram', 'Discord', 'Slack', 'TikTok', 'Instant messaging'],
+    tags: ['Security', 'Privacy', 'Encryption', 'Identity', 'Surveillance', 'Data Analytics', 'Biometrics', 'SSL', 'CVE', 'DRM', 'Ads', 'Search', 'VPN', 'X', 'WhatsApp', 'Signal', 'Telegram', 'Discord', 'Slack', 'TikTok', 'Instant messaging'],
     color: 'border-slate-500 text-slate-600 bg-slate-50 hover:bg-slate-100'
   },
   government: {
     name: 'Government & Law',
     icon: Landmark,
-    tags: ['Government', 'Law', 'Military', 'Drone', 'Education', 'Maritime', 'IP', 'Literature', 'History', 'Internet Archive', 'Palantir'],
+    tags: ['Government', 'Law', 'Military', 'Drone', 'Palantir', 'Education', 'Maritime', 'IP', 'Literature', 'History', 'Internet Archive'],
     color: 'border-stone-500 text-stone-600 bg-stone-50 hover:bg-stone-100'
   }
 };
@@ -183,6 +190,9 @@ function getCategoryGradient(categoryKey: string) {
       return 'from-purple-600 to-fuchsia-600';
     case 'cloud':
       return 'from-cyan-500 to-sky-600';
+    case 'graphics':
+      // yellow-green start keeps it clear of Programming/Productivity's greens
+      return 'from-lime-400 to-emerald-600';
     case 'hardware':
       return 'from-orange-500 to-red-600';
     case 'media':
