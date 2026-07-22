@@ -607,14 +607,16 @@ function CategoryBlock({
 
 function PortalSkeleton() {
   return (
+    // Mirrors the real portal layout (featured 1 col, trending 2 cols, then one
+    // card per configured category) so nothing shifts when the data arrives.
     <div className="space-y-8 animate-pulse">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 bg-gray-200 rounded-lg h-96"></div>
         <div className="lg:col-span-2 bg-gray-200 rounded-lg h-96"></div>
-        <div className="bg-gray-200 rounded-lg h-96"></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-gray-200 rounded-lg h-96"></div>
+        {Object.keys(CATEGORIES_CONFIG).map((key) => (
+          <div key={key} className="bg-gray-200 rounded-lg h-96"></div>
         ))}
       </div>
     </div>
@@ -645,7 +647,10 @@ function HomePageContent() {
   const [viewMode, setViewMode] = useState<'portal' | 'all' | 'watch'>('portal');
   const [techMap, setTechMap] = useState<Record<string, { id: number; name: string; slug: string }>>({});
   const [techsLoaded, setTechsLoaded] = useState(false);
-  const [loadingPortal, setLoadingPortal] = useState(false);
+  // Starts true so the first paint (including the prerendered HTML) shows the
+  // skeleton. Otherwise every category renders "No recent news in this category"
+  // until the technology map resolves and the portal fetch begins.
+  const [loadingPortal, setLoadingPortal] = useState(true);
   const [portalFilter, setPortalFilter] = useState<{ name: string; ids: number[]; tags: string[] } | null>(null);
   const [portalData, setPortalData] = useState<{
     hero: Post | null;
@@ -790,7 +795,12 @@ function HomePageContent() {
   }, []);
 
   const loadPortalData = useCallback(async (postType: string) => {
-    if (Object.keys(techMap).length === 0) return;
+    if (Object.keys(techMap).length === 0) {
+      // Nothing to categorize by (the technologies request failed). Clear the flag
+      // so the skeleton doesn't hang forever now that it starts out true.
+      setLoadingPortal(false);
+      return;
+    }
     setLoadingPortal(true);
     try {
       // 1. Fetch latest overall posts
