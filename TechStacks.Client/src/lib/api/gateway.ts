@@ -256,7 +256,7 @@ export const queryPosts = async (query: dtos.QueryPosts) => {
     new dtos.QueryPosts({
       take: 50,
       ...query,
-      fields: 'id,organizationId,userId,type,categoryId,slug,title,imageUrl,labels,technologyIds,upVotes,downVotes,points,commentsCount,created,createdBy'
+      fields: 'id,organizationId,userId,type,categoryId,slug,title,url,imageUrl,labels,technologyIds,upVotes,downVotes,points,commentsCount,created,createdBy'
     })    
   );
 };
