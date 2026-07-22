@@ -24,6 +24,15 @@ import {
   Server,
   Database,
   Cloud,
+  Layers,
+  CircuitBoard,
+  Clapperboard,
+  Atom,
+  HeartPulse,
+  TrendingUp,
+  AppWindow,
+  ShieldCheck,
+  Landmark,
   Flame,
   Newspaper,
   Eye,
@@ -53,51 +62,105 @@ const CATEGORIES_CONFIG: Record<string, CategoryConfig> = {
   ai: {
     name: 'AI & Machine Learning',
     icon: Brain,
-    tags: ['AI', 'LLM', 'Claude', 'ChatGPT', 'Machine Learning', 'OpenAI', 'Claude Code', 'Computer Vision', 'Gemini', 'Qwen', 'Kimi', 'GLM', 'Meta AI', 'Codex', 'GenAI', 'Mistral', 'OpenClaw', 'xAI', 'DeepSeek', 'PyTorch', 'TensorFlow', 'vLLM', 'SGLang', 'Hugging Face', 'Chatbots', 'World Models', 'scikit-learn'],
+    tags: ['AI', 'LLM', 'Claude', 'ChatGPT', 'Machine Learning', 'OpenAI', 'Anthropic', 'Claude Code', 'Computer Vision', 'Gemini', 'Qwen', 'Kimi', 'GLM', 'Minimax', 'Meta AI', 'Codex', 'GenAI', 'Mistral', 'OpenClaw', 'xAI', 'DeepSeek', 'PyTorch', 'TensorFlow', 'vLLM', 'SGLang', 'LangChain', 'Hugging Face', 'Chatbots', 'World Models', 'Cursor', 'Antigravity', 'OpenCode', 'Grok', 'Groq', 'Stable Diffusion', 'Vibe Coding', 'Sora', 'Seedance', 'Model Context Protocol', 'Microsoft Copilot', 'Cerebras', 'Jupyter'],
     color: 'border-purple-500 text-purple-600 bg-purple-50 hover:bg-purple-100'
   },
   mobile: {
     name: 'Mobile',
     icon: Smartphone,
-    tags: ['iOS', 'Android', 'Fuchsia', 'Swift', 'Kotlin', 'React Native', 'Flutter', 'Apple Pay', 'Google Pay', 'Apple News', 'Smart Device'],
+    tags: ['iOS', 'Android', 'Fuchsia', 'Swift', 'Kotlin', 'React Native', 'Flutter', 'Stripe', 'Payments', 'Apple Pay', 'Google Pay', 'Apple News', 'Smart Device', 'Smart Glasses', 'Virtual Reality', 'F-Droid', 'Bluetooth'],
     color: 'border-violet-500 text-violet-600 bg-violet-50 hover:bg-violet-100'
   },
   programming: {
     name: 'Programming',
     icon: Code2,
-    tags: ['Programming', 'Python', 'JavaScript', 'node.js', 'C#', '.NET', 'Ruby', 'PHP', 'Swift', 'Dart', 'Lisp', 'WebAssembly', 'Go', 'C', 'C++', 'Objective-C', 'Rust', 'Clojure', 'ClojureScript', 'Elixr', 'Elixir', 'Java', 'F#', 'Perl', 'Lua', 'R', 'Scala', 'Zig', 'Haskell', 'OCaml', 'Erlang', 'Bash', 'Assembly', 'LLVM'],
+    tags: ['Programming', 'Python', 'JavaScript', 'TypeScript', 'node.js', 'C#', '.NET', 'Ruby', 'PHP', 'Swift', 'Dart', 'Lisp', 'WebAssembly', 'Go', 'C', 'C++', 'Objective-C', 'Rust', 'Rustup', 'Clojure', 'ClojureScript', 'Elixr', 'Elixir', 'Java', 'F#', 'Perl', 'Lua', 'R', 'Julia', 'Scala', 'Zig', 'Haskell', 'OCaml', 'Erlang', 'Pascal', 'BASIC', 'Bash', 'Assembly', 'LLVM', 'Information Technology', 'Computer Science', 'Software Development', 'Benchmarks', 'Git', 'GitHub', 'Filament'],
     color: 'border-emerald-500 text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
   },
   os: {
     name: 'Operating Systems',
     icon: Cpu,
-    tags: ['Linux', 'Mac', 'macOS', 'Ubuntu', 'Windows', 'CoreOS', 'CentOS', 'FreeBSD', 'Wayland', 'WebKit', 'QEMU', 'KVM', 'io_uring', 'Arch Linux', 'Red Hat Linux'],
+    tags: ['Linux', 'Mac', 'macOS', 'Ubuntu', 'Windows', 'CoreOS', 'CentOS', 'FreeBSD', 'Wayland', 'WebKit', 'QEMU', 'KVM', 'io_uring', 'Arch Linux', 'Red Hat Linux', 'Telnet', 'CLI', 'Terminal', 'TUI', 'Bubble Tea', 'Networks', 'Proxmox VE', 'LXC', 'Wire Guard'],
     color: 'border-sky-500 text-sky-600 bg-sky-50 hover:bg-sky-100'
+  },
+  cloud: {
+    name: 'Cloud & Hosting',
+    icon: Cloud,
+    tags: ['Cloud', 'AWS', 'Microsoft Azure', 'Google Cloud', 'Google Cloud Storage', 'Hetzner', 'DigitalOcean', 'Vercel', 'Heroku', 'Linode', 'Cloudflare', 'Meteor', 'Twilio', 'Redis Cloud', 'Oracle Cloud', 'Amazon EC2 Container Service', 'CI/CD', 'Containerization', 'SysAdmin', 'Supabase', 'Apache Maven', 'LocalStack', 'E2B', 'AWS SDK', 'Kamal Deploy', 'Terraform', 'AWS IAM', 'AWS Lambda', 'Amazon API Gateway', 'WordPress'],
+    color: 'border-cyan-500 text-cyan-600 bg-cyan-50 hover:bg-cyan-100'
+  },
+  hardware: {
+    name: 'Hardware & Electronics',
+    icon: CircuitBoard,
+    tags: ['Hardware', 'Smart Device', 'Embedded', 'Firmware', 'PC', 'CPU', 'GPU', 'RISC', 'Arm', 'Intel', 'AMD', 'NVIDIA', 'Display', 'Robotics', 'Manufacturing', '3D Printing', 'Materials', 'Disk Storage', 'Automotive', 'System on Chip', 'Semiconductors', 'Memory', 'Electric Vehicle', 'Smart Home', 'Ring'],
+    color: 'border-orange-500 text-orange-600 bg-orange-50 hover:bg-orange-100'
   },
   clientFrameworks: {
     name: 'Client Frameworks',
     icon: Layout,
-    tags: ['React', 'Vue', 'Angular', 'AngularJS', 'Svelte', 'Next.js', 'Blazor', 'React Native', 'Flutter', 'jQuery', 'Tailwind CSS', 'Bootstrap', 'Backbone.js', 'Ember', 'Astro', 'Nuxt', 'Three.js', 'WebGL', 'WebGPU', 'shadcn/ui'],
+    tags: ['React', 'Vue', 'Angular', 'AngularJS', 'Svelte', 'Next.js', 'TanStack Start', 'vite', 'npm', 'Blazor', 'React Native', 'Flutter', 'jQuery', 'Tailwind CSS', 'CSS', 'Bootstrap', 'Backbone.js', 'Ember', 'Astro', 'Remix', 'Nuxt', 'Three.js', 'WebGL', 'GLSL', 'WebGPU', 'Canvas', 'shadcn/ui', 'HTML', 'Web Development', 'WebKit', 'Safari', 'Chrome', 'Firefox', 'Opera', 'Design', '3D', 'Graphics', 'Fonts', 'Browser Extension', 'Qt', 'Grand Central Dispatch', 'Electron'],
     color: 'border-pink-500 text-pink-600 bg-pink-50 hover:bg-pink-100'
   },
   serverFrameworks: {
     name: 'Server Frameworks',
     icon: Server,
-    tags: ['node.js', 'Django', 'FastAPI', 'Flask', 'Ruby on Rails', 'Laravel', 'Spring', 'ASP.NET Core', 'ASP.NET MVC', 'ServiceStack', 'Express', 'NestJS', 'Phoenix', 'Sinatra', 'Play Framework', 'Docker', 'Kubernetes', 'Nginx', 'Caddy', 'HAProxy', 'RabbitMQ', 'gRPC', 'Apache Kafka', 'Apache Tomcat'],
+    tags: ['node.js', 'Django', 'FastAPI', 'Flask', 'Ruby on Rails', 'Laravel', 'Spring', 'ASP.NET Core', 'ASP.NET MVC', 'ServiceStack', 'Express', 'NestJS', 'Phoenix', 'Sinatra', 'Play Framework', 'Docker', 'Kubernetes', 'Nginx', 'Caddy', 'HAProxy', 'RabbitMQ', 'gRPC', 'Apache Kafka', 'Apache Tomcat', 'Finangle', 'Apache Jena', 'MessageFormt', 'Bun', 'Data Analytics', 'MQTT', 'Apache Spark', 'React Server Components'],
     color: 'border-amber-500 text-amber-600 bg-amber-50 hover:bg-amber-100'
   },
   sql: {
     name: 'SQL Databases',
     icon: Database,
-    tags: ['SQL', 'PostgreSQL', 'SQLite', 'SqlServer', 'MySQL', 'Oracle Database', 'MariaDB', 'BigQuery', 'Microsoft SQL Server', 'OrmLite'],
+    tags: ['SQL', 'PostgreSQL', 'SQLite', 'SqlServer', 'MySQL', 'Oracle Database', 'MariaDB', 'BigQuery', 'OrmLite'],
     color: 'border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100'
   },
   nosql: {
     name: 'NoSQL Databases',
-    icon: Cloud,
+    icon: Layers,
     tags: ['NoSQL', 'Redis', 'MongoDB', 'mongoDB', 'Cassandra', 'LevelDB', 'Elasticsearch', 'CouchDB', 'Apache CouchDB', 'DynamoDB', 'Amazon DynamoDB', 'Neo4j', 'RocksDB', 'InfluxDB', 'Memcached', 'FoundationDB'],
     color: 'border-red-500 text-red-600 bg-red-50 hover:bg-red-100'
   },
+  media: {
+    name: 'Media & Entertainment',
+    icon: Clapperboard,
+    tags: ['Media', 'Streaming', 'Music', 'Audio', 'Video', 'Netflix', 'YouTube', 'Spotify', 'Entertainment', 'Steam', 'Games', 'Social Media', 'Godot', 'OpenGL', 'UpScrolled', 'BitTorrent', 'FFmpeg', 'Animation'],
+    color: 'border-fuchsia-500 text-fuchsia-600 bg-fuchsia-50 hover:bg-fuchsia-100'
+  },
+  science: {
+    name: 'Science & Mathematics',
+    icon: Atom,
+    tags: ['Science', 'Rocket Science', 'Physics', 'Solar', 'Energy', 'Energy Storage', 'Biotechnology', 'Algorithms', 'Mathematics', 'Quantum Mechanics', 'Engineering', 'LaTex', 'Lidar', 'Matplotlib', 'NumPy', 'scikit-learn'],
+    color: 'border-teal-500 text-teal-600 bg-teal-50 hover:bg-teal-100'
+  },
+  health: {
+    name: 'Health & Medicine',
+    icon: HeartPulse,
+    tags: ['Health', 'Medical', 'Biotechnology', 'Environment'],
+    color: 'border-rose-500 text-rose-600 bg-rose-50 hover:bg-rose-100'
+  },
+  startups: {
+    name: 'Companies & Finance',
+    icon: TrendingUp,
+    tags: ['Startups', 'SaaS', 'Finance', 'Web3', 'Cryptocurrency', 'Bitcoin', 'Blockchain', 'Netflix', 'Google', 'Apple', 'Microsoft', 'Amazon', 'Meta', 'Tesla', 'IBM', 'Xiaomi', 'E-commerce', 'Atlassian', 'Uber'],
+    color: 'border-indigo-500 text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+  },
+  productivity: {
+    name: 'Productivity & Apps',
+    icon: AppWindow,
+    tags: ['Office', 'Apps', 'Text Editors', 'VS Code', 'Maps', 'OpenStreetMap', 'Gmail', 'Visual Studio', 'Google Maps', 'Google Earth', 'Blog', 'GIS', 'GPS', 'Markdown', 'Sketch', 'Figma', 'Google Workspace'],
+    color: 'border-green-500 text-green-600 bg-green-50 hover:bg-green-100'
+  },
+  security: {
+    name: 'Security & Privacy',
+    icon: ShieldCheck,
+    tags: ['Security', 'Privacy', 'Encryption', 'Identity', 'Surveillance', 'Biometrics', 'SSL', 'CVE', 'DRM', 'Ads', 'Search', 'VPN', 'X', 'WhatsApp', 'Signal', 'Telegram', 'Discord', 'Slack', 'TikTok', 'Instant messaging'],
+    color: 'border-slate-500 text-slate-600 bg-slate-50 hover:bg-slate-100'
+  },
+  government: {
+    name: 'Government & Law',
+    icon: Landmark,
+    tags: ['Government', 'Law', 'Military', 'Drone', 'Education', 'Maritime', 'IP', 'Literature', 'History', 'Internet Archive', 'Palantir'],
+    color: 'border-stone-500 text-stone-600 bg-stone-50 hover:bg-stone-100'
+  }
 };
 
 function getCategoryGradient(categoryKey: string) {
@@ -118,6 +181,26 @@ function getCategoryGradient(categoryKey: string) {
       return 'from-red-500 to-rose-700';
     case 'mobile':
       return 'from-purple-600 to-fuchsia-600';
+    case 'cloud':
+      return 'from-cyan-500 to-sky-600';
+    case 'hardware':
+      return 'from-orange-500 to-red-600';
+    case 'media':
+      // magenta into deep blue, so it doesn't read as Mobile's purple-to-magenta
+      return 'from-fuchsia-600 to-indigo-700';
+    case 'science':
+      return 'from-teal-500 to-cyan-700';
+    case 'health':
+      // pink-leaning, so it stays distinct from NoSQL's red-to-rose
+      return 'from-rose-400 to-pink-600';
+    case 'startups':
+      return 'from-indigo-500 to-blue-700';
+    case 'productivity':
+      return 'from-green-500 to-emerald-600';
+    case 'security':
+      return 'from-slate-600 to-slate-800';
+    case 'government':
+      return 'from-stone-500 to-amber-700';
     default:
       return 'from-slate-600 to-gray-700';
   }
