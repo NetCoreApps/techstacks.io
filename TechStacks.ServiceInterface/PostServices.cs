@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -72,7 +74,7 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             }
         }
 
-        var byline = BuildByline(request);
+        var byline = BuildBylineHtml(request);
         if (byline != null)
             post.Content += $"\n\n{byline}";
 
@@ -142,37 +144,90 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             ? parsed.ToUniversalTime()
             : null;
 
+    // Small inline SVGs (14px, stroke=currentColor) for the byline meta row. Kept
+    // on single lines so the whole byline can be emitted as one raw-HTML block.
+    private const string IconGlobe =
+        "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;opacity:.65\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\"/></svg>";
+    private const string IconCalendar =
+        "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;opacity:.65\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/></svg>";
+    private const string IconClock =
+        "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;opacity:.65\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7v5l3 2\"/></svg>";
+
+    private static string Enc(string s) => WebUtility.HtmlEncode(s);
+
     /// <summary>
-    /// Compact provenance line under the summary: where it came from, when it was
-    /// published (HN and Reddit routinely resurface years-old articles), how long it
-    /// is, and whether it's the primary source or secondary coverage.
+    /// Provenance metadata rendered as a self-contained HTML card rather than inline
+    /// markdown, so it reads as post metadata (source, publish date, reading time,
+    /// level, tags) and not as body content. Emitted as a single raw-HTML block —
+    /// Markdig passes it through untouched — with inline styles only, since the
+    /// content is injected via dangerouslySetInnerHTML outside Tailwind's reach.
     /// </summary>
-    private static string? BuildByline(ImportNewsPost request)
+    private static string? BuildBylineHtml(ImportNewsPost request)
     {
-        var parts = new List<string>();
+        var meta = new List<string>();
 
+        // Source (linked to the article when available) + primary-source badge
         if (!string.IsNullOrEmpty(request.Source))
-            parts.Add(request.PrimarySource ? $"{request.Source} (primary source)" : request.Source);
+        {
+            var label = !string.IsNullOrEmpty(request.Url)
+                ? $"<a href=\"{Enc(request.Url)}\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"color:#334155;font-weight:600;text-decoration:none\">{Enc(request.Source)}</a>"
+                : $"<span style=\"color:#334155;font-weight:600\">{Enc(request.Source)}</span>";
+            var badge = request.PrimarySource
+                ? "<span style=\"margin-left:.35rem;padding:.02rem .4rem;border-radius:9999px;background:#ecfdf5;color:#047857;font-size:.66rem;font-weight:600;letter-spacing:.02em\">primary source</span>"
+                : "";
+            meta.Add($"<span style=\"display:inline-flex;align-items:center;gap:.32rem;white-space:nowrap\">{IconGlobe}{label}{badge}</span>");
+        }
 
+        // Parse as UTC so a "…T00:00:00+00:00" date doesn't slip to the previous day
+        // when the server is west of UTC.
         if (!string.IsNullOrEmpty(request.Published) &&
-            DateTime.TryParse(request.Published, out var published))
-            parts.Add($"published {published:yyyy-MM-dd}");
+            DateTime.TryParse(request.Published, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal,
+                out var published))
+            meta.Add($"<span style=\"display:inline-flex;align-items:center;gap:.32rem;white-space:nowrap;font-variant-numeric:tabular-nums\">{IconCalendar}{published:MMM d, yyyy}</span>");
 
         if (request.ReadingTime > 0)
-            parts.Add($"{request.ReadingTime} min read");
+            meta.Add($"<span style=\"display:inline-flex;align-items:center;gap:.32rem;white-space:nowrap\">{IconClock}{request.ReadingTime} min read</span>");
 
         if (!string.IsNullOrEmpty(request.Level))
-            parts.Add(request.Level);
+        {
+            var (bg, fg) = request.Level.ToLower() switch
+            {
+                "beginner"     => ("#dcfce7", "#166534"),
+                "intermediate" => ("#dbeafe", "#1d4ed8"),
+                "advanced"     => ("#ede9fe", "#6d28d9"),
+                _              => ("#f1f5f9", "#475569"),
+            };
+            meta.Add($"<span style=\"padding:.05rem .5rem;border-radius:9999px;background:{bg};color:{fg};font-size:.68rem;font-weight:600;text-transform:capitalize;letter-spacing:.02em\">{Enc(request.Level)}</span>");
+        }
 
-        if (request.Paywalled && !string.IsNullOrEmpty(request.ArchiveUrl))
-            parts.Add($"paywalled — [archived copy]({request.ArchiveUrl})");
-        else if (request.Paywalled)
-            parts.Add("paywalled");
+        if (request.Paywalled)
+        {
+            var pay = "<span style=\"padding:.05rem .5rem;border-radius:9999px;background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:600\">paywalled</span>";
+            if (!string.IsNullOrEmpty(request.ArchiveUrl))
+                pay += $"<a href=\"{Enc(request.ArchiveUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"margin-left:.35rem;color:#92400e;text-decoration:underline;font-size:.72rem\">archived copy</a>";
+            meta.Add($"<span style=\"display:inline-flex;align-items:center\">{pay}</span>");
+        }
+
+        if (meta.Count == 0 && !(request.Tags?.Count > 0))
+            return null;
+
+        var sb = new StringBuilder();
+        sb.Append("<div style=\"margin:1.25rem 0;padding:.7rem .9rem;border:1px solid #e2e8f0;border-radius:.6rem;background:#f8fafc;color:#475569;font-size:.8rem;line-height:1.45\">");
+
+        if (meta.Count > 0)
+            sb.Append($"<div style=\"display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .95rem\">{string.Concat(meta)}</div>");
 
         if (request.Tags?.Count > 0)
-            parts.Add(string.Join(", ", request.Tags));
+        {
+            sb.Append("<div style=\"display:flex;flex-wrap:wrap;gap:.32rem;margin-top:.55rem\">");
+            foreach (var tag in request.Tags)
+                sb.Append($"<span style=\"padding:.05rem .5rem;border-radius:9999px;background:#eef2ff;color:#4338ca;font-size:.68rem;font-weight:500\">{Enc(tag)}</span>");
+            sb.Append("</div>");
+        }
 
-        return parts.Count > 0 ? $"*{string.Join(" · ", parts)}*" : null;
+        sb.Append("</div>");
+        return sb.ToString();
     }
 
     private async Task InsertCommentTreeAsync(long postId, HackerNewsComment comment, long? replyId)

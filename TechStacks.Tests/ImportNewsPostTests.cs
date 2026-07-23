@@ -1,8 +1,10 @@
+using System.Reflection;
 using NUnit.Framework;
 using ServiceStack;
 using ServiceStack.Logging;
 using ServiceStack.OrmLite;
 using ServiceStack.Text;
+using TechStacks.ServiceInterface;
 using TechStacks.ServiceModel;
 using TechStacks.ServiceModel.Types;
 
@@ -179,6 +181,57 @@ public class ImportNewsPostTests : DbTasksBase
         Assert.That(related.Comments, Is.EqualTo(88));
 
         Assert.That(post.TopComment!.Score, Is.EqualTo(240));
+    }
+
+    // BuildBylineHtml is private; the byline must survive Markdig, so exercise it
+    // through the real pipeline exactly as ImportNewsPost does.
+    static string BuildBylineHtml(ImportNewsPost request)
+    {
+        var m = typeof(PostServices).GetMethod("BuildBylineHtml",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+        return (string)m.Invoke(null, [request])!;
+    }
+
+    [Test]
+    public void Byline_html_survives_markdown_transform_as_a_metadata_card()
+    {
+        var request = EnrichedPostJson.FromJson<ImportNewsPost>();
+        var byline = BuildBylineHtml(request);
+        Assert.That(byline, Is.Not.Null);
+
+        // Emulate ImportNewsPost: summary, byline, then a following markdown section
+        var content = $"{request.Summary}\n\n{byline}\n\n---\n\nmore markdown";
+        var html = new ServiceInterface.MarkdownProvider().Transform(content);
+
+        // The raw HTML block must pass through untouched, not be escaped to entities
+        StringAssert.Contains("<div style=\"margin:1.25rem 0", html);
+        StringAssert.Contains("blog.rust-lang.org", html);
+        StringAssert.Contains("Sep 5, 2024", html);        // formatted, not ISO
+        StringAssert.Contains("6 min read", html);
+        StringAssert.Contains("intermediate", html);
+        StringAssert.DoesNotContain("&lt;div", html);       // not escaped
+
+        // Markdown before and after the block must still be processed
+        StringAssert.Contains("<hr", html);                 // the --- after the card
+        StringAssert.Contains("<p>more markdown</p>", html);
+
+        html.Print();
+    }
+
+    [Test]
+    public void Byline_html_encodes_hostile_field_values()
+    {
+        var request = new ImportNewsPost
+        {
+            Source = "evil\"><script>alert(1)</script>",
+            Tags = ["<img src=x onerror=alert(1)>"],
+            Level = "intermediate",
+        };
+        var byline = BuildBylineHtml(request);
+
+        StringAssert.DoesNotContain("<script>", byline);
+        StringAssert.DoesNotContain("<img src=x", byline);
+        StringAssert.Contains("&lt;script&gt;", byline);
     }
 
     [Test]
