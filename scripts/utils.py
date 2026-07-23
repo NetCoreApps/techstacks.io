@@ -21,7 +21,7 @@ MIN_REDDIT_POINTS = 200
 TOP_REDDIT_LIMIT = 100
 
 # Posts the analyzer itself judged as barely dev-relevant are not worth publishing
-MIN_RELEVANCE_SCORE = int(os.getenv("MIN_RELEVANCE_SCORE", "50"))
+MIN_RELEVANCE_SCORE = int(os.getenv("MIN_RELEVANCE_SCORE", "40"))
 
 PYTHON = sys.executable
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
