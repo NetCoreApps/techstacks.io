@@ -74,33 +74,9 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
             }
         }
 
-        var byline = BuildBylineHtml(request);
-        if (byline != null)
-            post.Content += $"\n\n{byline}";
+        post.Content = BuildImportedContent(request);
 
-        if (request.Sentiment != null)
-        {
-            post.Content += $"""
-
-                ---
-                sentiment from [comments]({request.CommentsUrl}):
-
-                {request.Sentiment}
-                """;
-
-            if (request.Alternatives?.Count > 0)
-                post.Content += $"\n\n**Alternatives raised in the discussion:** {string.Join(", ", request.Alternatives)}";
-        }
-
-        if (request.RelatedDiscussions?.Count > 0)
-        {
-            var links = request.RelatedDiscussions
-                .Where(x => !string.IsNullOrEmpty(x.Url))
-                .Select(x => $"[{(!string.IsNullOrEmpty(x.Subreddit) ? x.Subreddit : x.Source)}]({x.Url}) ({x.Points} points, {x.Comments} comments)");
-            post.Content += $"\n\n**Also discussed on:** {string.Join(" · ", links)}";
-        }
-
-        log.LogInformation("Importing HackerNews post: {Title} with technologies {Technologies}, top comment: {TopComment}", 
+        log.LogInformation("Importing HackerNews post: {Title} with technologies {Technologies}, top comment: {TopComment}",
             post.Title, string.Join(", ", techIds), request.TopComment?.Text);  
         var ret = await Post(post);
 
@@ -154,6 +130,45 @@ public class PostServices(ILogger<PostServices> log, IMarkdownProvider markdown,
         "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"flex-shrink:0;opacity:.65\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7v5l3 2\"/></svg>";
 
     private static string Enc(string s) => WebUtility.HtmlEncode(s);
+
+    /// <summary>
+    /// Assembles the imported post's markdown body: summary, the byline metadata card,
+    /// then the sentiment / alternatives / related-discussions sections.
+    ///
+    /// Each section is joined with a blank line. This matters most around the byline:
+    /// it's a raw-HTML block, and Markdig keeps an HTML block open until it hits a
+    /// blank line — without the trailing blank line the markdown that follows gets
+    /// swallowed into the block and rendered as literal text (the "--- sentiment from
+    /// [comments](…)" leak). Everything here is under test in ImportNewsPostTests.
+    /// </summary>
+    internal static string BuildImportedContent(ImportNewsPost request)
+    {
+        var sb = new StringBuilder(request.Summary ?? "");
+
+        var byline = BuildBylineHtml(request);
+        if (byline != null)
+            // Blank line before separates it from the summary; blank line after
+            // closes the HTML block so the following markdown parses normally.
+            sb.Append($"\n\n{byline}\n\n");
+
+        if (request.Sentiment != null)
+        {
+            sb.Append($"\n\n---\n\nsentiment from [comments]({request.CommentsUrl}):\n\n{request.Sentiment}");
+
+            if (request.Alternatives?.Count > 0)
+                sb.Append($"\n\n**Alternatives raised in the discussion:** {string.Join(", ", request.Alternatives)}");
+        }
+
+        if (request.RelatedDiscussions?.Count > 0)
+        {
+            var links = request.RelatedDiscussions
+                .Where(x => !string.IsNullOrEmpty(x.Url))
+                .Select(x => $"[{(!string.IsNullOrEmpty(x.Subreddit) ? x.Subreddit : x.Source)}]({x.Url}) ({x.Points} points, {x.Comments} comments)");
+            sb.Append($"\n\n**Also discussed on:** {string.Join(" · ", links)}");
+        }
+
+        return sb.ToString();
+    }
 
     /// <summary>
     /// Provenance metadata rendered as a self-contained HTML card rather than inline

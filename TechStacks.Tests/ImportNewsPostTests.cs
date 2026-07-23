@@ -192,30 +192,56 @@ public class ImportNewsPostTests : DbTasksBase
         return (string)m.Invoke(null, [request])!;
     }
 
+    static string BuildImportedContent(ImportNewsPost request)
+    {
+        var m = typeof(PostServices).GetMethod("BuildImportedContent",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
+        return (string)m.Invoke(null, [request])!;
+    }
+
     [Test]
-    public void Byline_html_survives_markdown_transform_as_a_metadata_card()
+    public void Byline_card_renders_and_the_markdown_after_it_is_not_swallowed()
     {
         var request = EnrichedPostJson.FromJson<ImportNewsPost>();
-        var byline = BuildBylineHtml(request);
-        Assert.That(byline, Is.Not.Null);
 
-        // Emulate ImportNewsPost: summary, byline, then a following markdown section
-        var content = $"{request.Summary}\n\n{byline}\n\n---\n\nmore markdown";
+        // Run the REAL content assembly through the REAL Markdig pipeline. (An earlier
+        // version of this test hand-built the content string with an explicit blank
+        // line and so missed the missing-blank-line bug that broke production.)
+        var content = BuildImportedContent(request);
         var html = new ServiceInterface.MarkdownProvider().Transform(content);
 
-        // The raw HTML block must pass through untouched, not be escaped to entities
+        // The byline card passes through as raw HTML, not escaped to entities
         StringAssert.Contains("<div style=\"margin:1.25rem 0", html);
         StringAssert.Contains("blog.rust-lang.org", html);
-        StringAssert.Contains("Sep 5, 2024", html);        // formatted, not ISO
-        StringAssert.Contains("6 min read", html);
-        StringAssert.Contains("intermediate", html);
-        StringAssert.DoesNotContain("&lt;div", html);       // not escaped
+        StringAssert.Contains("Sep 5, 2024", html);       // formatted, not ISO
+        StringAssert.DoesNotContain("&lt;div", html);
 
-        // Markdown before and after the block must still be processed
-        StringAssert.Contains("<hr", html);                 // the --- after the card
-        StringAssert.Contains("<p>more markdown</p>", html);
+        // The markdown AFTER the card must be processed, not leaked as literal text:
+        //  - the "---" becomes a rule, not the string "---"
+        //  - the [comments](url) becomes a real link
+        StringAssert.Contains("<hr", html);
+        StringAssert.Contains("<a href=\"https://news.ycombinator.com/item?id=46942864\"", html);
+        StringAssert.DoesNotContain("[comments]", html);   // markdown link not left literal
+        StringAssert.DoesNotContain("---\nsentiment", html);
 
-        html.Print();
+        // The byline HTML block is closed by a blank line before the "---"
+        StringAssert.Contains("</div>\n\n", content);
+    }
+
+    [Test]
+    public void Byline_tags_render_on_their_own_row()
+    {
+        var request = EnrichedPostJson.FromJson<ImportNewsPost>();
+        var byline = BuildBylineHtml(request)!;
+
+        // Tags live in their own block-level div (a new line), separated from the
+        // meta row, not inline with the source/date/level items.
+        var metaRow = "align-items:center;gap:.4rem .95rem";
+        var tagRow = "gap:.32rem;margin-top:.55rem";
+        StringAssert.Contains(metaRow, byline);
+        StringAssert.Contains(tagRow, byline);
+        Assert.That(byline.IndexOf(tagRow), Is.GreaterThan(byline.IndexOf(metaRow)),
+            "tag row must come after (below) the meta row");
     }
 
     [Test]
