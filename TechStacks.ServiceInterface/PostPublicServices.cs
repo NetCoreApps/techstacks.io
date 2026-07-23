@@ -14,7 +14,15 @@ namespace TechStacks.ServiceInterface;
 
 public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQuery) : PostServicesBase(markdown)
 {
-    public async Task<object> Any(QueryPosts request)
+    [CacheResponse(Duration=300, MaxAge=30)]
+    public async Task<object> Any(CachedQueryPosts request)
+    {
+        var query = request.ConvertTo<QueryPosts>();
+        var response = await Any(query);
+        return response;
+    }
+
+    public async Task<QueryResponse<Post>> Any(QueryPosts request)
     {
         var q = autoQuery.CreateQuery(request, Request.GetRequestParams());
         q.Where(x => x.Deleted == null);

@@ -20,6 +20,18 @@ public partial class QueryPosts : QueryDb<Post>
 }
 
 [Tag(Tags.AutoQuery), Tag(Tags.Posts)]
+public partial class CachedQueryPosts : QueryDb<Post>
+{
+    public virtual int[]? Ids { get; set; }
+    public virtual int? OrganizationId { get; set; }
+    public virtual List<int>? OrganizationIds { get; set; }
+    public virtual HashSet<string>? Types { get; set; }
+    public virtual HashSet<int>? AnyTechnologyIds { get; set; }
+    public virtual string[]? Is { get; set; }
+    public int? UserId { get; set; }
+}
+
+[Tag(Tags.AutoQuery), Tag(Tags.Posts)]
 public class QueryPostComments : QueryDb<PostComment>
 {
     public long? Id { get; set; }
