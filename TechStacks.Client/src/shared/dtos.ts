@@ -1,6 +1,6 @@
 /* Options:
-Date: 2026-02-19 20:21:21
-Version: 10.06
+Date: 2026-07-23 16:04:40
+Version: 10.09
 Tip: To override a DTO option, remove "//" prefix before updating
 BaseUrl: https://localhost:5001
 
@@ -162,6 +162,20 @@ export class Post
     public refId?: string;
     public refSource?: string;
     public refUrn?: string;
+    public relevanceScore: number;
+    public source?: string;
+    public published?: string;
+    public readingTime: number;
+    public tags?: string[];
+    public level?: string;
+    public primarySource: boolean;
+    public paywalled: boolean;
+    public archiveUrl?: string;
+    public controversy: number;
+    public mood?: string;
+    public sentimentConfidence?: string;
+    public alternatives?: string[];
+    public relatedDiscussions?: string;
 
     public constructor(init?: Partial<Post>) { (Object as any).assign(this, init); }
 }
@@ -172,9 +186,21 @@ export class HackerNewsComment
     public by?: string;
     public text?: string;
     public time: number;
+    public score?: number;
     public children?: HackerNewsComment[];
 
     public constructor(init?: Partial<HackerNewsComment>) { (Object as any).assign(this, init); }
+}
+
+export class RelatedDiscussion
+{
+    public source?: string;
+    public url?: string;
+    public points: number;
+    public comments: number;
+    public subreddit?: string;
+
+    public constructor(init?: Partial<RelatedDiscussion>) { (Object as any).assign(this, init); }
 }
 
 export enum ReportAction
@@ -1734,6 +1760,22 @@ export class UpdateOrganizationMemberInvite implements IReturn<UpdateOrganizatio
     public createResponse() { return new UpdateOrganizationMemberInviteResponse(); }
 }
 
+export class CachedQueryPosts extends QueryDb_1<Post> implements IReturn<QueryResponse<Post>>
+{
+    public ids?: number[];
+    public organizationId?: number;
+    public organizationIds?: number[];
+    public types?: string[];
+    public anyTechnologyIds?: number[];
+    public is?: string[];
+    public userId?: number;
+
+    public constructor(init?: Partial<CachedQueryPosts>) { super(init); (Object as any).assign(this, init); }
+    public getTypeName() { return 'CachedQueryPosts'; }
+    public getMethod() { return 'GET'; }
+    public createResponse() { return new QueryResponse<Post>(); }
+}
+
 export class QueryPosts extends QueryDb_1<Post> implements IReturn<QueryResponse<Post>>
 {
     public ids?: number[];
@@ -1787,6 +1829,29 @@ export class ImportNewsPost implements IReturn<CreatePostResponse>
     public sentiment?: string;
     // @DataMember(Name="top_comment")
     public top_comment?: HackerNewsComment;
+
+    public source?: string;
+    public published?: string;
+    // @DataMember(Name="reading_time")
+    public reading_time: number;
+
+    public tags?: string[];
+    public level?: string;
+    // @DataMember(Name="primary_source")
+    public primary_source: boolean;
+
+    public paywalled: boolean;
+    // @DataMember(Name="archive_url")
+    public archive_url?: string;
+
+    public controversy: number;
+    public mood?: string;
+    // @DataMember(Name="sentiment_confidence")
+    public sentiment_confidence?: string;
+
+    public alternatives?: string[];
+    // @DataMember(Name="related_discussions")
+    public related_discussions?: RelatedDiscussion[];
 
     public constructor(init?: Partial<ImportNewsPost>) { (Object as any).assign(this, init); }
     public getTypeName() { return 'ImportNewsPost'; }

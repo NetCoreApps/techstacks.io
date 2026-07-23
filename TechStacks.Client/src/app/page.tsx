@@ -10,7 +10,7 @@ import * as gateway from '@/lib/api/gateway';
 import { useAppStore } from '@/lib/stores/useAppStore';
 import { useHeaderTitle } from '@/lib/hooks/useHeaderTitle';
 import Link from 'next/link';
-import { QueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
+import { CachedQueryPosts, Post, TechnologyView, PostType } from '@/shared/dtos';
 import { formatDistanceToNow } from 'date-fns';
 import routes from '@/lib/utils/routes';
 import { postDomain } from '@/lib/utils/domain';
@@ -773,7 +773,7 @@ function HomePageContent() {
       setLoading(true);
       setError(null);
       const skip = (page - 1) * POSTS_PER_PAGE;
-      const query = new QueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip });
+      const query = new CachedQueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip });
 
       const activeIds = filterIds.length > 0 ? filterIds : watched;
       if (activeIds.length > 0) {
@@ -804,7 +804,7 @@ function HomePageContent() {
     setLoadingPortal(true);
     try {
       // 1. Fetch latest overall posts
-      const overallQuery = new QueryPosts({
+      const overallQuery = new CachedQueryPosts({
         orderBy: '-id',
         take: 10
       });
@@ -839,7 +839,7 @@ function HomePageContent() {
         if (ids.length === 0) {
           return [key, []];
         }
-        const query = new QueryPosts({
+        const query = new CachedQueryPosts({
           anyTechnologyIds: ids,
           orderBy: '-id',
           take: 5

@@ -251,9 +251,9 @@ export const deleteTechStack = async (id: number) => {
 // POSTS
 // ============================================
 
-export const queryPosts = async (query: dtos.QueryPosts) => {
+export const queryPosts = async (query: dtos.CachedQueryPosts) => {
   return await client.get(
-    new dtos.QueryPosts({
+    new dtos.CachedQueryPosts({
       take: 50,
       ...query,
       fields: 'id,organizationId,userId,type,categoryId,slug,title,url,imageUrl,labels,technologyIds,upVotes,downVotes,points,commentsCount,created,createdBy'
