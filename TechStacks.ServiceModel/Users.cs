@@ -152,6 +152,24 @@ public class UserAvatar : IGet
     public int UserId { get; set; }
 }
 
+[ValidateIsAuthenticated]
+[Route("/account/avatar", "POST"), Tag(Tags.User)]
+public class UpdateUserAvatar : IReturn<UpdateUserAvatarResponse>, IPost
+{
+    /// <summary>
+    /// Use an existing Image URL for the Avatar, ignored when an Avatar image is uploaded.
+    /// When both are empty the Avatar is reset back to the default generated Avatar.
+    /// </summary>
+    public string ProfileUrl { get; set; }
+}
+
+public class UpdateUserAvatarResponse
+{
+    public string ProfileUrl { get; set; }
+
+    public ResponseStatus ResponseStatus { get; set; }
+}
+
 [Route("/users/karma", "GET"), Tag(Tags.User)]
 public class GetUsersKarma : IReturn<GetUsersKarmaResponse>, IGet
 {

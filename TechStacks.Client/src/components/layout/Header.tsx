@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@servicestack/react';
 import { appAuth } from '@/lib/auth';
+import { userAvatarUrl } from '@/lib/api/gateway';
 import routes from '@/lib/utils/routes';
 
 import { useAppStore } from '@/lib/stores/useAppStore';
@@ -100,11 +101,11 @@ export function Header() {
             ) : user ? (
               <div className="relative group">
                 <button type="button" className="flex items-center space-x-2 hover:bg-gray-800 rounded px-2 py-1">
-                  {user.profileUrl && (
+                  {(user.profileUrl || user.userId) && (
                     <img
-                      src={user.profileUrl}
+                      src={user.profileUrl || userAvatarUrl(user.userId!)}
                       alt={user.displayName || 'User'}
-                      className="w-10 h-10 rounded-full"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   )}
                 </button>

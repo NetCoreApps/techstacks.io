@@ -1317,6 +1317,14 @@ export class GetUserInfoResponse
     public constructor(init?: Partial<GetUserInfoResponse>) { (Object as any).assign(this, init); }
 }
 
+export class UpdateUserAvatarResponse
+{
+    public profileUrl: string;
+    public responseStatus: ResponseStatus;
+
+    public constructor(init?: Partial<UpdateUserAvatarResponse>) { (Object as any).assign(this, init); }
+}
+
 export class LogoUrlApprovalResponse
 {
     public result: Technology;
@@ -2643,6 +2651,18 @@ export class UserAvatar implements IGet
     public getTypeName() { return 'UserAvatar'; }
     public getMethod() { return 'GET'; }
     public createResponse() {}
+}
+
+// @Route("/account/avatar", "POST")
+// @ValidateRequest(Validator="IsAuthenticated")
+export class UpdateUserAvatar implements IReturn<UpdateUserAvatarResponse>, IPost
+{
+    public profileUrl: string;
+
+    public constructor(init?: Partial<UpdateUserAvatar>) { (Object as any).assign(this, init); }
+    public getTypeName() { return 'UpdateUserAvatar'; }
+    public getMethod() { return 'POST'; }
+    public createResponse() { return new UpdateUserAvatarResponse(); }
 }
 
 // @Route("/admin/technology/{TechnologyId}/logo")

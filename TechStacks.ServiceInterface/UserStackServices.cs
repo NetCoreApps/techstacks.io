@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using ServiceStack;
 using ServiceStack.Configuration;
 using ServiceStack.OrmLite;
@@ -161,6 +163,56 @@ public class CachedUserStackServices(UserManager<ApplicationUser> userManager) :
         }
 
         return HttpResult.Redirect(user.ProfileUrl);
+    }
+}
+
+public class UserProfileServices(
+    UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
+    IConfiguration configuration,
+    ILogger<UserProfileServices> log) : Service
+{
+    public async Task<UpdateUserAvatarResponse> Post(UpdateUserAvatar request)
+    {
+        var session = SessionAs<CustomUserSession>();
+        var user = await userManager.FindByIdAsync(session.UserAuthId);
+        if (user == null)
+            throw HttpError.NotFound("User not found");
+
+        string profileUrl = null;
+        if (Request.Files.Length > 0)
+        {
+            log.LogInformation("Uploading Avatar to Imgur: {FileName}", Request.Files[0].FileName);
+            profileUrl = Request.Files[0].UploadToImgur(configuration["oauth.imgur.ClientId"],
+                nameof(request.ProfileUrl), minWidth: 32, minHeight: 32, maxWidth: 4000, maxHeight: 4000);
+        }
+        else if (!string.IsNullOrEmpty(request.ProfileUrl))
+        {
+            profileUrl = request.ProfileUrl.Trim();
+            if (!profileUrl.StartsWith("https://") && !profileUrl.StartsWith("http://"))
+                throw new ArgumentException("Avatar URL must start with https:// or http://", nameof(request.ProfileUrl));
+        }
+
+        // null resets Avatar back to the default generated Avatar
+        user.ProfileUrl = profileUrl;
+        user.ModifiedDate = DateTime.UtcNow;
+
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new ArgumentException(result.Errors.FirstOrDefault()?.Description ?? "Could not update Avatar",
+                nameof(request.ProfileUrl));
+
+        // Refresh Auth Cookie so the updated picture claim populates session.ProfileUrl
+        await signInManager.RefreshSignInAsync(user);
+
+        // Invalidate cached Avatars used in Posts + Comments
+        PostExtensions.UserProfilesCache.TryRemove(user.Id, out _);
+        Cache.FlushAll();
+
+        return new UpdateUserAvatarResponse
+        {
+            ProfileUrl = profileUrl ?? $"/users/{user.Id}/avatar",
+        };
     }
 }
 

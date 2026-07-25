@@ -26,9 +26,11 @@ public class AdditionalUserClaimsPrincipalFactory(
         var principal = await base.CreateAsync(user);
         var identity = (ClaimsIdentity)principal.Identity!;
 
-        var claims = new List<Claim>();
-        if (user.ProfileUrl != null)
-            claims.Add(new Claim(JwtClaimTypes.Picture, user.ProfileUrl));
+        var claims = new List<Claim>
+        {
+            // Fallback to the default generated Avatar when User hasn't uploaded their own
+            new(JwtClaimTypes.Picture, user.ProfileUrl ?? $"/users/{user.Id}/avatar"),
+        };
 
         identity.AddClaims(claims);
         return principal;

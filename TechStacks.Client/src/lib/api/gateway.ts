@@ -615,6 +615,16 @@ export const getUsersKarma = async (userIds: number[]) => {
   return (await client.get(new dtos.GetUsersKarma({ userIds }))).results;
 };
 
+/** Default generated Avatar for Users without a custom Avatar */
+export const userAvatarUrl = (userId: string | number) => `/users/${userId}/avatar`;
+
+/** Replaces the Users Avatar with an uploaded image or image URL, resets to the default Avatar when both are empty */
+export const updateUserAvatar = async (profileUrl?: string, avatar?: File) => {
+  const args: Record<string, any> = { profileUrl: profileUrl || '' };
+  if (avatar) args.avatar = avatar;
+  return await client.apiForm(new dtos.UpdateUserAvatar(), toFormData(args));
+};
+
 // ============================================
 // STATS
 // ============================================
