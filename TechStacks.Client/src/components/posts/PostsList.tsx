@@ -184,7 +184,11 @@ export function PostsList({ posts }: PostsListProps) {
                     <span>
                       {formatDistanceToNow(new Date(post.created!), { addSuffix: true })}
                     </span>
-                    <ShareOnX title={post.title!} path={routes.post(postId, post.slug)} />
+                    <ShareOnX
+                      title={post.title!}
+                      path={routes.post(postId, post.slug)}
+                      technologyIds={post.technologyIds}
+                    />
                     {post.commentsCount || 0
                       ? (<Link
                             href={routes.post(postId, post.slug)}

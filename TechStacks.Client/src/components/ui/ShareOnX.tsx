@@ -1,30 +1,65 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { technologyCache } from '@/lib/utils/technologyCache';
 
 interface ShareOnXProps {
   /** Text of the post, used as the body of the tweet */
   title: string;
   /** Site-relative path of the page being shared, e.g. "/posts/1/some-slug" */
   path: string;
+  /** Post's technologies, added to the tweet as hashtags */
+  technologyIds?: number[];
   className?: string;
 }
 
+/** Technology name as a hashtag, or null if nothing usable survives. */
+function hashtag(name: string): string | null {
+  // Hashtags stop at the first non-alphanumeric character, so "ASP.NET Core"
+  // has to be closed up into "#ASPNETCore" rather than truncated to "#ASP"
+  const word = name.replace(/[^\p{L}\p{N}_]/gu, '');
+  return word && !/^\d+$/.test(word) ? `#${word}` : null;
+}
+
+// Enough to categorise the post without the tweet reading as tag spam
+const MAX_HASHTAGS = 3;
+
 /**
- * Opens x.com's post intent pre-filled with the post title and a link back to
- * its page on this site.
+ * Opens x.com's post intent pre-filled with the post title, its technology
+ * hashtags, and a link back to its page on this site.
  *
  * Pages are statically exported so the absolute URL is only known in the
  * browser, hence the link renders after mount instead of during SSR.
  */
-export function ShareOnX({ title, path, className = '' }: ShareOnXProps) {
+export function ShareOnX({ title, path, technologyIds, className = '' }: ShareOnXProps) {
   const [origin, setOrigin] = useState('');
+  const [hashtags, setHashtags] = useState<string[]>([]);
 
   useEffect(() => setOrigin(window.location.origin), []);
 
+  useEffect(() => {
+    if (!technologyIds || technologyIds.length === 0) {
+      setHashtags([]);
+      return;
+    }
+
+    let stale = false;
+    technologyCache.getTechnologies(technologyIds)
+      .then((techs) => {
+        if (stale) return;
+        const tags = techs.map((t) => hashtag(t.name)).filter((t): t is string => t !== null);
+        setHashtags(tags.slice(0, MAX_HASHTAGS));
+      })
+      // Sharing without hashtags beats not offering the link at all
+      .catch((err) => console.error('Failed to load technologies:', err));
+
+    return () => { stale = true; };
+  }, [technologyIds?.join(',')]);
+
   if (!origin) return null;
 
-  const href = `https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(origin + path)}`;
+  const text = [title, ...hashtags].join(' ');
+  const href = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(origin + path)}`;
 
   return (
     <a

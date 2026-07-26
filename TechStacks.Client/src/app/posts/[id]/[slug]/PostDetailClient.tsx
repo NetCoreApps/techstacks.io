@@ -491,7 +491,11 @@ export default function PostDetailClient() {
                       {postDomain(post.url)}
                     </span>
                   )}
-                  <ShareOnX title={post.title} path={routes.post(postId, slug)} />
+                  <ShareOnX
+                    title={post.title}
+                    path={routes.post(postId, slug)}
+                    technologyIds={post.technologyIds}
+                  />
                 </span>
               </h1>
               {canEditPost(post) && (
