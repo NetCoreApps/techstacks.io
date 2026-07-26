@@ -6,4 +6,5 @@ export { Card } from './Card';
 export { FavoriteButton } from './FavoriteButton';
 export { Input } from './Input';
 export type { InputProps } from './Input';
+export { ShareOnX } from './ShareOnX';
 

@@ -13,6 +13,7 @@ import { postDomain } from '@/lib/utils/domain';
 import * as gateway from '@/lib/api/gateway';
 import { TechnologyTags } from '@/components/TechnologyTags';
 import { Avatar } from '@/components/ui/Avatar';
+import { ShareOnX } from '@/components/ui/ShareOnX';
 
 export default function PostDetailClient() {
   const { canEditPost, canDeleteComment } = useAuthorization();
@@ -484,11 +485,14 @@ export default function PostDetailClient() {
                 ) : (
                   post.title
                 )}
-                {postDomain(post.url) && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">
-                    {postDomain(post.url)}
-                  </span>
-                )}
+                <span className="ml-2 inline-flex items-center gap-x-2 align-middle">
+                  {postDomain(post.url) && (
+                    <span className="text-sm font-normal text-gray-500">
+                      {postDomain(post.url)}
+                    </span>
+                  )}
+                  <ShareOnX title={post.title} path={routes.post(postId, slug)} />
+                </span>
               </h1>
               {canEditPost(post) && (
                 <Link href={routes.postEdit(postId, slug)}>
