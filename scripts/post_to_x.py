@@ -35,6 +35,7 @@ from requests_oauthlib import OAuth1Session
 
 TECHSTACKS_BASE = "https://techstacks.io"
 GET_POST_URL = f"{TECHSTACKS_BASE}/api/GetPost"
+QUERY_TECHNOLOGY_URL = f"{TECHSTACKS_BASE}/api/QueryTechnology"
 CREATE_TWEET_URL = "https://api.x.com/2/tweets"
 ME_URL = "https://api.x.com/2/users/me"
 INTENT_URL = "https://x.com/intent/post"
@@ -45,6 +46,9 @@ X_ENV_VARS = ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SEC
 # because links are rewritten to a fixed-width t.co URL when the post is created.
 TWEET_MAX_CHARS = 280
 TCO_URL_CHARS = 23
+
+# Enough to categorise the post without the tweet reading as tag spam
+MAX_HASHTAGS = 3
 
 
 def x_session() -> OAuth1Session:
@@ -81,14 +85,45 @@ def post_page_url(post: dict) -> str:
     return f"{TECHSTACKS_BASE}/posts/{post['id']}/{post['slug']}"
 
 
-def build_tweet(text: str, url: str) -> str:
-    """Compose "<text> <url>", trimming the text so the whole tweet fits.
+def hashtag(name: str) -> str:
+    """A technology name as a hashtag, or "" if nothing usable survives.
 
-    The link is never truncated — it is the point of the post — so the text
-    absorbs the whole overflow, on a word boundary where one is available.
+    Hashtags stop at the first non-alphanumeric character, so "ASP.NET Core"
+    has to be closed up into "#ASPNETCore" rather than truncated to "#ASP".
+    """
+    word = "".join(c for c in name if c.isalnum() or c == "_")
+    return f"#{word}" if word and not word.isdigit() else ""
+
+
+def fetch_hashtags(technology_ids: list[int]) -> list[str]:
+    """Hashtags for a post's technologies, in the order the post lists them."""
+    if not technology_ids:
+        return []
+
+    resp = requests.get(QUERY_TECHNOLOGY_URL, params={"ids": ",".join(map(str, technology_ids))})
+    if resp.status_code != 200:
+        # Tags are a nicety; a tweet without them still beats no tweet
+        print(f"Warning: could not resolve technologies ({resp.status_code})", file=sys.stderr)
+        return []
+
+    by_id = {t["id"]: t["name"] for t in resp.json().get("results", [])}
+    tags = [hashtag(by_id[tid]) for tid in technology_ids if tid in by_id]
+    return [t for t in tags if t][:MAX_HASHTAGS]
+
+
+def build_tweet(text: str, url: str, hashtags: list[str] | None = None) -> str:
+    """Compose "<text> <hashtags> <url>", trimming the text so the whole tweet fits.
+
+    Neither the link nor the hashtags are truncated — they are fixed-size and
+    the point of the post — so the text absorbs the whole overflow, on a word
+    boundary where one is available.
     """
     text = " ".join(text.split())  # collapse newlines/runs of whitespace
+    tags = " ".join(hashtags or [])
+
     budget = TWEET_MAX_CHARS - TCO_URL_CHARS - 1  # -1 for the space before the link
+    if tags:
+        budget -= len(tags) + 1  # and one before the hashtags
 
     if len(text) > budget:
         trimmed = text[: budget - 1]  # -1 for the ellipsis
@@ -98,16 +133,16 @@ def build_tweet(text: str, url: str) -> str:
             trimmed = trimmed[:space]
         text = trimmed.rstrip(" ,.;:-") + "…"
 
-    return f"{text} {url}"
+    return " ".join(part for part in (text, tags, url) if part)
 
 
-def intent_url(text: str, url: str) -> str:
+def intent_url(text: str, url: str, hashtags: list[str] | None = None) -> str:
     """x.com's compose window, pre-filled — the same link the site's Share on X icon opens.
 
     Needs no API credentials: it opens in whichever browser you are already
     signed in to, and nothing is published until you press Post yourself.
     """
-    text = " ".join(text.split())
+    text = " ".join((" ".join(text.split()), *(hashtags or []))).strip()
     return f"{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
 
 
