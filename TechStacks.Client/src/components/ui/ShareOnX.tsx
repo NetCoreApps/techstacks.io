@@ -31,6 +31,8 @@ export function ShareOnX({ title, path, className = '' }: ShareOnXProps) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      // Feed rows are clickable cards; sharing shouldn't also open the post
+      onClick={(e) => e.stopPropagation()}
       title="Share on X"
       aria-label="Share on X"
       className={`inline-flex items-center text-gray-400 hover:text-gray-900 ${className}`}

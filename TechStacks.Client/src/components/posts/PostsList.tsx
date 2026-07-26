@@ -9,6 +9,7 @@ import { postDomain } from '@/lib/utils/domain';
 import * as gateway from '@/lib/api/gateway';
 import { appAuth } from '@/lib/auth';
 import { TechnologyTags } from '@/components/TechnologyTags';
+import { ShareOnX } from '@/components/ui/ShareOnX';
 import { Post } from '@/shared/dtos';
 
 
@@ -183,6 +184,7 @@ export function PostsList({ posts }: PostsListProps) {
                     <span>
                       {formatDistanceToNow(new Date(post.created!), { addSuffix: true })}
                     </span>
+                    <ShareOnX title={post.title!} path={routes.post(postId, post.slug)} />
                     {post.commentsCount || 0
                       ? (<Link
                             href={routes.post(postId, post.slug)}
