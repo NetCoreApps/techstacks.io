@@ -30,7 +30,14 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-from post_to_x import build_tweet, create_tweet, intent_url, post_page_url, x_session
+from post_to_x import (
+    build_tweet,
+    create_tweet,
+    fetch_hashtags,
+    intent_url,
+    post_page_url,
+    x_session,
+)
 from utils import SCRIPT_DIR, TECHSTACKS_BASE, append_to_file, file_set
 
 QUERY_POSTS_URL = f"{TECHSTACKS_BASE}/api/QueryPosts"
@@ -106,6 +113,8 @@ def main():
     parser.add_argument("--intent", action="store_true",
                         help="Open each post in x.com's pre-filled compose window instead of "
                              "posting through the API (no credentials needed)")
+    parser.add_argument("--no-tags", action="store_true",
+                        help="Leave the posts' technology hashtags out of the tweets")
     parser.add_argument("--dry-run", action="store_true", help="Print the tweets but don't post them")
     args = parser.parse_args()
 
@@ -119,9 +128,10 @@ def main():
 
     for i, post in enumerate(selected, 1):
         print(f"\n[{i}/{len(selected)}] post {post['id']} ({post['points']} points)")
+        hashtags = [] if args.no_tags else fetch_hashtags(post.get("technologyIds", []))
 
         if args.intent:
-            compose = intent_url(post["title"], post_page_url(post))
+            compose = intent_url(post["title"], post_page_url(post), hashtags)
             print(f"  {compose}")
             if args.dry_run:
                 continue
@@ -133,7 +143,7 @@ def main():
                 print("  Left unrecorded — it will come up again on the next run")
                 continue
         else:
-            tweet = build_tweet(post["title"], post_page_url(post))
+            tweet = build_tweet(post["title"], post_page_url(post), hashtags)
             print(f"  {tweet}")
             if args.dry_run:
                 continue

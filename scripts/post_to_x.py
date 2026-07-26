@@ -112,7 +112,11 @@ def fetch_hashtags(technology_ids: list[int]) -> list[str]:
 
 
 def build_tweet(text: str, url: str, hashtags: list[str] | None = None) -> str:
-    """Compose "<text> <hashtags> <url>", trimming the text so the whole tweet fits.
+    """Compose the tweet, trimming the text so the whole thing fits:
+
+        <text>
+        <hashtags>
+        <url>
 
     Neither the link nor the hashtags are truncated — they are fixed-size and
     the point of the post — so the text absorbs the whole overflow, on a word
@@ -123,7 +127,7 @@ def build_tweet(text: str, url: str, hashtags: list[str] | None = None) -> str:
 
     budget = TWEET_MAX_CHARS - TCO_URL_CHARS - 1  # -1 for the space before the link
     if tags:
-        budget -= len(tags) + 1  # and one before the hashtags
+        budget -= len(tags) + 1  # and one for the newline before the hashtags
 
     if len(text) > budget:
         trimmed = text[: budget - 1]  # -1 for the ellipsis
@@ -133,7 +137,7 @@ def build_tweet(text: str, url: str, hashtags: list[str] | None = None) -> str:
             trimmed = trimmed[:space]
         text = trimmed.rstrip(" ,.;:-") + "…"
 
-    return " ".join(part for part in (text, tags, url) if part)
+    return f"{text}\n{tags}\n{url}" if tags else f"{text} {url}"
 
 
 def intent_url(text: str, url: str, hashtags: list[str] | None = None) -> str:
@@ -142,8 +146,10 @@ def intent_url(text: str, url: str, hashtags: list[str] | None = None) -> str:
     Needs no API credentials: it opens in whichever browser you are already
     signed in to, and nothing is published until you press Post yourself.
     """
-    text = " ".join((" ".join(text.split()), *(hashtags or []))).strip()
-    return f"{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
+    text = " ".join(text.split())
+    if hashtags:
+        text = f"{text}\n{' '.join(hashtags)}"
+    return f"\n{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
 
 
 def whoami(session: OAuth1Session) -> dict:
@@ -179,6 +185,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Print the tweet but don't post it")
     parser.add_argument("--intent", action="store_true",
                         help="Open x.com's compose window pre-filled instead of posting via the API")
+    parser.add_argument("--no-tags", action="store_true",
+                        help="Leave the post's technology hashtags out of the tweet")
     parser.add_argument("--whoami", action="store_true",
                         help="Print the account the credentials post as, then exit")
     args = parser.parse_args()
@@ -192,20 +200,22 @@ def main():
         post = fetch_post(args.post_id)
         url = args.url or post_page_url(post)
         text = args.text or post["title"]
+        hashtags = [] if args.no_tags else fetch_hashtags(post.get("technologyIds", []))
     elif args.url:
         url = args.url
         text = args.text or ""
+        hashtags = []  # nothing to derive tags from for an arbitrary link
     else:
         parser.error("either --post-id or --url is required")
 
     if args.intent:
-        compose = intent_url(text, url)
+        compose = intent_url(text, url, hashtags)
         print(compose)
         if not args.dry_run:
             webbrowser.open(compose)
         return
 
-    tweet = build_tweet(text, url)
+    tweet = build_tweet(text, url, hashtags)
     print(f"Tweet ({len(tweet)} chars):\n{tweet}\n")
 
     if args.dry_run:
