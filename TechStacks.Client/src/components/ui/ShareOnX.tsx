@@ -58,7 +58,8 @@ export function ShareOnX({ title, path, technologyIds, className = '' }: ShareOn
 
   if (!origin) return null;
 
-  const text = [title, ...hashtags].join(' ');
+  // The trailing newline lands x.com's appended link on its own line
+  const text = hashtags.length ? `${title}\n${hashtags.join(' ')}\n` : title;
   const href = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(origin + path)}`;
 
   return (
