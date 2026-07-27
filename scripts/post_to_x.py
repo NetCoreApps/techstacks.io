@@ -149,7 +149,7 @@ def intent_url(text: str, url: str, hashtags: list[str] | None = None) -> str:
     text = " ".join(text.split())
     if hashtags:
         text = f"{text}\n{' '.join(hashtags)}"
-    return f"\n{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
+    return f"{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
 
 
 def whoami(session: OAuth1Session) -> dict:
@@ -210,7 +210,7 @@ def main():
 
     if args.intent:
         compose = intent_url(text, url, hashtags)
-        print(compose)
+        print(f"\n{compose}")
         if not args.dry_run:
             webbrowser.open(compose)
         return
