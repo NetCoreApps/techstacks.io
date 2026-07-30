@@ -64,6 +64,9 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
             });
 
             services.AddPlugin(new AdminDatabaseFeature());
+
+            using var db = GetDbConnection();
+            services.AddPlugin(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
         });
 
     // Configure your AppHost with the necessary configuration and dependencies your App needs
@@ -77,9 +80,6 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
         JsConfig.Init(new Config {
             DateHandler = DateHandler.ISO8601
         });
-
-        using var db = GetDbConnection();
-        // Plugins.Add(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
 
         RegisterTypedRequestFilterAsync<IRegisterStats>(async (req, res, dto) =>
         {
