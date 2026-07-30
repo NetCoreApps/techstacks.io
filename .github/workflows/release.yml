@@ -113,9 +113,25 @@ jobs:
 
       - name: Deploy with Kamal
         run: |
+          set -euo pipefail
+
           kamal lock release -v
+
           kamal server exec --no-interactive 'echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin'
-          kamal server exec --no-interactive 'docker pull ${{ env.IMAGE }}:latest'
+
+          # Retry docker pull to handle transient TLS/network issues with GHCR
+          for i in 1 2 3 4 5; do
+            echo "Pull attempt $i..."
+            if kamal server exec --no-interactive 'docker pull ${{ env.IMAGE }}:latest'; then
+              break
+            fi
+            if [ "$i" -eq 5 ]; then
+              echo "docker pull failed after 5 attempts"
+              exit 1
+            fi
+            sleep $((i * 10))
+          done
+
           kamal deploy -P --version latest
 
       - name: Migration
