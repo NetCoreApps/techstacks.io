@@ -148,7 +148,7 @@ def intent_url(text: str, url: str, hashtags: list[str] | None = None) -> str:
     """
     text = " ".join(text.split())
     if hashtags:
-        text = f"{text}\n{' '.join(hashtags)}"
+        text = f"{text}\n{' '.join(hashtags)}\n"
     return f"{INTENT_URL}?{urlencode({'text': text, 'url': url})}"
 
 
