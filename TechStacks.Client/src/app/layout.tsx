@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Providers from '@/providers'
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import '../globals.css';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
@@ -36,7 +37,8 @@ export default function RootLayout({
           <Header />
           <main className="min-h-screen bg-gray-50">
             {children}
-          </main>          
+          </main>
+          <Footer />
         </Providers>
         <GoogleAnalytics gaId="G-9EZHMS9ZM6" />
       </body>

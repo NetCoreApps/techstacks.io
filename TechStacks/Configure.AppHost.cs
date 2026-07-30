@@ -65,8 +65,8 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
 
             services.AddPlugin(new AdminDatabaseFeature());
 
-            using var db = GetDbConnection();
-            services.AddPlugin(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
+            // using var db = dbFactory.Open();
+            // services.AddPlugin(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
         });
 
     // Configure your AppHost with the necessary configuration and dependencies your App needs
@@ -91,7 +91,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
     SitemapFeature CreateSiteMap(IDbConnection db, string baseUrl) =>
         new() {
             SitemapIndex = {
-                new Sitemap {
+                new() {
                     Location = baseUrl + "/sitemap-techstacks.xml",
                     AtPath = "/sitemap-techstacks.xml",
                     LastModified = DateTime.UtcNow,
@@ -102,7 +102,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
                             ChangeFrequency = SitemapFrequency.Weekly,
                         }),
                 },
-                new Sitemap {
+                new() {
                     Location = baseUrl + "/sitemap-technologies.xml",
                     AtPath = "/sitemap-technologies.xml",
                     LastModified = DateTime.UtcNow,
@@ -113,7 +113,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
                             ChangeFrequency = SitemapFrequency.Weekly,
                         })
                 },
-                new Sitemap {
+                new() {
                     Location = baseUrl + "/sitemap-organizations.xml",
                     AtPath = "/sitemap-organizations.xml",
                     LastModified = DateTime.UtcNow,
@@ -125,7 +125,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
                             ChangeFrequency = SitemapFrequency.Weekly,
                         })
                 },
-                new Sitemap {
+                new() {
                     Location = baseUrl + "/sitemap-posts.xml",
                     AtPath = "/sitemap-posts.xml",
                     LastModified = DateTime.UtcNow,

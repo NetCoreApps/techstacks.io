@@ -1,0 +1,304 @@
+@page "{type?}/{pageNumber:int?}"
+@model TechStacks.Pages.SitemapModel
+@{
+    ViewData["Title"] = "Sitemap & Directory - TechStacks";
+}
+
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <div class="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
+            Sitemap & Site Directory
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 text-sm">
+            Server-side rendered crawlable index of all posts, technologies, and tech stacks on TechStacks.
+        </p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex flex-wrap items-center gap-2 mb-8 border-b border-gray-200 dark:border-gray-800 pb-4">
+        <a href="/sitemap"
+           class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors @(Model.ActiveType == "all" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700")">
+            Overview
+        </a>
+        <a href="/sitemap/posts/1"
+           class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 @(Model.ActiveType == "posts" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700")">
+            Posts
+            <span class="px-2 py-0.5 text-xs rounded-full @(Model.ActiveType == "posts" ? "bg-indigo-700 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200")">
+                @Model.TotalPostsCount
+            </span>
+        </a>
+        <a href="/sitemap/technologies/1"
+           class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 @(Model.ActiveType == "technologies" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700")">
+            Technologies
+            <span class="px-2 py-0.5 text-xs rounded-full @(Model.ActiveType == "technologies" ? "bg-indigo-700 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200")">
+                @Model.TotalTechnologiesCount
+            </span>
+        </a>
+        <a href="/sitemap/techstacks/1"
+           class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 @(Model.ActiveType == "techstacks" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700")">
+            Tech Stacks
+            <span class="px-2 py-0.5 text-xs rounded-full @(Model.ActiveType == "techstacks" ? "bg-indigo-700 text-white" : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200")">
+                @Model.TotalTechStacksCount
+            </span>
+        </a>
+    </div>
+
+    @if (Model.ActiveType == "all")
+    {
+        <!-- OVERVIEW MODE -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Posts Column -->
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Posts</h2>
+                    <span class="text-xs font-medium text-gray-500">@Model.TotalPostsCount Total</span>
+                </div>
+                <ul class="space-y-3 mb-6">
+                    @foreach (var post in Model.Posts)
+                    {
+                        <li class="border-b border-gray-50 dark:border-gray-800 pb-2">
+                            <a href="@SitemapModel.GetPostUrl(post)"
+                               class="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline block leading-snug">
+                                @post.Title
+                            </a>
+                            <div class="text-[11px] text-gray-400 mt-1 flex items-center gap-2">
+                                <span>@post.Type</span>
+                                <span>&bull;</span>
+                                <span>@post.Created.ToString("MMM d, yyyy")</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <a href="/sitemap/posts/1"
+                   class="inline-block w-full text-center py-2 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold text-sm rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                    Browse All Posts (@Model.TotalPostsCount) &rarr;
+                </a>
+            </div>
+
+            <!-- Technologies Column -->
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Technologies</h2>
+                    <span class="text-xs font-medium text-gray-500">@Model.TotalTechnologiesCount Total</span>
+                </div>
+                <ul class="space-y-3 mb-6">
+                    @foreach (var tech in Model.Technologies)
+                    {
+                        <li class="border-b border-gray-50 dark:border-gray-800 pb-2">
+                            <a href="@SitemapModel.GetTechUrl(tech)"
+                               class="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline block">
+                                @tech.Name
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(tech.VendorName))
+                            {
+                                <div class="text-[11px] text-gray-400 mt-0.5">@tech.VendorName</div>
+                            }
+                        </li>
+                    }
+                </ul>
+                <a href="/sitemap/technologies/1"
+                   class="inline-block w-full text-center py-2 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold text-sm rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                    Browse All Technologies (@Model.TotalTechnologiesCount) &rarr;
+                </a>
+            </div>
+
+            <!-- Tech Stacks Column -->
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Tech Stacks</h2>
+                    <span class="text-xs font-medium text-gray-500">@Model.TotalTechStacksCount Total</span>
+                </div>
+                <ul class="space-y-3 mb-6">
+                    @foreach (var stack in Model.TechStacks)
+                    {
+                        <li class="border-b border-gray-50 dark:border-gray-800 pb-2">
+                            <a href="@SitemapModel.GetStackUrl(stack)"
+                               class="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline block">
+                                @stack.Name
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(stack.VendorName))
+                            {
+                                <div class="text-[11px] text-gray-400 mt-0.5">@stack.VendorName</div>
+                            }
+                        </li>
+                    }
+                </ul>
+                <a href="/sitemap/techstacks/1"
+                   class="inline-block w-full text-center py-2 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold text-sm rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                    Browse All Tech Stacks (@Model.TotalTechStacksCount) &rarr;
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- PAGED CATEGORY VIEW -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white capitalize">
+                        All @Model.ActiveType
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Showing page @Model.CurrentPage of @Model.TotalPages (@Model.TotalItems total items)
+                    </p>
+                </div>
+
+                <!-- Top Pagination Controls -->
+                <div class="flex items-center gap-2">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/@(Model.CurrentPage - 1)"
+                           class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
+                            &larr; Prev
+                        </a>
+                    }
+                    <span class="text-xs font-semibold px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded">
+                        Page @Model.CurrentPage / @Model.TotalPages
+                    </span>
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/@(Model.CurrentPage + 1)"
+                           class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
+                            Next &rarr;
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Items List -->
+            @if (Model.ActiveType == "posts")
+            {
+                <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                    @foreach (var post in Model.Posts)
+                    {
+                        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <a href="@SitemapModel.GetPostUrl(post)"
+                                   class="text-base font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline">
+                                    @post.Title
+                                </a>
+                                <div class="text-xs text-gray-500 mt-1 flex items-center gap-3">
+                                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded font-medium text-gray-600 dark:text-gray-400">
+                                        @post.Type
+                                    </span>
+                                    <span>Created @post.Created.ToString("yyyy-MM-dd HH:mm")</span>
+                                    @if (post.Points > 0)
+                                    {
+                                        <span>▲ @post.Points points</span>
+                                    }
+                                </div>
+                            </div>
+                            <a href="@SitemapModel.GetPostUrl(post)"
+                               class="text-xs font-medium text-gray-400 hover:text-gray-600 shrink-0">
+                                View Post &rarr;
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Model.ActiveType == "technologies")
+            {
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach (var tech in Model.Technologies)
+                    {
+                        <div class="p-4 border border-gray-100 dark:border-gray-800 rounded-lg hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors">
+                            <a href="@SitemapModel.GetTechUrl(tech)"
+                               class="text-base font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline block mb-1">
+                                @tech.Name
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(tech.Description))
+                            {
+                                <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                                    @tech.Description
+                                </p>
+                            }
+                            <div class="text-[11px] text-gray-400 flex items-center justify-between">
+                                <span>Slug: @tech.Slug</span>
+                                <span>Updated: @tech.LastModified.ToString("yyyy-MM-dd")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Model.ActiveType == "techstacks")
+            {
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach (var stack in Model.TechStacks)
+                    {
+                        <div class="p-4 border border-gray-100 dark:border-gray-800 rounded-lg hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors">
+                            <a href="@SitemapModel.GetStackUrl(stack)"
+                               class="text-base font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline block mb-1">
+                                @stack.Name
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(stack.Description))
+                            {
+                                <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                                    @stack.Description
+                                </p>
+                            }
+                            <div class="text-[11px] text-gray-400 flex items-center justify-between">
+                                <span>Slug: @stack.Slug</span>
+                                <span>Updated: @stack.LastModified.ToString("yyyy-MM-dd")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Bottom Crawler Pagination Links -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-center gap-2">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/@(Model.CurrentPage - 1)"
+                           class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
+                            &larr; Previous
+                        </a>
+                    }
+
+                    @{
+                        int startPage = Math.Max(1, Model.CurrentPage - 5);
+                        int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 5);
+                    }
+
+                    @if (startPage > 1)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/1" class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">1</a>
+                        @if (startPage > 2)
+                        {
+                            <span class="text-gray-400 text-xs px-1">...</span>
+                        }
+                    }
+
+                    @for (int p = startPage; p <= endPage; p++)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/@p"
+                           class="px-3 py-1.5 text-xs font-semibold rounded transition-colors @(p == Model.CurrentPage ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300")">
+                            @p
+                        </a>
+                    }
+
+                    @if (endPage < Model.TotalPages)
+                    {
+                        @if (endPage < Model.TotalPages - 1)
+                        {
+                            <span class="text-gray-400 text-xs px-1">...</span>
+                        }
+                        <a href="/sitemap/@Model.ActiveType/@Model.TotalPages" class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">@Model.TotalPages</a>
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="/sitemap/@Model.ActiveType/@(Model.CurrentPage + 1)"
+                           class="px-3 py-1.5 text-xs font-semibold rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">
+                            Next &rarr;
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

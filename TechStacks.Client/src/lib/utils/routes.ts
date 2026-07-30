@@ -36,7 +36,8 @@ export const routes = {
   // Other
   favorites: () => '/favorites',
   account: () => '/account',
-  news: () => '/news'
+  news: () => '/news',
+  sitemap: () => '/sitemap'
 };
 
 export default routes;
