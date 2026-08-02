@@ -98,6 +98,35 @@ public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQue
             Comments = postComments,
         };
     }
+
+    async Task<Post> GetPublicPostOrThrow(long id)
+    {
+        var post = await Db.SingleByIdAsync<Post>(id);
+        if (post == null || post.Deleted != null || post.Hidden != null)
+            throw HttpError.NotFound("Post does not exist");
+        return post;
+    }
+
+    [CacheResponse(Duration = 3600)]
+    public async Task Get(GetPostCardSvg request)
+    {
+        var post = await GetPublicPostOrThrow(request.Id);
+
+        Response.ContentType = MimeTypes.GetMimeType("svg");
+        await Response.WriteAsync(PostCardRenderer.RenderSvg(post));
+        Response.EndRequest();
+    }
+
+    [CacheResponse(Duration = 3600)]
+    public async Task Get(GetPostCardImage request)
+    {
+        var post = await GetPublicPostOrThrow(request.Id);
+
+        var png = PostCardRenderer.RenderPng(post);
+        Response.ContentType = MimeTypes.GetMimeType("png");
+        await Response.OutputStream.WriteAsync(png);
+        Response.EndRequest();
+    }
 }
 
 public static class PostExtensions

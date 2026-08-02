@@ -9,6 +9,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.PUBLIC_BASE_URL || 'https://techstacks.io'),
   title: 'TechStacks - Technology Stack Sharing',
   description: 'Discover and share technology stacks used by the most popular startups and companies',
 };

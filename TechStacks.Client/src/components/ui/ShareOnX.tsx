@@ -28,8 +28,8 @@ const MAX_HASHTAGS = 3;
  * Opens x.com's post intent pre-filled with the post title, its technology
  * hashtags, and a link back to its page on this site.
  *
- * Pages are statically exported so the absolute URL is only known in the
- * browser, hence the link renders after mount instead of during SSR.
+ * The absolute URL depends on the browser's origin, hence the link renders
+ * after mount instead of during SSR.
  */
 export function ShareOnX({ title, path, technologyIds, className = '' }: ShareOnXProps) {
   const [origin, setOrigin] = useState('');

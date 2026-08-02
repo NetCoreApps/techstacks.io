@@ -254,6 +254,18 @@ public class GetPost : IGet, IReturn<GetPostResponse>
     public string Include { get; set; }
 }
 
+[Route("/posts/{Id}/card.svg", "GET"), Tag(Tags.Posts)]
+public class GetPostCardSvg : IGet
+{
+    public long Id { get; set; }
+}
+
+[Route("/posts/{Id}/card.png", "GET"), Tag(Tags.Posts)]
+public class GetPostCardImage : IGet
+{
+    public long Id { get; set; }
+}
+
 public class GetPostResponse
 {
     public long Cache { get; set; }
