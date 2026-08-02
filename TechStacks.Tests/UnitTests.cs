@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -68,5 +68,20 @@ public class UnitTests
     public void Generate_AuthKey()
     {
         Convert.ToBase64String(AesUtils.CreateKey()).Print();
+    }
+}
+
+[TestFixture]
+public class PostCardTests
+{
+    [Test]
+    public void Can_Render_PostCard()
+    {
+        var post = new Post { Id = 1, Title = "Test Post Title", Tags = new[] { "dotnet", "c#" } };
+        var svg = PostCardRenderer.RenderSvg(post);
+        Assert.That(svg, Is.Not.Null.And.Not.Empty);
+
+        var png = PostCardRenderer.RenderPng(post);
+        Assert.That(png, Is.Not.Null.And.Not.Empty);
     }
 }

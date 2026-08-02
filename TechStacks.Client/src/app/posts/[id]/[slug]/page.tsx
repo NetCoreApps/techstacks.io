@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         card: 'summary_large_image',
         title: post.title,
         description,
-        images: [imageUrl],
+        images: [{ url: imageUrl, alt: post.title }],
       },
     };
   } catch (err) {
