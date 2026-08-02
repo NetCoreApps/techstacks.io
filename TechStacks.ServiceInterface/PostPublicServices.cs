@@ -85,8 +85,9 @@ public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQue
             : TypeConstants<PostComment>.EmptyList;
 
         // Get unique userIds from post and comments
-        var userIds = postComments.Map(x => x.UserId).Distinct().ToList();
-        var users = await Db.GetUserProfilesMapAsync(userIds);
+        var userIds = postComments.Map(x => x.UserId);
+        userIds.Add(post.UserId);
+        var users = await Db.GetUserProfilesMapAsync(userIds.Distinct().ToList());
 
         post.UserProfileUrl = users.GetProfileUrl(post.UserId);
         postComments.Each(x => x.UserProfileUrl = users.GetProfileUrl(x.UserId));
