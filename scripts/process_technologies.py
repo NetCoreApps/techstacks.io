@@ -5,6 +5,34 @@ import os
 import subprocess
 import argparse
 
+def apply_alias_to_posts(dir_path, name, alias):
+    """Replace `name` with `alias` in the technologies of unsent posts (still in posts/)."""
+    updated = []
+    for post_file in glob.glob(os.path.join(dir_path, "posts/*.json")):
+        with open(post_file) as f:
+            post = json.load(f)
+
+        techs = post.get("technologies", [])
+        if name not in techs:
+            continue
+
+        processed = []
+        seen = set()
+        for tech in techs:
+            tech = alias if tech == name else tech
+            if tech not in seen:
+                processed.append(tech)
+                seen.add(tech)
+
+        post["technologies"] = processed
+        with open(post_file, "w") as f:
+            json.dump(post, f, indent=4)
+        updated.append(os.path.basename(post_file))
+
+    if updated:
+        print(f"Updated tags in {len(updated)} unsent post(s): {', '.join(updated)}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--blacklist", nargs="+", help="Add technologies to the blacklist")
@@ -28,6 +56,7 @@ def main():
                 json.dump(sorted_aliases, f, indent=2)
                 f.write("\n")
             print(f"Added alias: {name} -> {alias}")
+            apply_alias_to_posts(dir_path, name, alias)
         return
 
     if args.blacklist:
@@ -143,6 +172,7 @@ def main():
                         json.dump(sorted_aliases, f, indent=2)
                         f.write("\n")
                     print(f"Added alias: {tech} -> {alias_to}")
+                    apply_alias_to_posts(dir_path, tech, alias_to)
 
             elif choice == "3":
                 subprocess.run(
