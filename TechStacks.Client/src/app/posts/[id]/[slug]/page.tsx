@@ -21,6 +21,10 @@ function toDescription(html?: string, text?: string): string {
 
 type Props = { params: Promise<{ id: string; slug: string }> };
 
+// Re-check post data periodically instead of caching a single render
+// (including a failed one) for the lifetime of the deployment.
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, slug } = await params;
   const postId = Number(id);
@@ -52,8 +56,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: [imageUrl],
       },
     };
-  } catch {
-    // Fall back to site-wide default metadata (e.g. post not found/deleted)
+  } catch (err) {
+    // Fall back to site-wide default metadata (e.g. post not found/deleted),
+    // but log so a real failure (e.g. the internal API fetch) isn't invisible.
+    console.error(`generateMetadata failed for post ${postId}:`, err);
     return {};
   }
 }
