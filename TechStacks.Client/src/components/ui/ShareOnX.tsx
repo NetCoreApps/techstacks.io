@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { technologyCache } from '@/lib/utils/technologyCache';
+import { decodeHtmlEntities } from '@/lib/utils/decodeHtmlEntities';
 
 interface ShareOnXProps {
   /** Text of the post, used as the body of the tweet */
@@ -58,8 +59,12 @@ export function ShareOnX({ title, path, technologyIds, className = '' }: ShareOn
 
   if (!origin) return null;
 
+  // Title comes HTML-escaped from the API (e.g. "&amp;"); decode it back to
+  // plain text before it goes into the tweet body.
+  const decodedTitle = decodeHtmlEntities(title);
+
   // The trailing newline lands x.com's appended link on its own line
-  const text = hashtags.length ? `${title}\n${hashtags.join(' ')}\n` : title;
+  const text = hashtags.length ? `${decodedTitle}\n${hashtags.join(' ')}\n` : decodedTitle;
   const href = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(origin + path)}`;
 
   return (

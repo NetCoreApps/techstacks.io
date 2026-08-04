@@ -307,11 +307,22 @@ export default function PostDetailClient() {
                 <Avatar
                   imageUrl={comment.userProfileUrl}
                   alt={comment.createdBy || 'User'}
+                  username={comment.createdBy}
                   size="sm"
                 />
               </div>
 
               <div className="text-sm text-gray-600 mb-2">
+                <span className="font-semibold text-gray-800">{comment.createdBy || 'Anonymous'}</span>
+                {comment.refSource && (
+                  <span
+                    className="ml-1 text-xs text-gray-400"
+                    title={`Imported from ${comment.refSource}`}
+                  >
+                    (via {comment.refSource})
+                  </span>
+                )}
+                {' · '}
                 {formatDistanceToNow(new Date(comment.created), { addSuffix: true })}
                 {comment.modified && comment.modified !== comment.created && (
                   <span className="text-gray-500"> (edited)</span>

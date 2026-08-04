@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using SkiaSharp;
 using TechStacks.ServiceModel.Types;
@@ -84,7 +85,7 @@ public static class PostCardRenderer
 
     public static Layout Build(Post post)
     {
-        var title = (post.Title ?? "").Trim();
+        var title = WebUtility.HtmlDecode((post.Title ?? "").Trim());
         var maxWidth = Width - Margin * 2;
 
         var fontSize = TitleTiers[^1].FontSize;
@@ -115,6 +116,7 @@ public static class PostCardRenderer
 
         var tagNames = (post.Tags ?? Array.Empty<string>())
             .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(WebUtility.HtmlDecode)
             .ToList();
 
         using var tagFont = new SKFont(Typeface, TagFontSize);
