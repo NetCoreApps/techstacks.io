@@ -305,7 +305,7 @@ export default function PostDetailClient() {
 
           {/* Comment Content */}
           <div className="flex-1">
-            <div className="flex items-center gap-x-2">
+            <div className="flex items-center gap-x-2 mb-2">
               {/* Avatar */}
               <Avatar
                 imageUrl={isImported ? null : comment.userProfileUrl}
@@ -314,7 +314,7 @@ export default function PostDetailClient() {
                 size="xs"
               />
 
-              <div className="text-sm text-gray-600 mb-2">
+              <div className="text-sm text-gray-600">
                 <span className="font-semibold text-gray-800">{comment.createdBy || 'Anonymous'}</span>
                 {' · '}
                 {formatDistanceToNow(new Date(comment.created), { addSuffix: true })}
