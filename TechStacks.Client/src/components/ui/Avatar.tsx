@@ -21,13 +21,10 @@ const sizeClasses = {
   xl: 'w-20 h-20',
 };
 
-const fontSizeClasses = {
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 24,
-  xl: 30,
-};
+// A fixed viewBox means one font size scales proportionally with the
+// container at every size (~55% of the 40-unit box), so the letter stays
+// equally prominent whether the avatar is xs or xl.
+const InitialFontSize = 22;
 
 export function Avatar({
   imageUrl,
@@ -65,7 +62,7 @@ export function Avatar({
               dy=".35em"
               textAnchor="middle"
               fill="#fff"
-              fontSize={fontSizeClasses[size]}
+              fontSize={InitialFontSize}
               fontWeight="600"
               fontFamily="system-ui, sans-serif"
             >
