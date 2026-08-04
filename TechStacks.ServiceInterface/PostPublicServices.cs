@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics;
@@ -85,8 +85,9 @@ public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQue
             : TypeConstants<PostComment>.EmptyList;
 
         // Get unique userIds from post and comments
-        var userIds = postComments.Map(x => x.UserId).Distinct().ToList();
-        var users = await Db.GetUserProfilesMapAsync(userIds);
+        var userIds = postComments.Map(x => x.UserId);
+        userIds.Add(post.UserId);
+        var users = await Db.GetUserProfilesMapAsync(userIds.Distinct().ToList());
 
         post.UserProfileUrl = users.GetProfileUrl(post.UserId);
         postComments.Each(x => x.UserProfileUrl = users.GetProfileUrl(x.UserId));
@@ -111,9 +112,10 @@ public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQue
     public async Task Get(GetPostCardSvg request)
     {
         var post = await GetPublicPostOrThrow(request.Id);
+        var palettes = CardPaletteServices.LoadPalettes();
 
         Response.ContentType = MimeTypes.GetMimeType("svg");
-        await Response.WriteAsync(PostCardRenderer.RenderSvg(post));
+        await Response.WriteAsync(PostCardRenderer.RenderSvg(post, null, palettes));
         Response.EndRequest();
     }
 
@@ -121,8 +123,9 @@ public class PostPublicServices(IMarkdownProvider markdown, IAutoQueryDb autoQue
     public async Task Get(GetPostCardImage request)
     {
         var post = await GetPublicPostOrThrow(request.Id);
+        var palettes = CardPaletteServices.LoadPalettes();
 
-        var png = PostCardRenderer.RenderPng(post);
+        var png = PostCardRenderer.RenderPng(post, null, palettes);
         Response.ContentType = MimeTypes.GetMimeType("png");
         await Response.OutputStream.WriteAsync(png);
         Response.EndRequest();

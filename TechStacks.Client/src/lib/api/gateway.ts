@@ -7,15 +7,17 @@ export const Routes = {
 }
 
 export const BaseUrl = typeof window === 'undefined'
-    ? (process.env.apiBaseUrl || '')
+    ? (process.env.INTERNAL_API_URL || process.env.apiBaseUrl || '')
     : (process.env.apiBaseUrl || '')
 
 export function apiUrl(path: string) {
-    const base = typeof window === 'undefined' ? process.env.apiBaseUrl : process.env.apiBaseUrl
+    const base = typeof window === 'undefined'
+        ? (process.env.INTERNAL_API_URL || process.env.apiBaseUrl)
+        : process.env.apiBaseUrl
     return combinePaths(base || '', path)
 }
 
-export const client = new JsonServiceClient()
+export const client = new JsonServiceClient(BaseUrl)
 
 // Load Metadata & Auth State on Startup
 // This needs to be called on client side only
