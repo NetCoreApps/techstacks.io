@@ -266,6 +266,10 @@ export default function PostDetailClient() {
     const canDelete = canDeleteComment(comment);
     const isEditing = editingCommentId === comment.id;
     const isReplyingTo = replyToId === comment.id;
+    // Imported comments (e.g. HackerNews, Reddit) aren't backed by a real
+    // TechStacks account, so always show the generated avatar for them
+    // rather than a (likely absent/unrelated) userProfileUrl.
+    const isImported = Boolean(comment.refSource);
 
     return (
       <div key={comment.id} className={depth > 0 ? 'ml-12' : ''}>
@@ -305,23 +309,15 @@ export default function PostDetailClient() {
               {/* Avatar */}
               <div className="flex items-center">
                 <Avatar
-                  imageUrl={comment.userProfileUrl}
+                  imageUrl={isImported ? null : comment.userProfileUrl}
                   alt={comment.createdBy || 'User'}
                   username={comment.createdBy}
-                  size="sm"
+                  size="xs"
                 />
               </div>
 
               <div className="text-sm text-gray-600 mb-2">
                 <span className="font-semibold text-gray-800">{comment.createdBy || 'Anonymous'}</span>
-                {comment.refSource && (
-                  <span
-                    className="ml-1 text-xs text-gray-400"
-                    title={`Imported from ${comment.refSource}`}
-                  >
-                    (via {comment.refSource})
-                  </span>
-                )}
                 {' · '}
                 {formatDistanceToNow(new Date(comment.created), { addSuffix: true })}
                 {comment.modified && comment.modified !== comment.created && (
