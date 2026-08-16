@@ -1,4 +1,5 @@
-##!/bin/bash
+#!/bin/bash
+set -e
 
 echo "Updating Hacker News top posts..."
 ./hn_top.py 4
@@ -12,14 +13,15 @@ echo "Process posts..."
 echo "Process technologies..."
 ./process_technologies.py
 
-POST_COUNT=$(ls ./posts/*.json 2>/dev/null | wc -l)
+POST_COUNT=$(ls ./posts/*.json 2>/dev/null | grep -v 'all.json' | wc -l || true)
 if [ "$POST_COUNT" -eq 0 ]; then
-    echo "No posts found in ./posts/, exiting."
+    echo "No posts found in ./posts/ ready to publish."
+    ./.venv/bin/python -c "from utils import print_pipeline_summary; print_pipeline_summary()"
     exit 0
 fi
 
 # Check for technologies in posts that aren't in all-technologies.json
-MISSING=$(python3 -c "
+MISSING=$(./.venv/bin/python -c "
 import json, glob
 with open('data/all-technologies.json') as f:
     known = set(json.load(f).keys())
@@ -45,3 +47,7 @@ fi
 
 echo "Publishing posts..."
 ./publish_posts.py
+
+./.venv/bin/python -c "from utils import print_pipeline_summary; print_pipeline_summary()"
+
+

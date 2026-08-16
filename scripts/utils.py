@@ -23,8 +23,9 @@ TOP_REDDIT_LIMIT = 100
 # Posts the analyzer itself judged as barely dev-relevant are not worth publishing
 MIN_RELEVANCE_SCORE = int(os.getenv("MIN_RELEVANCE_SCORE", "40"))
 
-PYTHON = sys.executable
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "bin", "python")
+PYTHON = VENV_PYTHON if os.path.exists(VENV_PYTHON) else sys.executable
 POSTS_DIR = os.path.join(SCRIPT_DIR, "posts")
 COMPLETED_DIR = os.path.join(SCRIPT_DIR, "done", "completed")
 FAILED_DIR = os.path.join(SCRIPT_DIR, "done", "failed")
@@ -239,3 +240,53 @@ def controversy_ratio(comments: int, points: int) -> float:
     if not points:
         return 0.0
     return round(comments / points, 2)
+
+
+def print_pipeline_summary():
+    """Print status of pending items requiring human review or intervention."""
+    import glob
+
+    review_path = os.path.join(SCRIPT_DIR, "data", "review-technologies.json")
+    failed_dir = os.path.join(SCRIPT_DIR, "done", "failed")
+
+    pending_tags = []
+    if os.path.exists(review_path):
+        try:
+            with open(review_path) as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    pending_tags = data
+                elif isinstance(data, dict):
+                    pending_tags = [{"tag": k, "post_ids": v if isinstance(v, list) else [v]} for k, v in data.items()]
+        except Exception:
+            pass
+
+    failed_count = len(glob.glob(os.path.join(failed_dir, "*.json"))) if os.path.exists(failed_dir) else 0
+
+    print(f"\n{'='*60}")
+    print(" PIPELINE STATUS SUMMARY")
+    print(f"{'='*60}")
+
+    if pending_tags:
+        print(f"⚠️  {len(pending_tags)} tag(s) pending review in data/review-technologies.json:")
+        for item in pending_tags[:5]:
+            t = item.get("tag", "")
+            pids = item.get("post_ids", [])
+            pstr = f" (posts: {', '.join(str(p) for p in pids)})" if pids else ""
+            print(f"     • {t}{pstr}")
+        if len(pending_tags) > 5:
+            print(f"     ... and {len(pending_tags) - 5} more")
+        print("   -> Action: Run './process_technologies.py --review' to process them.")
+    else:
+        print("✅ Tag Review Queue: 0 tags pending review.")
+
+    if failed_count > 0:
+        print(f"⚠️  Failed Posts: {failed_count} post(s) in done/failed/")
+    else:
+        print("✅ Failed Posts: None.")
+
+    print(f"\n💡 Next steps:")
+    print("   - Review tags:   ./process_technologies.py --review")
+    print("   - Tweet top:     ./tweet_top_posts.py --dry-run")
+    print(f"{'='*60}\n")
+
