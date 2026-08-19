@@ -339,7 +339,7 @@ def main():
     parser.add_argument("--blacklist", nargs="+", help="Add technologies to the blacklist")
     parser.add_argument("--alias", nargs=2, metavar=("NAME", "ALIAS"), help="Add a technology alias (NAME -> ALIAS)")
     parser.add_argument("--review", action="store_true", help="Interactively review tags in review-technologies.json")
-    parser.add_argument("--interactive", action="store_true", help="Prompt interactively for new technologies and pending review tags")
+    parser.add_argument("-i", "--interactive", action="store_true", help="Prompt interactively for new technologies and pending review tags")
     parser.add_argument("--model", default=LLMS_TECH_MODEL, help=f"AI model to use for technology matching (default: {LLMS_TECH_MODEL})")
     args = parser.parse_args()
 

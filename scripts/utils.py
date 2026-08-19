@@ -287,6 +287,22 @@ def print_pipeline_summary():
 
     print(f"\n💡 Next steps:")
     print("   - Review tags:   ./process_technologies.py --review")
-    print("   - Tweet top:     ./tweet_top_posts.py --dry-run")
+    print("   - Tweet top:     ./tweet_top_posts.py --intent")
     print(f"{'='*60}\n")
+
+    # Persist summary to runs.log
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_file = os.path.join(SCRIPT_DIR, "runs.log")
+    try:
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] Run Completed:\n")
+            if pending_tags:
+                f.write(f"  • Review Queue: {len(pending_tags)} tag(s) pending ({', '.join(item.get('tag', '') for item in pending_tags[:3])})\n")
+            else:
+                f.write("  • Review Queue: 0 pending\n")
+            f.write(f"  • Failed Posts: {failed_count}\n\n")
+    except Exception:
+        pass
+
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.techstacks.process_news</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>source ~/.zshrc 2>/dev/null || true; export PATH="/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"; ./process_news.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/demisbellot/src/NetCoreApps/techstacks.io/scripts</string>
+
+    <!-- Run every 3 hours (10800 seconds) -->
+    <key>StartInterval</key>
+    <integer>10800</integer>
+
+    <!-- Do not run immediately upon load (only on interval or manual trigger) -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Standard log output -->
+    <key>StandardOutPath</key>
+    <string>/Users/demisbellot/src/NetCoreApps/techstacks.io/scripts/process_news.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/demisbellot/src/NetCoreApps/techstacks.io/scripts/process_news.log</string>
+</dict>
+</plist>

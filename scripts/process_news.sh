@@ -2,10 +2,10 @@
 set -e
 
 echo "Updating Hacker News top posts..."
-./hn_top.py 4
+./hn_top.py 4 || true
 
 echo "Updating Reddit top posts..."
-./reddit_top.py
+./reddit_top.py || true
 
 echo "Process posts..."
 ./process_posts.py

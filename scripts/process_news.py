@@ -43,15 +43,15 @@ def main():
     parser.add_argument("--skip-fetch", action="store_true", help="Skip fetching HN/Reddit posts and process existing json feeds")
     parser.add_argument("--min-points", type=int, default=None, help="Minimum HN points threshold")
     parser.add_argument("--model", default=None, help="Override default LLM model for analysis and technology matching")
-    parser.add_argument("--interactive", action="store_true", help="Prompt interactively for new technologies and review queue instead of using AI")
+    parser.add_argument("-i", "--interactive", action="store_true", help="Prompt interactively for new technologies and review queue instead of using AI")
     parser.add_argument("--review", action="store_true", help="Run interactive review queue for review-technologies.json")
     parser.add_argument("--no-publish", action="store_true", help="Do not run publish_posts.py at the end")
     args = parser.parse_args()
 
-    # Step 1: Fetch latest posts
+    # Step 1: Fetch latest posts (non-fatal if one source encounters a transient error)
     if not args.skip_fetch and not args.review:
-        run_step([PYTHON, os.path.join(SCRIPT_DIR, "hn_top.py"), str(args.hn_pages)], "Fetching Hacker News top posts")
-        run_step([PYTHON, os.path.join(SCRIPT_DIR, "reddit_top.py")], "Fetching Reddit top posts")
+        run_step([PYTHON, os.path.join(SCRIPT_DIR, "hn_top.py"), str(args.hn_pages)], "Fetching Hacker News top posts", check=False)
+        run_step([PYTHON, os.path.join(SCRIPT_DIR, "reddit_top.py")], "Fetching Reddit top posts", check=False)
 
     # Step 2: Process posts (articles + comments analysis)
     if not args.review:
