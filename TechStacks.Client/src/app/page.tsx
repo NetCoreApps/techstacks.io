@@ -45,6 +45,20 @@ import {
 
 const POSTS_PER_PAGE = 25;
 
+// Posts must reach this score before they surface anywhere on the home page.
+// Enforced server-side via AutoQuery's implicit `>=` convention so that paging and
+// totals stay accurate, with a client-side guard for anything a cached (or older)
+// response might still let through.
+const MIN_POINTS = 10;
+
+/** Constrains a home page posts query to posts that have reached MIN_POINTS. */
+const withMinPoints = <T extends object>(query: T) =>
+  Object.assign(query, { pointsGreaterThanOrEqualTo: MIN_POINTS });
+
+/** Drops any post that hasn't reached MIN_POINTS. */
+const aboveMinPoints = (posts: Post[]) =>
+  posts.filter(post => (post.points ?? 0) >= MIN_POINTS);
+
 const POST_TYPE_OPTIONS = [
   { value: '', label: 'All' },
   { value: PostType.Announcement, label: 'Announcement' },
@@ -773,7 +787,7 @@ function HomePageContent() {
       setLoading(true);
       setError(null);
       const skip = (page - 1) * POSTS_PER_PAGE;
-      const query = new CachedQueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip });
+      const query = withMinPoints(new CachedQueryPosts({ orderBy: '-id', take: POSTS_PER_PAGE, skip }));
 
       const activeIds = filterIds.length > 0 ? filterIds : watched;
       if (activeIds.length > 0) {
@@ -783,7 +797,7 @@ function HomePageContent() {
         query.types = [postType];
       }
       const response = await gateway.queryPosts(query);
-      setPosts(response.results || []);
+      setPosts(aboveMinPoints(response.results || []));
       setTotal(response.total || 0);
       setCurrentPage(page);
     } catch (err: any) {
@@ -804,15 +818,15 @@ function HomePageContent() {
     setLoadingPortal(true);
     try {
       // 1. Fetch latest overall posts
-      const overallQuery = new CachedQueryPosts({
+      const overallQuery = withMinPoints(new CachedQueryPosts({
         orderBy: '-id',
         take: 10
-      });
+      }));
       if (postType) {
         overallQuery.types = [postType];
       }
       const overallResponse = await gateway.queryPosts(overallQuery);
-      const overallPosts = overallResponse.results || [];
+      const overallPosts = aboveMinPoints(overallResponse.results || []);
 
       let hero: Post | null = null;
       let trending: Post[] = [];
@@ -839,17 +853,17 @@ function HomePageContent() {
         if (ids.length === 0) {
           return [key, []];
         }
-        const query = new CachedQueryPosts({
+        const query = withMinPoints(new CachedQueryPosts({
           anyTechnologyIds: ids,
           orderBy: '-id',
           take: 5
-        });
+        }));
         if (postType) {
           query.types = [postType];
         }
         try {
           const res = await gateway.queryPosts(query);
-          return [key, res.results || []];
+          return [key, aboveMinPoints(res.results || [])];
         } catch {
           return [key, []];
         }
