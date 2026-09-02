@@ -113,10 +113,42 @@ public class PostCardTests
     }
 
     [Test]
+    public void Can_Select_Palette_Deterministically_For_Posts()
+    {
+        var post1 = new Post { Id = 19207, Title = "The efficient frontier of LLM inference" };
+        var post2 = new Post { Id = 19208, Title = "Building Realtime Apps with ServiceStack" };
+
+        var palette1a = PostCardRenderer.GetPaletteForPost(post1);
+        var palette1b = PostCardRenderer.GetPaletteForPost(post1);
+        Assert.That(palette1a.Id, Is.EqualTo(palette1b.Id));
+
+        var palette2 = PostCardRenderer.GetPaletteForPost(post2);
+        Assert.That(palette2.Id, Is.Not.EqualTo(palette1a.Id));
+    }
+
+    [Test]
     public void Can_Extract_Initial_Letter()
     {
         Assert.That(PostCardRenderer.GetInitialLetter("Migrating to Next.js 16"), Is.EqualTo("M"));
         Assert.That(PostCardRenderer.GetInitialLetter("  \"Hello World\""), Is.EqualTo("H"));
         Assert.That(PostCardRenderer.GetInitialLetter("10 Tips for .NET"), Is.EqualTo("1"));
+    }
+
+    [Test]
+    public void LoadPalettes_FallsBackToDefault_WhenCorruptedOrSinglePalette()
+    {
+        // When fewer than 2 palettes or invalid hex colors are present
+        var singlePalette = new List<CardPalette>
+        {
+            new CardPalette { Id = "test", BgStart = "invalid", BgEnd = "invalid", AccentColor = "(select 1)" }
+        };
+        CardPaletteServices.SavePalettesList(singlePalette);
+
+        var loaded = CardPaletteServices.LoadPalettes();
+        Assert.That(loaded.Count, Is.EqualTo(PostCardRenderer.DefaultPalettes.Count));
+        Assert.That(loaded[0].Id, Is.EqualTo(PostCardRenderer.DefaultPalettes[0].Id));
+
+        // Restore default palettes
+        CardPaletteServices.SavePalettesList(PostCardRenderer.DefaultPalettes);
     }
 }

@@ -20,6 +20,32 @@ public class CardPaletteServices : Service
         WriteIndented = true
     };
 
+    public static bool IsValidHexColor(string? hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return false;
+        var s = hex.Trim();
+        if (!s.StartsWith('#')) return false;
+        var len = s.Length - 1;
+        if (len != 3 && len != 6 && len != 8) return false;
+        for (int i = 1; i < s.Length; i++)
+        {
+            var c = s[i];
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+                return false;
+        }
+        return true;
+    }
+
+    public static bool IsValidPalette(CardPalette? p)
+    {
+        if (p == null) return false;
+        return IsValidHexColor(p.BgStart)
+            && IsValidHexColor(p.BgEnd)
+            && IsValidHexColor(p.TitleColor)
+            && IsValidHexColor(p.DomainColor)
+            && IsValidHexColor(p.AccentColor);
+    }
+
     public static List<CardPalette> LoadPalettes()
     {
         lock (FileLock)
@@ -43,7 +69,7 @@ public class CardPaletteServices : Service
                 if (!string.IsNullOrEmpty(json))
                 {
                     var list = JsonSerializer.Deserialize<List<CardPalette>>(json, JsonOptions);
-                    if (list != null && list.Count > 0)
+                    if (list != null && list.Count >= 2 && list.All(IsValidPalette))
                         return list;
                 }
             }
@@ -89,8 +115,11 @@ public class CardPaletteServices : Service
 
     public object Post(SaveCardPalettes request)
     {
-        if (request.Palettes == null || request.Palettes.Count == 0)
-            throw HttpError.BadRequest("Palettes list cannot be empty");
+        if (request.Palettes == null || request.Palettes.Count < 2)
+            throw HttpError.BadRequest("Palettes list must contain at least 2 palettes");
+
+        if (!request.Palettes.All(IsValidPalette))
+            throw HttpError.BadRequest("Invalid color hex values in palette list");
 
         SavePalettesList(request.Palettes);
         return new HttpResult(LoadPalettes(), MimeTypes.Json);

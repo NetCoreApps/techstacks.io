@@ -36,6 +36,7 @@ public class GetCardPalettes : IGet, IReturn<List<CardPalette>>
 {
 }
 
+[ValidateIsAdmin]
 [Route("/cards/palettes", "POST")]
 [Route("/api/cards/palettes", "POST")]
 public class SaveCardPalettes : IPost, IReturn<List<CardPalette>>

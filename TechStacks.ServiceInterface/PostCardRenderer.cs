@@ -78,6 +78,17 @@ public static class PostCardRenderer
         return list[index];
     }
 
+    public static CardPalette GetPaletteForPost(Post post, List<CardPalette>? palettes = null)
+    {
+        var list = palettes != null && palettes.Count > 0 ? palettes : DefaultPalettes;
+        var key = post.Id > 0 
+            ? (string.IsNullOrWhiteSpace(post.Title) ? post.Id.ToString() : $"{post.Id}:{post.Title}") 
+            : (post.Title ?? "");
+        var hash = Fnv1aHash(key);
+        var index = (int)(hash % (uint)list.Count);
+        return list[index];
+    }
+
     // (font size, max lines) tried largest-first; each has been sized so
     // MaxLines * LineHeight always fits within ContentBottom - ContentTop.
     static readonly (float FontSize, int MaxLines)[] TitleTiers =
@@ -258,7 +269,7 @@ public static class PostCardRenderer
     }
 
     public static string RenderSvg(Post post, CardPalette? customPalette = null, List<CardPalette>? palettes = null) =>
-        RenderSvg(post.Title, post.Tags, customPalette ?? GetPaletteForTitle(post.Title, palettes));
+        RenderSvg(post.Title, post.Tags, customPalette ?? GetPaletteForPost(post, palettes));
 
     public static string RenderSvg(string? title, string[]? tags, CardPalette palette)
     {
@@ -268,6 +279,7 @@ public static class PostCardRenderer
         var bgEnd = palette.BgEnd;
         var titleColor = palette.TitleColor;
         var domainColor = palette.DomainColor;
+        var accentColor = !string.IsNullOrWhiteSpace(palette.AccentColor) ? palette.AccentColor : "#38bdf8";
 
         sb.Append($@"<svg width=""{Width}"" height=""{Height}"" viewBox=""0 0 {Width} {Height}"" xmlns=""http://www.w3.org/2000/svg"">
   <defs>
@@ -282,7 +294,7 @@ public static class PostCardRenderer
   <rect x=""0"" y=""0"" width=""{Width}"" height=""{Height}"" fill=""url(#bg)""/>
   <circle cx=""1050"" cy=""70"" r=""230"" fill=""#ffffff"" opacity=""0.10"" filter=""url(#blur)""/>
   <circle cx=""40"" cy=""600"" r=""170"" fill=""#ffffff"" opacity=""0.07"" filter=""url(#blur)""/>
-  <circle cx=""640"" cy=""680"" r=""210"" fill=""#38bdf8"" opacity=""0.12"" filter=""url(#blur)""/>
+  <circle cx=""640"" cy=""680"" r=""210"" fill=""{accentColor}"" opacity=""0.15"" filter=""url(#blur)""/>
 ");
 
         var initial = GetInitialLetter(title);
@@ -322,7 +334,7 @@ public static class PostCardRenderer
     }
 
     public static byte[] RenderPng(Post post, CardPalette? customPalette = null, List<CardPalette>? palettes = null) =>
-        RenderPng(post.Title, post.Tags, customPalette ?? GetPaletteForTitle(post.Title, palettes));
+        RenderPng(post.Title, post.Tags, customPalette ?? GetPaletteForPost(post, palettes));
 
     public static byte[] RenderPng(string? title, string[]? tags, CardPalette palette)
     {
@@ -347,7 +359,8 @@ public static class PostCardRenderer
 
         DrawAccentCircle(canvas, new SKPoint(1050, 70), 230, new SKColor(255, 255, 255, 26));
         DrawAccentCircle(canvas, new SKPoint(40, 600), 170, new SKColor(255, 255, 255, 18));
-        DrawAccentCircle(canvas, new SKPoint(640, 680), 210, new SKColor(0x38, 0xbd, 0xf8, 31));
+        var accentCircleColor = ParseSKColor(palette.AccentColor, new SKColor(0x38, 0xbd, 0xf8)).WithAlpha(38);
+        DrawAccentCircle(canvas, new SKPoint(640, 680), 210, accentCircleColor);
 
         var initial = GetInitialLetter(title);
         if (!string.IsNullOrEmpty(initial))
