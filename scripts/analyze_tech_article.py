@@ -28,7 +28,6 @@ from markdownify import markdownify as md
 from prompts import ARTICLE_PROMPT, ARTICLE_SCHEMA, EXTRACTION_FAILED
 from utils import (
     SCRIPT_DIR,
-    REPO_ROOT,
     LLMS_SH,
     LLMS_ANALYTICS_MODEL,
     USER_AGENT,
@@ -284,10 +283,10 @@ def call_llm(user_message: str, model: str) -> dict:
         json.dump(chat_request, f, indent=2)
 
     result = subprocess.run(
-        [LLMS_SH, "--model", model, "--chat", chat_json_path, "--nohistory"],
+        [LLMS_SH, "--model", model, "--chat", os.path.basename(chat_json_path), "--nohistory"],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=SCRIPT_DIR,
     )
     content = result.stdout.strip()
     if result.returncode != 0:

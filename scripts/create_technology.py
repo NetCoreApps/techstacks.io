@@ -13,7 +13,7 @@ import sys
 import aiohttp
 from yarl import URL
 
-from utils import TECHSTACKS_BASE, SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_TECH_MODEL, COOKIES, parse_json_response, create_slug
+from utils import TECHSTACKS_BASE, SCRIPT_DIR, LLMS_SH, LLMS_TECH_MODEL, COOKIES, parse_json_response, create_slug
 
 CREATE_URL = f"{TECHSTACKS_BASE}/api/CreateTechnology"
 
@@ -99,10 +99,10 @@ Return ONLY the JSON object, no markdown fences or extra text."""
         json.dump(chat_request, f, indent=2)
 
     result = subprocess.run(
-        [LLMS_SH, "--chat", chat_json_path, "--nohistory"],
+        [LLMS_SH, "--chat", os.path.basename(chat_json_path), "--nohistory"],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=SCRIPT_DIR,
     )
     if result.returncode != 0:
         print(f"Error from llms.sh ({result.returncode}):\n{result.stderr}", file=sys.stderr)

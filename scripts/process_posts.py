@@ -18,6 +18,24 @@ from pathlib import Path
 
 from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS, POSTS_DIR, SCRIPT_DIR, FAILED_DIR, PYTHON, append_to_file, file_set
 
+
+def subprocess_error(result: subprocess.CompletedProcess) -> str:
+    """Return a useful one-line error, skipping noisy SDK deprecation warnings."""
+    stderr = result.stderr.strip()
+    if not stderr:
+        return f"exit code {result.returncode}"
+
+    lines = [line.strip() for line in stderr.splitlines() if line.strip()]
+    for line in reversed(lines):
+        if "DeprecationWarning:" in line:
+            continue
+        if line.startswith("VersionedUnionType ="):
+            continue
+        if line.startswith("Error from llms.sh ("):
+            continue
+        return line
+    return f"exit code {result.returncode}"
+
 def load_urls() -> set:
     done = set()
     done.update(file_set(os.path.join(SCRIPT_DIR, "urls_completed.txt")))
@@ -98,7 +116,7 @@ def run_comments_analyzer(post: dict, comments_url: str, model: str | None):
         comments_cmd.extend(["--model", model])
     result = subprocess.run(comments_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True)
     if result.returncode != 0:
-        error_msg = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else f"exit code {result.returncode}"
+        error_msg = subprocess_error(result)
         print(f"Warning: {analyzer} failed for post {post['id']}: {error_msg}", file=sys.stderr)
     if result.stdout:
         print(result.stdout, end="")
@@ -185,7 +203,7 @@ def main():
 
         result = subprocess.run(article_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True)
         if result.returncode != 0:
-            error_msg = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else f"exit code {result.returncode}"
+            error_msg = subprocess_error(result)
             print(f"Warning: analyze_tech_article.py failed for post {post_id}: {error_msg}", file=sys.stderr)
             mark_failed(post, error_msg)
             continue

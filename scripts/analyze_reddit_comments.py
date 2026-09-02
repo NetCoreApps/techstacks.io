@@ -24,7 +24,6 @@ import requests
 from prompts import SENTIMENT_SCHEMA, sentiment_prompt, sentiment_user_message
 from utils import (
     SCRIPT_DIR,
-    REPO_ROOT,
     LLMS_SH,
     LLMS_ANALYTICS_MODEL,
     USER_AGENT,
@@ -123,10 +122,10 @@ def analyze_sentiment(post_title: str, comments_text: str, model: str,
         json.dump(chat_request, f, indent=2)
 
     result = subprocess.run(
-        [LLMS_SH, "--model", model, "--chat", chat_json_path, "--nohistory"],
+        [LLMS_SH, "--model", model, "--chat", os.path.basename(chat_json_path), "--nohistory"],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=SCRIPT_DIR,
     )
     content = result.stdout.strip()
     if result.returncode != 0:

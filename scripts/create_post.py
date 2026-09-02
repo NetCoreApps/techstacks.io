@@ -16,7 +16,7 @@ import sys
 import aiohttp
 from yarl import URL
 
-from utils import SCRIPT_DIR, REPO_ROOT, LLMS_SH, LLMS_MODEL, COOKIES, parse_json_response
+from utils import SCRIPT_DIR, LLMS_SH, LLMS_MODEL, COOKIES, parse_json_response
 
 TECHSTACKS_BASE = "https://techstacks.io"
 SEARCH_TECH_URL = f"{TECHSTACKS_BASE}/api/QueryTechnology"
@@ -174,10 +174,10 @@ Return a JSON object with a "posts" array. If no stories match the criteria, ret
         json.dump(chat_request, f, indent=2)
 
     result = subprocess.run(
-        [LLMS_SH, "--model", model, "--chat", chat_json_path, "--nohistory"],
+        [LLMS_SH, "--model", model, "--chat", os.path.basename(chat_json_path), "--nohistory"],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=SCRIPT_DIR,
     )
     content = result.stdout.strip()
     if result.returncode != 0:

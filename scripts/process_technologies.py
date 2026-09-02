@@ -10,7 +10,6 @@ from pathlib import Path
 from utils import (
     LLMS_SH,
     LLMS_TECH_MODEL,
-    REPO_ROOT,
     SCRIPT_DIR,
     parse_json_response,
 )
@@ -53,6 +52,39 @@ MATCH_TECHNOLOGIES_SCHEMA = {
         "additionalProperties": False,
     },
 }
+
+
+def input_with_autocomplete(prompt: str, options: list[str]) -> str:
+    """Prompt for input with TAB autocomplete against the given options."""
+    try:
+        import readline
+    except ImportError:
+        return input(prompt)
+
+    matches: list[str] = []
+
+    def completer(text: str, state: int):
+        if state == 0:
+            text_lower = text.casefold()
+            matches[:] = [o for o in options if o.casefold().startswith(text_lower)]
+            if not matches:
+                matches[:] = [o for o in options if text_lower in o.casefold()]
+        return matches[state] if state < len(matches) else None
+
+    old_completer = readline.get_completer()
+    old_delims = readline.get_completer_delims()
+    readline.set_completer(completer)
+    readline.set_completer_delims(" \t\n")
+    try:
+        # macOS ships libedit instead of GNU readline, which needs a different binding
+        if "libedit" in (readline.__doc__ or ""):
+            readline.parse_and_bind("bind ^I rl_complete")
+        else:
+            readline.parse_and_bind("tab: complete")
+        return input(prompt)
+    finally:
+        readline.set_completer(old_completer)
+        readline.set_completer_delims(old_delims)
 
 
 def apply_alias_to_posts(dir_path: str, name: str, alias: str):
@@ -201,10 +233,10 @@ EXISTING TECHNOLOGIES:
         json.dump(chat_request, f, indent=2)
 
     result = subprocess.run(
-        [LLMS_SH, "--chat", chat_json_path, "--nohistory"],
+        [LLMS_SH, "--chat", os.path.basename(chat_json_path), "--nohistory"],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=SCRIPT_DIR,
     )
     if result.returncode != 0:
         print(f"Error from llms.sh ({result.returncode}):\n{result.stderr}", file=sys.stderr)
@@ -271,6 +303,12 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
         print("No tags pending review in review-technologies.json.")
         return
 
+    all_tech_names = []
+    all_tech_path = os.path.join(dir_path, "data/all-technologies.json")
+    if os.path.exists(all_tech_path):
+        with open(all_tech_path) as f:
+            all_tech_names = sorted(json.load(f).keys(), key=str.casefold)
+
     print(f"\n==========================================")
     print(f" Review Queue: {len(reviews)} tag(s) pending review")
     print(f"==========================================")
@@ -299,7 +337,8 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
             print(f"Confirmed blacklisted. Removed '{tech}' from review queue.")
 
         elif choice == "2":
-            alias_to = input(f"Alias '{tech}' -> ").strip()
+            print("  (TAB to autocomplete against existing technologies)")
+            alias_to = input_with_autocomplete(f"Alias '{tech}' -> ", all_tech_names).strip()
             if alias_to:
                 remove_from_blacklist(blacklist_path, tech)
                 add_alias(alias_path, tech, alias_to)
@@ -448,7 +487,7 @@ def main():
                 print(f"Added to blacklist: {tech}")
 
             elif choice == "2":
-                alias_to = input(f"Alias '{tech}' -> ").strip()
+                alias_to = input_with_autocomplete(f"Alias '{tech}' -> ", sorted(all_known.keys(), key=str.casefold)).strip()
                 if alias_to:
                     add_alias(alias_path, tech, alias_to)
                     print(f"Added alias: {tech} -> {alias_to}")
