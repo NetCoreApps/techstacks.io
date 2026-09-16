@@ -1,8 +1,22 @@
 [
   {
-    "tag": "Sonic Pi",
+    "tag": "Cartesian",
     "post_ids": [
-      "49482099"
+      "49713999"
+    ],
+    "reason": "No AI match returned"
+  },
+  {
+    "tag": "Fitbit",
+    "post_ids": [
+      "49677648"
+    ],
+    "reason": "No AI match returned"
+  },
+  {
+    "tag": "Google Health API",
+    "post_ids": [
+      "49677648"
     ],
     "reason": "No AI match returned"
   }
