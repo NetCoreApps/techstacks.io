@@ -204,7 +204,7 @@ def fetch_hn_firebase(limit: int = 60) -> list[dict]:
                         "slug": create_slug(title),
                         "url": url_link,
                         "points": item.get("score", 0),
-                        "comments": len(item.get("kids", [])),
+                        "comments": item.get("descendants", len(item.get("kids", []))),
                         "comments_url": f"https://news.ycombinator.com/item?id={item_id}",
                     }
         except Exception:

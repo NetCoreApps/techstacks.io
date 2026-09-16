@@ -144,7 +144,7 @@ EXCLUDE stories about:
 - Non-technical topics
 
 For each selected story, create a post entry with:
-- type: Use "Announcement" for new releases/launches, "Post" for articles/blog posts, "Showcase" for Show HN posts, "Question" for Ask HN posts
+- type: Use "Announcement" for new releases/launches, "Post" for articles/blog posts, "Showcase" for Show HN posts, "Request" for Ask HN posts / questions
 - title: Use the original title, clean up if needed
 - url: The original URL
 - imageUrl: Empty string (we don't have images)

@@ -65,16 +65,16 @@ def input_with_autocomplete(prompt: str, options: list[str]) -> str:
 
     def completer(text: str, state: int):
         if state == 0:
-            text_lower = text.casefold()
-            matches[:] = [o for o in options if o.casefold().startswith(text_lower)]
+            query = text.strip().casefold()
+            matches[:] = [o for o in options if o.casefold().startswith(query)]
             if not matches:
-                matches[:] = [o for o in options if text_lower in o.casefold()]
+                matches[:] = [o for o in options if query in o.casefold()]
         return matches[state] if state < len(matches) else None
 
     old_completer = readline.get_completer()
     old_delims = readline.get_completer_delims()
     readline.set_completer(completer)
-    readline.set_completer_delims(" \t\n")
+    readline.set_completer_delims("")
     try:
         # macOS ships libedit instead of GNU readline, which needs a different binding
         if "libedit" in (readline.__doc__ or ""):
@@ -84,24 +84,114 @@ def input_with_autocomplete(prompt: str, options: list[str]) -> str:
         return input(prompt)
     finally:
         readline.set_completer(old_completer)
-        readline.set_completer_delims(old_delims)
+        if old_delims is not None:
+            readline.set_completer_delims(old_delims)
+
+
+def load_aliases(alias_path: str) -> tuple[dict[str, str], list[tuple[str, str]]]:
+    """Load aliases and return (exact_alias_map_lower, wildcard_aliases).
+
+    wildcard_aliases is a list of (prefix_lower, target) sorted by prefix length descending.
+    """
+    if not os.path.exists(alias_path):
+        return {}, []
+
+    with open(alias_path) as f:
+        aliases = json.load(f)
+
+    exact_map_lower = {}
+    wildcards = []
+
+    for k, v in aliases.items():
+        kl = k.casefold()
+        if kl.endswith("*") and len(kl[:-1].strip()) >= 2:
+            prefix = kl[:-1].rstrip()
+            wildcards.append((prefix, v))
+        if kl not in exact_map_lower:
+            exact_map_lower[kl] = v
+
+    wildcards.sort(key=lambda x: len(x[0]), reverse=True)
+    return exact_map_lower, wildcards
+
+
+def resolve_technology(
+    tech: str,
+    all_known: dict,
+    known_tech_map: dict,
+    alias_map_lower: dict,
+    wildcard_aliases: list[tuple[str, str]],
+) -> tuple[str, str | None]:
+    """Resolve a technology tag against known technologies, exact aliases, wildcards, and prefixes.
+
+    Returns (resolved_tech, match_type) where match_type is:
+    - 'known': exact match in all_known or known_tech_map
+    - 'alias': exact alias match
+    - 'wildcard': matched wildcard alias (e.g. "Nvidia*")
+    - 'prefix': first-word or multi-word prefix matched existing known tech or alias
+    - None: no match found (new technology candidate)
+    """
+    if not tech or not tech.strip():
+        return tech, None
+
+    tech_clean = tech.strip()
+    tech_lower = tech_clean.casefold()
+
+    # 1. Exact known technology (preserve canonical casing)
+    if tech_clean in all_known:
+        return tech_clean, "known"
+    if tech_lower in known_tech_map:
+        return known_tech_map[tech_lower], "known"
+
+    # 2. Exact alias match (case-insensitive)
+    if tech_lower in alias_map_lower:
+        target = alias_map_lower[tech_lower]
+        target = known_tech_map.get(target.casefold(), target)
+        return target, "alias"
+
+    # 3. Wildcard alias match (e.g. "Nvidia*" -> "NVIDIA")
+    for prefix, target in wildcard_aliases:
+        if tech_lower.startswith(prefix):
+            target = known_tech_map.get(target.casefold(), target)
+            return target, "wildcard"
+
+    # 4. First-word / multi-word prefix match
+    words = tech_clean.split()
+    if len(words) > 1:
+        for i in range(len(words) - 1, 0, -1):
+            prefix = " ".join(words[:i]).strip(":,.;-").casefold()
+            if not prefix:
+                continue
+            if prefix in alias_map_lower:
+                target = alias_map_lower[prefix]
+                target = known_tech_map.get(target.casefold(), target)
+                return target, "prefix"
+            if prefix in known_tech_map:
+                return known_tech_map[prefix], "prefix"
+
+    return tech_clean, None
 
 
 def apply_alias_to_posts(dir_path: str, name: str, alias: str):
-    """Replace `name` with `alias` in the technologies of unsent posts (still in posts/)."""
+    """Replace `name` (or wildcard pattern `name*`) with `alias` in technologies of unsent posts."""
     updated = []
+    is_wildcard = name.endswith("*")
+    prefix = name[:-1].rstrip().casefold() if is_wildcard else name.casefold()
+
     for post_file in glob.glob(os.path.join(dir_path, "posts/*.json")):
         with open(post_file) as f:
             post = json.load(f)
 
         techs = post.get("technologies", [])
-        if name not in techs:
+        def matches(t: str) -> bool:
+            return t.casefold().startswith(prefix) if is_wildcard else t.casefold() == prefix
+
+        if not any(matches(t) for t in techs):
             continue
 
         processed = []
         seen = set()
         for tech in techs:
-            tech = alias if tech == name else tech
+            tech = alias if matches(tech) else tech
             if tech not in seen:
                 processed.append(tech)
                 seen.add(tech)
@@ -141,14 +231,18 @@ def add_to_blacklist(blacklist_path: str, tags: list[str]) -> list[str]:
 
 def add_alias(alias_path: str, tag: str, alias: str):
     """Add an alias mapping to alias-technologies.json (sorted case-insensitively)."""
+    if tag.casefold() == alias.casefold():
+        return
+
     if os.path.exists(alias_path):
         with open(alias_path) as f:
             aliases = json.load(f)
     else:
         aliases = {}
 
-    aliases[tag] = alias
-    sorted_aliases = dict(sorted(aliases.items(), key=lambda x: x[0].casefold()))
+    new_aliases = {k: v for k, v in aliases.items() if k.casefold() != tag.casefold()}
+    new_aliases[tag] = alias
+    sorted_aliases = dict(sorted(new_aliases.items(), key=lambda x: x[0].casefold()))
     with open(alias_path, "w") as f:
         json.dump(sorted_aliases, f, indent=2)
         f.write("\n")
@@ -303,11 +397,18 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
         print("No tags pending review in review-technologies.json.")
         return
 
-    all_tech_names = []
     all_tech_path = os.path.join(dir_path, "data/all-technologies.json")
-    if os.path.exists(all_tech_path):
-        with open(all_tech_path) as f:
-            all_tech_names = sorted(json.load(f).keys(), key=str.casefold)
+
+    def load_known_technologies():
+        names = []
+        if os.path.exists(all_tech_path):
+            with open(all_tech_path) as f:
+                names = sorted(json.load(f).keys(), key=str.casefold)
+        tech_map = {k.casefold(): k for k in names}
+        return names, tech_map
+
+    all_tech_names, known_tech_map = load_known_technologies()
+    alias_map_lower, wildcard_aliases = load_aliases(alias_path)
 
     print(f"\n==========================================")
     print(f" Review Queue: {len(reviews)} tag(s) pending review")
@@ -317,6 +418,18 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
         tech = item.get("tag", "")
         post_ids = item.get("post_ids", [])
         reason = item.get("reason", "")
+
+        # Check if the tag matches an exact alias, wildcard, or first-word prefix
+        resolved, match_type = resolve_technology(tech, {}, known_tech_map, alias_map_lower, wildcard_aliases)
+        if match_type in ("known", "alias", "wildcard", "prefix"):
+            remove_from_blacklist(blacklist_path, tech)
+            add_alias(alias_path, tech, resolved)
+            apply_alias_to_posts(dir_path, tech, resolved)
+            remove_from_review(review_path, tech)
+            alias_map_lower, wildcard_aliases = load_aliases(alias_path)
+            print(f"\n--- [Auto-Resolved] '{tech}' -> '{resolved}' (matched {match_type}) ---")
+            print(f"Removed '{tech}' from review queue and blacklist.")
+            continue
 
         print(f"\n--- [Review] {tech} ---")
         if post_ids:
@@ -339,15 +452,19 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
         elif choice == "2":
             print("  (TAB to autocomplete against existing technologies)")
             alias_to = input_with_autocomplete(f"Alias '{tech}' -> ", all_tech_names).strip()
-            if alias_to:
+            if not alias_to:
+                print(f"No alias entered; '{tech}' skipped.")
+            elif alias_to.casefold() == tech.casefold():
+                print(f"Cannot alias '{tech}' to itself; skipped.")
+            else:
+                canonical_target = known_tech_map.get(alias_to.casefold(), alias_to)
                 remove_from_blacklist(blacklist_path, tech)
-                add_alias(alias_path, tech, alias_to)
-                apply_alias_to_posts(dir_path, tech, alias_to)
+                add_alias(alias_path, tech, canonical_target)
+                apply_alias_to_posts(dir_path, tech, canonical_target)
                 remove_from_review(review_path, tech)
-                print(f"Added alias: '{tech}' -> '{alias_to}' (removed from blacklist and review queue).")
+                print(f"Added alias: '{tech}' -> '{canonical_target}' (removed from blacklist and review queue).")
 
         elif choice == "3":
-            remove_from_blacklist(blacklist_path, tech)
             try:
                 subprocess.run(
                     [os.path.join(dir_path, "create_technology.py"), tech],
@@ -356,7 +473,9 @@ def process_review_queue(review_path: str, blacklist_path: str, alias_path: str,
                 update_script = os.path.join(dir_path, "data/update.sh")
                 if os.path.exists(update_script):
                     subprocess.run(["./update.sh"], cwd=os.path.join(dir_path, "data"), check=True)
+                remove_from_blacklist(blacklist_path, tech)
                 remove_from_review(review_path, tech)
+                all_tech_names, known_tech_map = load_known_technologies()
                 print(f"Created technology '{tech}' (removed from blacklist and review queue).")
             except Exception as e:
                 print(f"Error creating technology '{tech}': {e}", file=sys.stderr)
@@ -419,8 +538,7 @@ def main():
         blacklist = set(json.load(f))
     blacklist_lower = {b.casefold() for b in blacklist}
 
-    with open(alias_path) as f:
-        aliases = json.load(f)
+    alias_map_lower, wildcard_aliases = load_aliases(alias_path)
 
     with open(os.path.join(dir_path, "data/all-technologies.json")) as f:
         all_known = json.load(f)  # dict of {name: id}
@@ -444,7 +562,12 @@ def main():
         for tech in techs:
             if not tech or not tech.strip() or tech in blacklist or tech.casefold() in blacklist_lower:
                 continue
-            tech = aliases.get(tech, tech)
+            resolved, match_type = resolve_technology(tech, all_known, known_tech_map, alias_map_lower, wildcard_aliases)
+            if match_type in ("wildcard", "prefix"):
+                print(f"  [AUTO ALIAS] '{tech}' -> '{resolved}' (matched {match_type})")
+            tech = resolved
+            if tech in blacklist or tech.casefold() in blacklist_lower:
+                continue
             if tech not in seen:
                 processed.append(tech)
                 seen.add(tech)
@@ -488,16 +611,32 @@ def main():
 
             elif choice == "2":
                 alias_to = input_with_autocomplete(f"Alias '{tech}' -> ", sorted(all_known.keys(), key=str.casefold)).strip()
-                if alias_to:
-                    add_alias(alias_path, tech, alias_to)
-                    print(f"Added alias: {tech} -> {alias_to}")
-                    apply_alias_to_posts(dir_path, tech, alias_to)
+                if not alias_to:
+                    print(f"No alias entered; '{tech}' skipped.")
+                elif alias_to.casefold() == tech.casefold():
+                    print(f"Cannot alias '{tech}' to itself; skipped.")
+                else:
+                    canonical_target = known_tech_map.get(alias_to.casefold(), alias_to)
+                    add_alias(alias_path, tech, canonical_target)
+                    print(f"Added alias: {tech} -> {canonical_target}")
+                    apply_alias_to_posts(dir_path, tech, canonical_target)
 
             elif choice == "3":
-                subprocess.run(
-                    [os.path.join(dir_path, "create_technology.py"), tech],
-                    cwd=dir_path, check=True
-                )
+                try:
+                    subprocess.run(
+                        [os.path.join(dir_path, "create_technology.py"), tech],
+                        cwd=dir_path, check=True
+                    )
+                    update_script = os.path.join(dir_path, "data/update.sh")
+                    if os.path.exists(update_script):
+                        subprocess.run(["./update.sh"], cwd=os.path.join(dir_path, "data"), check=True)
+                    all_known_path = os.path.join(dir_path, "data/all-technologies.json")
+                    if os.path.exists(all_known_path):
+                        with open(all_known_path) as f:
+                            all_known = json.load(f)
+                        known_tech_map = {k.casefold(): k for k in all_known.keys()}
+                except Exception as e:
+                    print(f"Error creating technology '{tech}': {e}", file=sys.stderr)
 
             else:
                 print(f"Skipped: {tech}")
@@ -539,8 +678,7 @@ def main():
         blacklist = set(json.load(f))
     blacklist_lower = {b.casefold() for b in blacklist}
 
-    with open(alias_path) as f:
-        aliases = json.load(f)
+    alias_map_lower, wildcard_aliases = load_aliases(alias_path)
 
     for post_file in glob.glob(os.path.join(dir_path, "posts/*.json")):
         with open(post_file) as f:
@@ -552,9 +690,10 @@ def main():
         for tech in techs:
             if not tech or not tech.strip() or tech in blacklist or tech.casefold() in blacklist_lower:
                 continue
-            tech = aliases.get(tech, tech)
-            if tech.casefold() in known_tech_map:
-                tech = known_tech_map[tech.casefold()]
+            resolved, _ = resolve_technology(tech, all_known, known_tech_map, alias_map_lower, wildcard_aliases)
+            tech = resolved
+            if tech in blacklist or tech.casefold() in blacklist_lower:
+                continue
             if tech not in seen:
                 processed.append(tech)
                 seen.add(tech)

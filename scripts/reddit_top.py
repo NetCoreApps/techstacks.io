@@ -12,12 +12,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urlparse
 
-from utils import MIN_REDDIT_POINTS, TOP_REDDIT_LIMIT, USER_AGENT, create_slug
+from utils import MIN_REDDIT_POINTS, SCRIPT_DIR, TOP_REDDIT_LIMIT, USER_AGENT, create_slug
 
 SUBREDDITS = [
     "r/react",
-    "r/angular/",
-    "r/vuejs/",
+    "r/angular",
+    "r/vuejs",
     "r/python",
     "r/dotnet",
     "r/csharp",
@@ -28,7 +28,7 @@ SUBREDDITS = [
     "r/ollama",
     "r/claude",
     "r/OpenAI",
-    "/r/Qwen_AI",
+    "r/Qwen_AI",
     "r/machinelearning",
     "r/programming",
     "r/technology",
@@ -38,8 +38,8 @@ SUBREDDITS = [
     "r/apple",
     "r/windows",
     "r/cybersecurity",
-    "/r/ArtificialInteligence",
-    "/r/technews",
+    "r/ArtificialInteligence",
+    "r/technews",
     "r/gadgets",
     "r/hardware",
 ]
@@ -57,7 +57,8 @@ def create_cookie_jar():
 
 def fetch_subreddit_posts(subreddit: str, limit: int = 50) -> list[dict]:
     """Fetch top posts from a subreddit using Reddit's JSON API."""
-    url = f"https://www.reddit.com/{subreddit}/hot.json?limit={limit}"
+    clean_sub = subreddit.strip("/")
+    url = f"https://www.reddit.com/{clean_sub}/hot.json?limit={limit}"
     resp = requests.get(url, headers={"user-agent": USER_AGENT},
                         cookies=create_cookie_jar(), timeout=30, allow_redirects=True)
     resp.raise_for_status()
@@ -127,4 +128,5 @@ if __name__ == "__main__":
 
     top_json = json.dumps(posts, indent=2)
     print(top_json)
-    Path("reddit_top.json").write_text(top_json, encoding="utf-8")
+    output_path = Path(SCRIPT_DIR) / "reddit_top.json"
+    output_path.write_text(top_json, encoding="utf-8")

@@ -6,7 +6,7 @@ import glob
 import os
 
 def build_url_map():
-    completed_dir = os.path.join(os.path.dirname(__file__), 'completed')
+    completed_dir = os.path.join(os.path.dirname(__file__), 'done', 'completed')
     url_map = {}
 
     for filepath in sorted(glob.glob(os.path.join(completed_dir, '*.json'))):

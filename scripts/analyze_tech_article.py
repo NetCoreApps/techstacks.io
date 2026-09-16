@@ -28,6 +28,7 @@ from markdownify import markdownify as md
 from prompts import ARTICLE_PROMPT, ARTICLE_SCHEMA, EXTRACTION_FAILED
 from utils import (
     SCRIPT_DIR,
+    POSTS_DIR,
     LLMS_SH,
     LLMS_ANALYTICS_MODEL,
     USER_AGENT,
@@ -338,7 +339,7 @@ def main():
     args.url = args.url.strip('"').strip("'")
 
     hn_top = None
-    hn_top_path = "hn_top.json"
+    hn_top_path = os.path.join(SCRIPT_DIR, "hn_top.json")
     # Allow passing a Hacker News post ID or URL to auto-resolve the article URL from the top 30 posts
     post_id = int(args.url) if args.url.isdigit() else None
     post_ref = None
@@ -346,7 +347,7 @@ def main():
     # if the argument looks like a short string (less than 10 chars) and isn't a URL, treat it as a Reddit post ID
     if post_id is None and len(args.url) < 10:
         post_id = args.url
-        reddit_top_path = "reddit_top.json"
+        reddit_top_path = os.path.join(SCRIPT_DIR, "reddit_top.json")
         if os.path.exists(reddit_top_path):
             reddit_top = json.loads(Path(reddit_top_path).read_text())
             for post in reddit_top:
@@ -366,7 +367,7 @@ def main():
                 break
 
     post_url = post_ref.get("url") if post_ref else args.url
-    post_id = post_ref.get("id") if post_ref else None
+    post_id = post_ref.get("id") if post_ref else post_id
 
     if post_url.startswith("https://twitter.com") or post_url.startswith("https://x.com"):
         post_url = "https://xcancel.com" + post_url[post_url.index("/", 8):]
@@ -380,9 +381,9 @@ def main():
         print(f"URL {post_url} has already been processed")
         exit(0)
 
+    post_path = None
     if post_id:
-        post_filename = f"{post_id}.json"
-        post_path = Path("posts") / post_filename
+        post_path = Path(POSTS_DIR) / f"{post_id}.json"
         if post_path.exists():
             print(f"Post ID {post_id} has already been created")
             exit(0)
@@ -462,8 +463,8 @@ def main():
         # Comments per point: a 300-point post with 400 comments is an argument,
         # one with 20 comments is a consensus.
         result["controversy"] = controversy_ratio(result.get("comments", 0), result.get("points", 0))
-        post_json = json.dumps(result, indent=2)
-        post_path.write_text(post_json, encoding="utf-8")
+        target_path = post_path if post_path else Path(POSTS_DIR) / f"{post_id}.json"
+        target_path.write_text(post_json, encoding="utf-8")
 
     return result
 
