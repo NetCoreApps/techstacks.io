@@ -53,6 +53,16 @@ def load_ids() -> set:
 def mark_failed(post: dict, error_msg: str):
     post_id = str(post["id"])
     append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), post_id)
+    for sec_id in post.get("secondary_ids", []):
+        append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), str(sec_id))
+    for rel in post.get("related_discussions", []):
+        url = rel.get("url", "")
+        m_hn = re.search(r"item\?id=(\d+)", url)
+        if m_hn:
+            append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), m_hn.group(1))
+        m_red = re.search(r"/comments/([a-z0-9]+)", url)
+        if m_red:
+            append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), m_red.group(1))
     post_url = post.get("url", "")
     if post_url:
         append_to_file(os.path.join(SCRIPT_DIR, "urls_failed.txt"), post_url.rstrip('/'))
@@ -91,6 +101,7 @@ def merge_cross_posts(posts: list[dict]) -> list[dict]:
         group.sort(key=lambda p: p.get("points", 0), reverse=True)
         primary, others = group[0], group[1:]
         if others:
+            primary["secondary_ids"] = [str(o["id"]) for o in others if o.get("id")]
             primary["related_discussions"] = [
                 {
                     "source": discussion_source(o.get("comments_url", "")),
@@ -166,21 +177,48 @@ def main():
 
     done = load_ids()
     done_urls = load_urls()
-    to_process = [p for p in eligible if str(p["id"]) not in done and p.get("url", "").rstrip('/') not in done_urls and is_content_url(p.get("url", ""))]
-    print(f"Already processed: {len(eligible) - len(to_process)}, remaining: {len(to_process)}")
 
-    to_process = merge_cross_posts(to_process)
-
-    # Find posts that have article analysis but are missing comments analysis
+    posts_dir = Path(POSTS_DIR)
+    already_created_ids = set()
+    existing_post_urls = set()
     needs_comments = []
-    posts_dir = Path(SCRIPT_DIR) / "posts"
+
     for p in eligible:
         pid = str(p["id"])
         post_path = posts_dir / f"{pid}.json"
-        if post_path.exists() and p.get("comments_url"):
-            post_data = json.loads(post_path.read_text())
-            if "sentiment" not in post_data:
-                needs_comments.append(p)
+        if post_path.exists():
+            already_created_ids.add(pid)
+            if p.get("comments_url"):
+                try:
+                    post_data = json.loads(post_path.read_text())
+                    if "sentiment" not in post_data:
+                        needs_comments.append(p)
+                except Exception:
+                    pass
+
+    for post_file in posts_dir.glob("*.json"):
+        if post_file.name != "all.json":
+            try:
+                pdata = json.loads(post_file.read_text())
+                if pdata.get("url"):
+                    existing_post_urls.add(pdata["url"].rstrip('/'))
+                for sec_id in pdata.get("secondary_ids", []):
+                    already_created_ids.add(str(sec_id))
+            except Exception:
+                pass
+
+    to_process = [
+        p for p in eligible
+        if str(p["id"]) not in done
+        and str(p["id"]) not in already_created_ids
+        and p.get("url", "").rstrip('/') not in done_urls
+        and p.get("url", "").rstrip('/') not in existing_post_urls
+        and is_content_url(p.get("url", ""))
+    ]
+    print(f"Already processed/pending: {len(eligible) - len(to_process)}, remaining to analyze: {len(to_process)}")
+
+    to_process = merge_cross_posts(to_process)
+
     if needs_comments:
         print(f"Posts needing comments analysis: {len(needs_comments)}")
 
@@ -211,13 +249,17 @@ def main():
             print(result.stdout, end="")
 
         # Step 1b: analyze_tech_article writes the post file from the source feed
-        # entry, so cross-post links have to be patched in afterwards.
+        # entry, so cross-post links and secondary IDs have to be patched in afterwards.
         related = post.get("related_discussions")
-        if related:
+        sec_ids = post.get("secondary_ids")
+        if related or sec_ids:
             post_path = Path(POSTS_DIR) / f"{post_id}.json"
             if post_path.exists():
                 post_data = json.loads(post_path.read_text())
-                post_data["related_discussions"] = related
+                if related:
+                    post_data["related_discussions"] = related
+                if sec_ids:
+                    post_data["secondary_ids"] = sec_ids
                 post_path.write_text(json.dumps(post_data, indent=2), encoding="utf-8")
 
         # Step 2: Analyze the post comments

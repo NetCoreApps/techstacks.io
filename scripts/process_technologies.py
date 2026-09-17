@@ -3,6 +3,8 @@ import argparse
 import glob
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +13,8 @@ from utils import (
     LLMS_SH,
     LLMS_TECH_MODEL,
     SCRIPT_DIR,
+    SKIPPED_DIR,
+    append_to_file,
     parse_json_response,
 )
 
@@ -681,6 +685,7 @@ def main():
     alias_map_lower, wildcard_aliases = load_aliases(alias_path)
 
     for post_file in glob.glob(os.path.join(dir_path, "posts/*.json")):
+        post_id = Path(post_file).stem
         with open(post_file) as f:
             post = json.load(f)
 
@@ -699,8 +704,24 @@ def main():
                 seen.add(tech)
 
         if not processed:
-            os.remove(post_file)
-            print(f"Removed {os.path.basename(post_file)} (no valid technologies remaining)")
+            os.makedirs(SKIPPED_DIR, exist_ok=True)
+            skipped_dest = os.path.join(SKIPPED_DIR, os.path.basename(post_file))
+            shutil.move(post_file, skipped_dest)
+            append_to_file(os.path.join(dir_path, "ids_completed.txt"), str(post_id))
+            for sec_id in post.get("secondary_ids", []):
+                append_to_file(os.path.join(dir_path, "ids_completed.txt"), str(sec_id))
+            for rel in post.get("related_discussions", []):
+                url = rel.get("url", "")
+                m_hn = re.search(r"item\?id=(\d+)", url)
+                if m_hn:
+                    append_to_file(os.path.join(dir_path, "ids_completed.txt"), m_hn.group(1))
+                m_red = re.search(r"/comments/([a-z0-9]+)", url)
+                if m_red:
+                    append_to_file(os.path.join(dir_path, "ids_completed.txt"), m_red.group(1))
+            post_url = post.get("url", "")
+            if post_url:
+                append_to_file(os.path.join(dir_path, "urls_completed.txt"), post_url.rstrip("/"))
+            print(f"Skipped {os.path.basename(post_file)} -> moved to done/skipped (no valid technologies remaining)")
         elif processed != techs:
             post["technologies"] = processed
             with open(post_file, "w") as f:

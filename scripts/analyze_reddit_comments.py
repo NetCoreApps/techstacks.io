@@ -161,7 +161,7 @@ def main():
     with open(post_path, "r", encoding="utf-8") as f:
         post_info = json.load(f)
 
-    if post_info.get("sentiment") and post_info.get("top_comment"):
+    if "sentiment" in post_info and "top_comment" in post_info:
         print(f"Post {post_id} already has sentiment and top_comment", file=sys.stderr)
         sys.exit(0)
 

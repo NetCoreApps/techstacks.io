@@ -11,6 +11,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -31,6 +32,22 @@ from utils import (
 IMPORT_POST_URL = f"{TECHSTACKS_BASE}/api/ImportNewsPost"
 SYNC_POST_URL = f"{TECHSTACKS_BASE}/api/SyncStats"
 
+def get_all_post_ids(post_data: dict, primary_id: str) -> list[str]:
+    """Return primary ID and any secondary/related discussion IDs."""
+    ids = [str(primary_id)]
+    for sec_id in post_data.get("secondary_ids", []):
+        if str(sec_id) not in ids:
+            ids.append(str(sec_id))
+    for rel in post_data.get("related_discussions", []):
+        url = rel.get("url", "")
+        m_hn = re.search(r"item\?id=(\d+)", url)
+        if m_hn and m_hn.group(1) not in ids:
+            ids.append(m_hn.group(1))
+        m_red = re.search(r"/comments/([a-z0-9]+)", url)
+        if m_red and m_red.group(1) not in ids:
+            ids.append(m_red.group(1))
+    return ids
+
 def import_post(post_file):
     """Import a single post JSON file into TechStacks."""
     post_id = Path(post_file).stem
@@ -46,7 +63,8 @@ def import_post(post_file):
         os.makedirs(SKIPPED_DIR, exist_ok=True)
         shutil.move(post_file, os.path.join(SKIPPED_DIR, f"{post_id}.json"))
         # Recorded as done so it isn't re-analyzed on the next run
-        append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(post_id))
+        for pid in get_all_post_ids(post_data, post_id):
+            append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(pid))
         post_url = post_data.get("url", "")
         if post_url:
             append_to_file(os.path.join(SCRIPT_DIR, "urls_completed.txt"), post_url.rstrip("/"))
@@ -69,7 +87,8 @@ def import_post(post_file):
         dest = os.path.join(COMPLETED_DIR, f"{post_id}.json")
         shutil.move(post_file, dest)
         
-        append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(post_id))
+        for pid in get_all_post_ids(post_data, post_id):
+            append_to_file(os.path.join(SCRIPT_DIR, "ids_completed.txt"), str(pid))
         if post_url:
             append_to_file(os.path.join(SCRIPT_DIR, "urls_completed.txt"), post_url.rstrip('/'))
 
@@ -85,7 +104,8 @@ def import_post(post_file):
             json.dump(post_data, f, indent=2)
         os.remove(post_file)
 
-        append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), str(post_id))
+        for pid in get_all_post_ids(post_data, post_id):
+            append_to_file(os.path.join(SCRIPT_DIR, "ids_failed.txt"), str(pid))
         if post_url:
             append_to_file(os.path.join(SCRIPT_DIR, "urls_failed.txt"), post_url.rstrip('/'))
 
