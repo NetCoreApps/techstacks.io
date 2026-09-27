@@ -103,6 +103,7 @@ Return ONLY the JSON object, no markdown fences or extra text."""
         capture_output=True,
         text=True,
         cwd=SCRIPT_DIR,
+        stdin=subprocess.DEVNULL,
     )
     if result.returncode != 0:
         print(f"Error from llms.sh ({result.returncode}):\n{result.stderr}", file=sys.stderr)

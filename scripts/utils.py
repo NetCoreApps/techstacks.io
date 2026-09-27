@@ -14,7 +14,7 @@ COOKIES = {
     ".AspNetCore.Identity.Application": os.getenv("TECHSTACKS_IDENTITY"),
 }
 
-USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 
 MIN_HN_POINTS = 100
 MIN_REDDIT_POINTS = 200
@@ -53,6 +53,17 @@ def append_to_file(file_path, symbol: str):
         with open(file_path, "a") as f:
             f.write(f"{symbol}\n")
 
+def remove_symbols_from_file(file_path: str, symbols: set | list):
+    """Remove symbols from an ids_*.txt or urls_*.txt file."""
+    if not os.path.exists(file_path):
+        return
+    sym_set = set(str(s) for s in symbols)
+    with open(file_path, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip() and line.strip() not in sym_set]
+    with open(file_path, "w", encoding="utf-8") as f:
+        for l in lines:
+            f.write(f"{l}\n")
+
 def create_cookie_jar():
     parsed = urlparse(TECHSTACKS_BASE)
     jar = requests.cookies.RequestsCookieJar()
@@ -72,29 +83,46 @@ def create_reddit_cookie_jar():
     return jar
 
 
-def parse_json_response(text):
-    # Try direct parse first
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-
-    # Strip markdown fences
-    cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip())
-    cleaned = re.sub(r"\s*```$", "", cleaned)
-
-    try:
-        return json.loads(cleaned)
-    except Exception:
-        pass
-
-    # Try to extract JSON object/array
-    match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", text)
-    if match:
+def parse_json_response(text: str):
+    # 1. Try direct parse first (with and without strict mode)
+    for strict in (True, False):
         try:
-            return json.loads(match.group(1))
-        except Exception as e:
-            print(f"Error parsing extracted JSON: {e}\nExtracted text:\n{match.group(1)}", file=sys.stderr)
+            return json.loads(text, strict=strict)
+        except Exception:
+            pass
+
+    # 2. Strip thinking blocks if present (<think>...</think>)
+    cleaned = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.DOTALL).strip()
+
+    # 3. Strip markdown fences: ```json ... ```
+    m_fence = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned)
+    if m_fence:
+        fence_content = m_fence.group(1).strip()
+        for strict in (True, False):
+            try:
+                return json.loads(fence_content, strict=strict)
+            except Exception:
+                pass
+
+    # 4. Try to extract outermost JSON object {...} or array [...]
+    match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", cleaned)
+    if match:
+        for strict in (True, False):
+            try:
+                return json.loads(match.group(1), strict=strict)
+            except Exception:
+                pass
+
+    # 5. Fallback: slice between first { and last }
+    first_brace = cleaned.find("{")
+    last_brace = cleaned.rfind("}")
+    if first_brace != -1 and last_brace > first_brace:
+        slice_text = cleaned[first_brace:last_brace + 1]
+        for strict in (True, False):
+            try:
+                return json.loads(slice_text, strict=strict)
+            except Exception:
+                pass
 
     raise ValueError("Could not parse JSON from response")
 

@@ -86,6 +86,18 @@ def list_snapshots(url: str) -> list[dict]:
     return unique
 
 
+def strip_tracking_params(url: str) -> str:
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+    parsed = urlparse(url)
+    tracking_prefixes = ("utm_", "fbclid", "gclid", "ref", "mc_", "igshid")
+    cleaned_query = [
+        (k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True)
+        if not any(k.lower().startswith(p) for p in tracking_prefixes)
+    ]
+    query_str = urlencode(cleaned_query)
+    return urlunparse(parsed._replace(query=query_str))
+
+
 def fetch_latest(url: str) -> tuple[str, str]:
     """
     Fetch the latest archived version of a URL.
@@ -98,6 +110,13 @@ def fetch_latest(url: str) -> tuple[str, str]:
     session.headers.update(HEADERS)
 
     resp = session.get(archive_url, allow_redirects=True, timeout=30)
+    if resp.status_code == 404:
+        clean_url = strip_tracking_params(url)
+        if clean_url != url:
+            alt_archive_url = get_archive_url(clean_url)
+            print(f"Retrying without tracking params: {alt_archive_url}")
+            resp = session.get(alt_archive_url, allow_redirects=True, timeout=30)
+
     resp.raise_for_status()
 
     return resp.url, resp.text

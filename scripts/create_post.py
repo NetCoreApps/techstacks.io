@@ -178,6 +178,7 @@ Return a JSON object with a "posts" array. If no stories match the criteria, ret
         capture_output=True,
         text=True,
         cwd=SCRIPT_DIR,
+        stdin=subprocess.DEVNULL,
     )
     content = result.stdout.strip()
     if result.returncode != 0:

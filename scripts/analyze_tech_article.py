@@ -20,6 +20,13 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+# Auto re-exec in .venv if available and not already inside it
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_venv_python = os.path.join(_script_dir, ".venv", "bin", "python")
+if os.path.exists(_venv_python) and sys.executable != _venv_python:
+    os.execv(_venv_python, [_venv_python] + sys.argv)
+
 from urllib.parse import urlparse
 
 import requests
@@ -213,12 +220,28 @@ def extract_content(html: str, url: str) -> dict:
     for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
         comment.extract()
 
-    # Find the best content container
+    # Find the best content container among selectors.
+    # Prefer selectors whose best match has substantial text (>= MIN_CONTENT_CHARS),
+    # which avoids picking tiny teaser or promo <article> cards over the real story.
     content_el = None
     for selector in ARTICLE_SELECTORS:
-        content_el = soup.select_one(selector)
-        if content_el:
-            break
+        matches = soup.select(selector)
+        if matches:
+            best_match = max(matches, key=lambda el: len(el.get_text(strip=True)))
+            if len(best_match.get_text(strip=True)) >= MIN_CONTENT_CHARS:
+                content_el = best_match
+                break
+
+    # If no selector met the threshold, choose the longest match across all candidate selectors
+    if not content_el:
+        candidates = []
+        for selector in ARTICLE_SELECTORS:
+            for el in soup.select(selector):
+                text = el.get_text(strip=True)
+                if text:
+                    candidates.append((len(text), el))
+        if candidates:
+            content_el = max(candidates, key=lambda c: c[0])[1]
 
     if not content_el:
         content_el = soup.body if soup.body else soup
@@ -242,6 +265,132 @@ def extract_content(html: str, url: str) -> dict:
     }
 
 
+def extract_youtube_video_id(url: str) -> str | None:
+    """Extract YouTube video ID from various URL patterns."""
+    try:
+        parsed = urlparse(url)
+        netloc = parsed.netloc.lower()
+        if "youtu.be" in netloc:
+            path = parsed.path.strip("/")
+            return path.split("/")[0] if path else None
+        if "youtube.com" in netloc:
+            if "/watch" in parsed.path:
+                from urllib.parse import parse_qs
+                qs = parse_qs(parsed.query)
+                return qs.get("v", [None])[0]
+            if "/shorts/" in parsed.path:
+                return parsed.path.split("/shorts/")[1].strip("/").split("/")[0]
+            if "/embed/" in parsed.path:
+                return parsed.path.split("/embed/")[1].strip("/").split("/")[0]
+            if "/v/" in parsed.path:
+                return parsed.path.split("/v/")[1].strip("/").split("/")[0]
+    except Exception:
+        pass
+    return None
+
+
+def fetch_youtube_content(video_id: str, original_url: str) -> dict | None:
+    """Fetch YouTube video metadata and transcript.
+    Returns an extracted dict compatible with extract_content(), or None on failure."""
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        ytt = YouTubeTranscriptApi()
+        snippets = None
+        try:
+            snippets = ytt.fetch(video_id)
+        except Exception:
+            try:
+                tl = ytt.list(video_id)
+                try:
+                    snippets = tl.find_transcript(["en"]).fetch()
+                except Exception:
+                    try:
+                        snippets = tl.find_generated_transcript(["en"]).fetch()
+                    except Exception:
+                        for t in tl:
+                            if t.is_translatable:
+                                snippets = t.translate("en").fetch()
+                                break
+                            else:
+                                snippets = t.fetch()
+                                break
+            except Exception as e:
+                print(f"Failed to list YouTube transcripts: {e}", file=sys.stderr)
+
+        if not snippets:
+            print(f"No transcript available for YouTube video {video_id}", file=sys.stderr)
+            return None
+
+        # Format transcript into timestamped paragraphs
+        lines = []
+        current_time = 0
+        current_chunk = []
+        for s in snippets:
+            text = getattr(s, "text", "")
+            if not text:
+                continue
+            if not current_chunk:
+                current_time = int(s.start)
+            current_chunk.append(text.strip())
+            if s.start - current_time >= 60 or len(" ".join(current_chunk)) > 500:
+                mins, secs = divmod(current_time, 60)
+                lines.append(f"[{mins:02d}:{secs:02d}] " + " ".join(current_chunk))
+                current_chunk = []
+                current_time = int(s.start)
+
+        if current_chunk:
+            mins, secs = divmod(current_time, 60)
+            lines.append(f"[{mins:02d}:{secs:02d}] " + " ".join(current_chunk))
+
+        transcript_text = "\n\n".join(lines)
+        plain_text = " ".join(getattr(s, "text", "").strip() for s in snippets if getattr(s, "text", None))
+
+        # Fetch metadata via oEmbed
+        title = ""
+        author = ""
+        try:
+            oembed_url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json"
+            oresp = requests.get(oembed_url, timeout=10)
+            if oresp.status_code == 200:
+                odata = oresp.json()
+                title = odata.get("title", "")
+                author = odata.get("author_name", "")
+        except Exception as e:
+            print(f"oEmbed fetch warning: {e}", file=sys.stderr)
+
+        # Fetch description and published date from HTML with curl UA
+        description = ""
+        published = ""
+        try:
+            watch_url = f"https://www.youtube.com/watch?v={video_id}"
+            wresp = requests.get(watch_url, headers={"User-Agent": "curl/8.7.1"}, timeout=15)
+            if wresp.status_code == 200:
+                soup = BeautifulSoup(wresp.text, "html.parser")
+                if not title:
+                    og_title = soup.find("meta", property="og:title")
+                    if og_title and og_title.get("content"):
+                        title = og_title["content"].strip()
+                meta_desc = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", property="og:description")
+                if meta_desc and meta_desc.get("content"):
+                    description = meta_desc["content"].strip()
+                published = extract_published_date(soup)
+        except Exception as e:
+            print(f"YouTube HTML metadata fetch warning: {e}", file=sys.stderr)
+
+        return {
+            "title": title or f"YouTube Video ({video_id})",
+            "author": author,
+            "description": description,
+            "published": published,
+            "url": original_url,
+            "text_markdown": transcript_text,
+            "text_plain": plain_text,
+        }
+    except Exception as e:
+        print(f"Error fetching YouTube content for {video_id}: {e}", file=sys.stderr)
+        return None
+
+
 # ── LLM Integration ─────────────────────────────────────────────────────────
 
 def build_user_message(extracted: dict, max_chars: int = 12000) -> str:
@@ -255,6 +404,8 @@ def build_user_message(extracted: dict, max_chars: int = 12000) -> str:
         f"Source: {extract_domain(extracted['url'])}",
         f"Page Title: {extracted['title']}",
     ]
+    if extracted.get("author"):
+        parts.append(f"Author / Channel: {extracted['author']}")
     if extracted.get("description"):
         parts.append(f"Meta Description: {extracted['description']}")
     if extracted.get("published"):
@@ -288,6 +439,7 @@ def call_llm(user_message: str, model: str) -> dict:
         capture_output=True,
         text=True,
         cwd=SCRIPT_DIR,
+        stdin=subprocess.DEVNULL,
     )
     content = result.stdout.strip()
     if result.returncode != 0:
@@ -300,6 +452,10 @@ def call_llm(user_message: str, model: str) -> dict:
         print(f"Error: llms.sh returned empty response", file=sys.stderr)
         if result.stderr.strip():
             print(f"stderr: {result.stderr.strip()}", file=sys.stderr)
+        sys.exit(1)
+
+    if "{" not in content and "ERROR: Provider" in content:
+        print(f"Error: llms providers failed:\n{content}", file=sys.stderr)
         sys.exit(1)
 
     print(content + "\n\n")
@@ -321,7 +477,7 @@ def create_slug(title):
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze a technology article URL using an LLM.")
-    parser.add_argument("url", help="URL of the technology article to analyze")
+    parser.add_argument("url", help="URL of the technology article to analyze, or a post ID")
     parser.add_argument(
         "--model",
         default=LLMS_ANALYTICS_MODEL,
@@ -333,41 +489,84 @@ def main():
         default=12000,
         help="Max characters of page content to send to the LLM (default: 12000)",
     )
+    parser.add_argument("--post-file", help="Path to JSON file containing post metadata")
+    parser.add_argument("--post-id", help="Explicit post ID associated with the URL")
+    parser.add_argument("--force", action="store_true", help="Process even if already in done_urls or posts/")
 
     args = parser.parse_args()
 
-    args.url = args.url.strip('"').strip("'")
+    import html
+    args.url = html.unescape(args.url.strip('"').strip("'"))
 
-    hn_top = None
-    hn_top_path = os.path.join(SCRIPT_DIR, "hn_top.json")
-    # Allow passing a Hacker News post ID or URL to auto-resolve the article URL from the top 30 posts
-    post_id = int(args.url) if args.url.isdigit() else None
     post_ref = None
+    if args.post_file and os.path.exists(args.post_file):
+        try:
+            post_ref = json.loads(Path(args.post_file).read_text())
+        except Exception as e:
+            print(f"Warning: could not read post file {args.post_file}: {e}", file=sys.stderr)
 
-    # if the argument looks like a short string (less than 10 chars) and isn't a URL, treat it as a Reddit post ID
-    if post_id is None and len(args.url) < 10:
-        post_id = args.url
+    post_id = args.post_id or (post_ref.get("id") if post_ref else None)
+    if not post_id and (args.url.isdigit() or (len(args.url) < 15 and not args.url.startswith("http"))):
+        post_id = int(args.url) if args.url.isdigit() else args.url
+
+    # Check top lists if not yet resolved
+    if not post_ref and post_id:
         reddit_top_path = os.path.join(SCRIPT_DIR, "reddit_top.json")
         if os.path.exists(reddit_top_path):
-            reddit_top = json.loads(Path(reddit_top_path).read_text())
-            for post in reddit_top:
-                if post.get("id") == post_id:
-                    post_ref = post
-                    break
+            try:
+                reddit_top = json.loads(Path(reddit_top_path).read_text())
+                for post in reddit_top:
+                    if str(post.get("id")) == str(post_id):
+                        post_ref = post
+                        break
+            except Exception:
+                pass
 
-    if not post_ref and os.path.exists(hn_top_path):
-        hn_top = json.loads(Path(hn_top_path).read_text())
-        for post in hn_top:
-            if post_id and post.get("id") == post_id:
-                post_ref = post
-                args.url = post.get("url")
-                break
-            if post.get("url") == args.url:
-                post_ref = post
-                break
+    if not post_ref and post_id:
+        hn_top_path = os.path.join(SCRIPT_DIR, "hn_top.json")
+        if os.path.exists(hn_top_path):
+            try:
+                hn_top = json.loads(Path(hn_top_path).read_text())
+                for post in hn_top:
+                    if str(post.get("id")) == str(post_id):
+                        post_ref = post
+                        break
+            except Exception:
+                pass
+
+    # Check previous runs and archive folders if still not found
+    if not post_ref and post_id:
+        for folder in ("done/failed", "done/skipped", "done/completed", "posts"):
+            cand = Path(SCRIPT_DIR) / folder / f"{post_id}.json"
+            if cand.exists():
+                try:
+                    post_ref = json.loads(cand.read_text())
+                    break
+                except Exception:
+                    pass
+
+    # Also check if args.url matched a URL in hn_top or reddit_top
+    if not post_ref and args.url.startswith("http"):
+        for top_name in ("reddit_top.json", "hn_top.json"):
+            top_file = Path(SCRIPT_DIR) / top_name
+            if top_file.exists():
+                try:
+                    items = json.loads(top_file.read_text())
+                    for post in items:
+                        if post.get("url") == args.url:
+                            post_ref = post
+                            post_id = post.get("id")
+                            break
+                    if post_ref:
+                        break
+                except Exception:
+                    pass
 
     post_url = post_ref.get("url") if post_ref else args.url
     post_id = post_ref.get("id") if post_ref else post_id
+
+    if post_url:
+        post_url = html.unescape(post_url)
 
     if post_url.startswith("https://twitter.com") or post_url.startswith("https://x.com"):
         post_url = "https://xcancel.com" + post_url[post_url.index("/", 8):]
@@ -376,61 +575,78 @@ def main():
         print(f"Error: URL must start with http:// or https://", file=sys.stderr)
         sys.exit(1)
 
-    done_urls = load_done_urls()
-    if post_url.rstrip("/") in done_urls:
-        print(f"URL {post_url} has already been processed")
-        exit(0)
+    if not args.force:
+        done_urls = load_done_urls()
+        if post_url.rstrip("/") in done_urls:
+            print(f"URL {post_url} has already been processed")
+            exit(0)
 
     post_path = None
     if post_id:
         post_path = Path(POSTS_DIR) / f"{post_id}.json"
-        if post_path.exists():
+        if not args.force and post_path.exists():
             print(f"Post ID {post_id} has already been created")
             exit(0)
 
-    # Step 1: Fetch the page
-    print(f"⏳ Fetching {post_url} ...", file=sys.stderr)
-    html = fetch_page(post_url)
-
-    # Step 2: Extract content
-    print("📄 Extracting content ...", file=sys.stderr)
-    extracted = extract_content(html, post_url)
-    print(
-        f"   Title: {extracted['title']}\n   Content length: {len(extracted['text_markdown']):,} chars",
-        file=sys.stderr,
-    )
-
-    # Step 2b: If the page is a paywall/wall rather than an article, retry via
-    # archive.is before giving up — otherwise the LLM summarizes the wall itself.
     paywalled = False
     archive_url = ""
-    failure = detect_extraction_failure(extracted)
-    if failure:
-        print(f"⚠️  No usable article body ({failure}), trying archive.is ...", file=sys.stderr)
-        try:
-            from archive_is_fetch import fetch_latest
+    extracted = None
 
-            # fetch_latest prints progress to stdout, which would corrupt our JSON
-            with contextlib.redirect_stdout(sys.stderr):
-                archive_url, archive_html = fetch_latest(post_url)
-            archived = extract_content(archive_html, post_url)
-            archive_failure = detect_extraction_failure(archived)
-            if archive_failure:
-                # Fall through with the original: a short page may still be a real
-                # article (a terse README), and the model is told to report
-                # EXTRACTION_FAILED if it truly gets handed a wall.
-                print(f"   Archive also looks unusable ({archive_failure}), letting the model decide",
-                      file=sys.stderr)
+    # Step 1: Detect YouTube video and extract transcript
+    video_id = extract_youtube_video_id(post_url)
+    if video_id:
+        print(f"📹 Detected YouTube video {video_id}, extracting transcript...", file=sys.stderr)
+        extracted = fetch_youtube_content(video_id, post_url)
+        if extracted:
+            print(
+                f"   Title: {extracted['title']}\n   Transcript length: {len(extracted['text_markdown']):,} chars",
+                file=sys.stderr,
+            )
+        else:
+            print("⚠️  Could not extract YouTube transcript, falling back to standard fetch...", file=sys.stderr)
+
+    if not extracted:
+        # Step 1: Fetch the page
+        print(f"⏳ Fetching {post_url} ...", file=sys.stderr)
+        html = fetch_page(post_url)
+
+        # Step 2: Extract content
+        print("📄 Extracting content ...", file=sys.stderr)
+        extracted = extract_content(html, post_url)
+        print(
+            f"   Title: {extracted['title']}\n   Content length: {len(extracted['text_markdown']):,} chars",
+            file=sys.stderr,
+        )
+
+        # Step 2b: If the page is a paywall/wall rather than an article, retry via
+        # archive.is before giving up — otherwise the LLM summarizes the wall itself.
+        failure = detect_extraction_failure(extracted)
+        if failure:
+            print(f"⚠️  No usable article body ({failure}), trying archive.is ...", file=sys.stderr)
+            try:
+                from archive_is_fetch import fetch_latest
+
+                # fetch_latest prints progress to stdout, which would corrupt our JSON
+                with contextlib.redirect_stdout(sys.stderr):
+                    archive_url, archive_html = fetch_latest(post_url)
+                archived = extract_content(archive_html, post_url)
+                archive_failure = detect_extraction_failure(archived)
+                if archive_failure:
+                    # Fall through with the original: a short page may still be a real
+                    # article (a terse README), and the model is told to report
+                    # EXTRACTION_FAILED if it truly gets handed a wall.
+                    print(f"   Archive also looks unusable ({archive_failure}), letting the model decide",
+                          file=sys.stderr)
+                    archive_url = ""
+                else:
+                    extracted = archived
+                    # Only now is it certain the original was actually walled
+                    paywalled = failure.startswith(WALL_PREFIX)
+                    print(f"   Recovered from {archive_url} ({len(extracted['text_markdown']):,} chars)",
+                          file=sys.stderr)
+            except Exception as e:
+                print(f"   Archive fetch failed ({e}), letting the model decide", file=sys.stderr)
                 archive_url = ""
-            else:
-                extracted = archived
-                # Only now is it certain the original was actually walled
-                paywalled = failure.startswith(WALL_PREFIX)
-                print(f"   Recovered from {archive_url} ({len(extracted['text_markdown']):,} chars)",
-                      file=sys.stderr)
-        except Exception as e:
-            print(f"   Archive fetch failed ({e}), letting the model decide", file=sys.stderr)
-            archive_url = ""
 
     # Step 3: Build the LLM request
     user_message = build_user_message(extracted, max_chars=args.max_chars)
@@ -451,18 +667,23 @@ def main():
     result["published"] = extracted.get("published", "")
     result["reading_time"] = reading_time_mins(extracted["text_plain"])
     result["paywalled"] = paywalled
+    if extracted.get("author"):
+        result["author"] = extracted["author"]
     if archive_url:
         result["archive_url"] = archive_url
 
     # Step 5: Output
+    if post_ref:
+        clean_ref = {k: v for k, v in post_ref.items() if k not in ("error", "_filepath")}
+        result.update(clean_ref)
+        # Comments per point: a 300-point post with 400 comments is an argument,
+        # one with 20 comments is a consensus.
+        result["controversy"] = controversy_ratio(result.get("comments", 0), result.get("points", 0))
+
     post_json = json.dumps(result, indent=2)
     print(post_json)
 
     if post_ref:
-        result.update(post_ref)
-        # Comments per point: a 300-point post with 400 comments is an argument,
-        # one with 20 comments is a consensus.
-        result["controversy"] = controversy_ratio(result.get("comments", 0), result.get("points", 0))
         target_path = post_path if post_path else Path(POSTS_DIR) / f"{post_id}.json"
         target_path.write_text(post_json, encoding="utf-8")
 

@@ -15,11 +15,18 @@ Usage:
   python process_news.py [--hn-pages 4] [--min-points 100] [--model MODEL] [--skip-fetch] [--no-publish]
 """
 
+import os
+import sys
+
+# Auto re-exec in .venv if available and not already inside it
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "bin", "python")
+if os.path.exists(VENV_PYTHON) and sys.executable != VENV_PYTHON:
+    os.execv(VENV_PYTHON, [VENV_PYTHON] + sys.argv)
+
 import argparse
 import glob
-import os
 import subprocess
-import sys
 from pathlib import Path
 
 from utils import PYTHON, SCRIPT_DIR, print_pipeline_summary
@@ -46,6 +53,7 @@ def main():
     parser.add_argument("-i", "--interactive", action="store_true", help="Prompt interactively for new technologies and review queue instead of using AI")
     parser.add_argument("--review", action="store_true", help="Run interactive review queue for review-technologies.json")
     parser.add_argument("--no-publish", action="store_true", help="Do not run publish_posts.py at the end")
+    parser.add_argument("--retry-failed", action="store_true", help="Re-run failed posts from done/failed/")
     args = parser.parse_args()
 
     # Step 1: Fetch latest posts (non-fatal if one source encounters a transient error)
@@ -60,6 +68,8 @@ def main():
             process_posts_cmd.extend(["--min-points", str(args.min_points)])
         if args.model:
             process_posts_cmd.extend(["--model", args.model])
+        if args.retry_failed:
+            process_posts_cmd.append("--retry-failed")
         run_step(process_posts_cmd, "Analyzing posts and comments")
 
     # Step 3: Process technologies (AI tag matching / aliasing / blacklisting / review queue)

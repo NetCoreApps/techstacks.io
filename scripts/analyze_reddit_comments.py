@@ -19,6 +19,12 @@ import re
 import subprocess
 import sys
 
+# Auto re-exec in .venv if available and not already inside it
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_venv_python = os.path.join(_script_dir, ".venv", "bin", "python")
+if os.path.exists(_venv_python) and sys.executable != _venv_python:
+    os.execv(_venv_python, [_venv_python] + sys.argv)
+
 import requests
 
 from prompts import SENTIMENT_SCHEMA, sentiment_prompt, sentiment_user_message
@@ -126,6 +132,7 @@ def analyze_sentiment(post_title: str, comments_text: str, model: str,
         capture_output=True,
         text=True,
         cwd=SCRIPT_DIR,
+        stdin=subprocess.DEVNULL,
     )
     content = result.stdout.strip()
     if result.returncode != 0:

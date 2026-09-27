@@ -9,11 +9,19 @@ Usage:
     python process_posts.py [--min-points 100] [--model MODEL]
 """
 
+import os
+import sys
+
+# Auto re-exec in .venv if available and not already inside it
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "bin", "python")
+if os.path.exists(VENV_PYTHON) and sys.executable != VENV_PYTHON:
+    os.execv(VENV_PYTHON, [VENV_PYTHON] + sys.argv)
+
 import argparse
 import json
-import os
+import re
 import subprocess
-import sys
 from pathlib import Path
 
 from utils import MIN_HN_POINTS, MIN_REDDIT_POINTS, POSTS_DIR, SCRIPT_DIR, FAILED_DIR, PYTHON, append_to_file, file_set
@@ -125,7 +133,7 @@ def run_comments_analyzer(post: dict, comments_url: str, model: str | None):
     comments_cmd = [PYTHON, os.path.join(SCRIPT_DIR, analyzer), str(post["id"])]
     if model:
         comments_cmd.extend(["--model", model])
-    result = subprocess.run(comments_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True)
+    result = subprocess.run(comments_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True, stdin=subprocess.DEVNULL)
     if result.returncode != 0:
         error_msg = subprocess_error(result)
         print(f"Warning: {analyzer} failed for post {post['id']}: {error_msg}", file=sys.stderr)
@@ -137,6 +145,9 @@ def main():
     parser = argparse.ArgumentParser(description="Process HN top posts through article and comment analyzers.")
     parser.add_argument("--min-points", type=int, default=MIN_HN_POINTS, help=f"Minimum points threshold (default: {MIN_HN_POINTS})")
     parser.add_argument("--model", default=None, help="Model to pass to analyzers (default: use analyzer defaults)")
+    parser.add_argument("--retry", nargs="*", metavar="ID", help="Retry specific failed post ID(s)")
+    parser.add_argument("--retry-failed", action="store_true", help="Retry all failed posts from done/failed/")
+    parser.add_argument("--last", type=int, default=None, help="When retrying failed posts, limit to the last N failed")
     args = parser.parse_args()
 
     hntop_path = Path(SCRIPT_DIR) / "hn_top.json"
@@ -207,6 +218,29 @@ def main():
             except Exception:
                 pass
 
+    retry_posts = []
+    if args.retry is not None or args.retry_failed:
+        from retry_failed import load_failed_posts, unmark_failed
+        all_failed = load_failed_posts()
+        failed_map = {str(p["id"]): p for p in all_failed}
+        if args.retry:
+            for pid in args.retry:
+                if str(pid) in failed_map:
+                    p = failed_map[str(pid)]
+                    unmark_failed(p)
+                    retry_posts.append(p)
+                else:
+                    print(f"Warning: Failed post {pid} not found in done/failed/", file=sys.stderr)
+        else:
+            targets = all_failed[:args.last] if args.last else all_failed
+            for p in targets:
+                unmark_failed(p)
+                retry_posts.append(p)
+        print(f"Queued {len(retry_posts)} failed post(s) for retry.")
+        # Refresh done sets since retry posts were unmarked
+        done = load_ids()
+        done_urls = load_urls()
+
     to_process = [
         p for p in eligible
         if str(p["id"]) not in done
@@ -216,6 +250,10 @@ def main():
         and is_content_url(p.get("url", ""))
     ]
     print(f"Already processed/pending: {len(eligible) - len(to_process)}, remaining to analyze: {len(to_process)}")
+
+    if retry_posts:
+        existing_ids = {str(p["id"]) for p in to_process}
+        to_process = retry_posts + [p for p in to_process if str(p["id"]) not in {str(r["id"]) for r in retry_posts}]
 
     to_process = merge_cross_posts(to_process)
 
@@ -239,7 +277,7 @@ def main():
         if args.model:
             article_cmd.extend(["--model", args.model])
 
-        result = subprocess.run(article_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True)
+        result = subprocess.run(article_cmd, cwd=SCRIPT_DIR, capture_output=True, text=True, stdin=subprocess.DEVNULL)
         if result.returncode != 0:
             error_msg = subprocess_error(result)
             print(f"Warning: analyze_tech_article.py failed for post {post_id}: {error_msg}", file=sys.stderr)
