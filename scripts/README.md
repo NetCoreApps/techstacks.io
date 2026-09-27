@@ -46,7 +46,7 @@ If no new technologies are needed, you can skip the last step.
 
 ---
 
-Tweet the best of the newly published posts, linking back to their techstacks.io page:
+Tweet the best of the newly published posts, linking back to their techstacks.page page:
 
 ```bash
 ./tweet_top_posts.py --dry-run

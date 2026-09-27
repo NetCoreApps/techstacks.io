@@ -313,7 +313,7 @@ public static class PostCardRenderer
         }
 
         var domainY = layout.TagsY + TagPillHeight / 2 + 8;
-        sb.Append($@"  <text x=""{Width - Margin}"" y=""{domainY:0.##}"" text-anchor=""end"" font-family=""Inter, sans-serif"" font-size=""28"" font-weight=""700"" fill=""{domainColor}"" opacity=""0.85"">techstacks.io</text>
+        sb.Append($@"  <text x=""{Width - Margin}"" y=""{domainY:0.##}"" text-anchor=""end"" font-family=""Inter, sans-serif"" font-size=""28"" font-weight=""700"" fill=""{domainColor}"" opacity=""0.85"">techstacks.page</text>
 ");
 
         if (layout.Tags.Count > 0)
@@ -390,7 +390,7 @@ public static class PostCardRenderer
         using (var domainFont = new SKFont(Typeface, 28) { Embolden = true })
         using (var domainPaint = new SKPaint { Color = domainColor, IsAntialias = true })
         {
-            canvas.DrawText("techstacks.io", new SKPoint(Width - Margin, layout.TagsY + TagPillHeight / 2 + 8), SKTextAlign.Right, domainFont, domainPaint);
+            canvas.DrawText("techstacks.page", new SKPoint(Width - Margin, layout.TagsY + TagPillHeight / 2 + 8), SKTextAlign.Right, domainFont, domainPaint);
         }
 
         DrawTags(canvas, layout, palette);

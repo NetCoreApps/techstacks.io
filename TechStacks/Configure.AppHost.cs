@@ -66,7 +66,7 @@ public class AppHost() : AppHostBase("TechStacks!"), IHostingStartup
             services.AddPlugin(new AdminDatabaseFeature());
 
             // using var db = dbFactory.Open();
-            // services.AddPlugin(CreateSiteMap(db, baseUrl:"https://techstacks.io"));
+            // services.AddPlugin(CreateSiteMap(db, baseUrl:"https://techstacks.page"));
         });
 
     // Configure your AppHost with the necessary configuration and dependencies your App needs

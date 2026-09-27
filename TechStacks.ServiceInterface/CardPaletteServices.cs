@@ -165,7 +165,7 @@ public class CardPaletteServices : Service
     <header class=""mb-8 border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"">
         <div>
             <h1 class=""text-3xl font-extrabold text-white tracking-tight"">Poster Card Palette Designer</h1>
-            <p class=""text-slate-400 text-sm mt-1"">Explore background gradients and text color combinations for techstacks.io social share cards.</p>
+            <p class=""text-slate-400 text-sm mt-1"">Explore background gradients and text color combinations for techstacks.page social share cards.</p>
         </div>
         <div class=""flex items-center gap-3"">
             <button id=""btnSave"" onclick=""saveSelectedPalettes()"" class=""px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow-md transition-all flex items-center gap-2"">

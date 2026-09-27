@@ -2,7 +2,7 @@
 
 # .NET 10.0 Next.js + Tailwindcss ASP.NET Identity Auth Template
 
-[![](https://react-templates.net/img/replacing-legacy-uis/react-home.webp)](https://techstacks.io)
+[![](https://react-templates.net/img/replacing-legacy-uis/react-home.webp)](https://techstacks.page)
 
 > Browse [source code](https://github.com/NetCoreTemplates/next-rsc) and install with:
 
@@ -71,7 +71,7 @@ Through this process, we've identified the most effective technology stack for A
 - **TypeScript** - Type safety that helps AI generate correct code
 - **Tailwind CSS v4** - Utility-first styling that AI excels at composing
 
-This stack represents the sweet spot where AI models have the most training data, the clearest patterns, and the best ability to generate cohesive, loosely coupled, high-quality code, and what was used for the new [techstacks.io](https://techstacks.io).
+This stack represents the sweet spot where AI models have the most training data, the clearest patterns, and the best ability to generate cohesive, loosely coupled, high-quality code, and what was used for the new [techstacks.page](https://techstacks.page).
 
 ## A Real-World Example: TechStacks
 
@@ -84,11 +84,11 @@ with the last version rewritten 7 years ago.
 
 - **v1**: [Angular 1 + Bootstrap](https://github.com/ServiceStackApps/TechStacks)
 - **v2**: [Nuxt.js 1.4 + Vuetify 1](https://github.com/NetCoreApps/TechStacks)
-- **v3**: [Next.js 16 + React 19 + Tailwindcss v4](https://github.com/NetCoreApps/techstacks.io) (Vibe Coded UI / Preserved backend .NET APIs)
+- **v3**: [Next.js 16 + React 19 + Tailwindcss v4](https://github.com/NetCoreApps/techstacks.page) (Vibe Coded UI / Preserved backend .NET APIs)
 
 The previous migration from **Angular 1 / Bootstrap** to **Nuxt.js / Vuetify** was done over **several weeks** whilst the last AI completed migration to **React / Tailwindcss** was done within a couple of days. 
 
-The actual migration and Vibe coded walkthrough itself **only took a few hours**, as the majority of the time was spent moving the existing deployment from an AWS ECS / RDS setup to a much less expensive Hetzner + PostgreSQL setup, [deployed using GitHub Actions](https://github.com/NetCoreApps/techstacks.io/tree/main/.github/workflows) and [Kamal](https://kamal-deploy.org).
+The actual migration and Vibe coded walkthrough itself **only took a few hours**, as the majority of the time was spent moving the existing deployment from an AWS ECS / RDS setup to a much less expensive Hetzner + PostgreSQL setup, [deployed using GitHub Actions](https://github.com/NetCoreApps/techstacks.page/tree/main/.github/workflows) and [Kamal](https://kamal-deploy.org).
 
 ### Migration Scope
 
@@ -126,7 +126,7 @@ the UI layer for the existing C# back-end APIs. All Data is already available in
 existing C# APIs.
 ```
 
-The result of which was the [NEXTJS_MIGRATION_PLAN.md](https://github.com/NetCoreApps/techstacks.io/blob/main/NEXTJS_MIGRATION_PLAN.md).
+The result of which was the [NEXTJS_MIGRATION_PLAN.md](https://github.com/NetCoreApps/techstacks.page/blob/main/NEXTJS_MIGRATION_PLAN.md).
 
 After reviewing the plan and making the necessary changes to match what you want to build it's time to execute the migration. 
 
@@ -170,8 +170,8 @@ Here's a sample set of screenshots of the old vs new UIs:
 
 Whilst we keep the old UI around for reference, you can view both UIs side-by-side at:
 
-- Old (AWS + ECS + RDS): https://vuetify.techstacks.io
-- New (Hetzner + PostgreSQL): https://techstacks.io
+- Old (AWS + ECS + RDS): https://vuetify.techstacks.page
+- New (Hetzner + PostgreSQL): https://techstacks.page
 
 ### Why UIs Are Perfect Candidates for Replacement
 

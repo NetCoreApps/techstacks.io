@@ -295,7 +295,7 @@ def match_technologies_with_ai(missing_tags: list[str], all_technologies: list[s
     all_tech_str = "\n".join(f"- {t}" for t in sorted(all_technologies, key=str.casefold))
     candidate_str = "\n".join(f"- {t}" for t in missing_tags)
 
-    prompt = f"""You are an expert developer taxonomist for techstacks.io.
+    prompt = f"""You are an expert developer taxonomist for techstacks.page.
 Evaluate the following candidate tags against the list of EXISTING canonical technologies on TechStacks.
 
 Goal:

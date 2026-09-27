@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // API base URL - can be overridden via environment variable
-const API_URL = process.env.API_URL || 'https://react.techstacks.io';
+const API_URL = process.env.API_URL || 'https://react.techstacks.page';
 
 console.log(`Fetching data from: ${API_URL}`);
 

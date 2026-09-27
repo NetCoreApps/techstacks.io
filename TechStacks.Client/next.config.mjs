@@ -7,8 +7,9 @@ const isProd = process.env.NODE_ENV === 'production'
 const buildLocal = process.env.MODE === 'local'
 
 // Define DEPLOY_API first
-const DEPLOY_API = process.env.KAMAL_DEPLOY_HOST 
-    ? `https://${process.env.KAMAL_DEPLOY_HOST}` 
+const deployHost = process.env.KAMAL_DEPLOY_HOST ? process.env.KAMAL_DEPLOY_HOST.split(',')[0].trim() : null
+const DEPLOY_API = deployHost 
+    ? `https://${deployHost}` 
     : target
 
 // Now use it for API_URL

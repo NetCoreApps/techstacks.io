@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Create missing technologies on techstacks.io using AI to generate the metadata.
+# Create missing technologies on techstacks.page using AI to generate the metadata.
 # Usage: python create_technology.py "Tech1" "Tech2" "Tech3"
 
 import argparse
@@ -68,7 +68,7 @@ def find_technology(name: str) -> bool:
 
 def generate_technology_json(name: str, model: str) -> dict:
     """Use llms.sh to generate the CreateTechnology JSON."""
-    prompt = f"""Return a JSON object for creating a new technology entry for "{name}" on techstacks.io.
+    prompt = f"""Return a JSON object for creating a new technology entry for "{name}" on techstacks.page.
 
 The JSON must match this schema exactly:
 - name: The official name of the technology
@@ -113,8 +113,8 @@ Return ONLY the JSON object, no markdown fences or extra text."""
 
 
 async def create_technology(session: aiohttp.ClientSession, tech: dict) -> dict:
-    """POST the technology to techstacks.io using session cookies."""
-    tech["logoUrl"] = "https://techstacks.io/img/placeholder.webp"
+    """POST the technology to techstacks.page using session cookies."""
+    tech["logoUrl"] = "https://techstacks.page/img/placeholder.webp"
     async with session.post(CREATE_URL, json=tech) as resp:
         body = await resp.text()
         if resp.status not in (200, 201):
@@ -124,13 +124,13 @@ async def create_technology(session: aiohttp.ClientSession, tech: dict) -> dict:
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Create missing technologies on techstacks.io")
+    parser = argparse.ArgumentParser(description="Create missing technologies on techstacks.page")
     parser.add_argument("names", nargs="+", help="Names of the technologies to search for / create")
     parser.add_argument("--model", default=LLMS_TECH_MODEL, help=f"OpenAI model to use (default: {LLMS_TECH_MODEL})")
     parser.add_argument("--dry-run", action="store_true", help="Generate JSON but don't create the technology")
     args = parser.parse_args()
 
-    # Create session with techstacks.io auth cookies
+    # Create session with techstacks.page auth cookies
     cookie_jar = aiohttp.CookieJar()
     for name, value in COOKIES.items():
         cookie_jar.update_cookies({name: value}, URL(TECHSTACKS_BASE))
@@ -157,7 +157,7 @@ async def main():
                     continue
 
                 # Step 3: Create the technology
-                print(f"\nCreating technology on techstacks.io...")
+                print(f"\nCreating technology on techstacks.page...")
                 result = await create_technology(session, tech)
                 print(f"Created successfully!")
                 print(json.dumps(result, indent=2))

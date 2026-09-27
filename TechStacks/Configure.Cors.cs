@@ -1,4 +1,4 @@
-﻿[assembly: HostingStartup(typeof(TechStacks.ConfigureCors))]
+[assembly: HostingStartup(typeof(TechStacks.ConfigureCors))]
 
 namespace TechStacks;
 
@@ -11,8 +11,9 @@ public class ConfigureCors : IHostingStartup
                 options.AddDefaultPolicy(policy => {
                     policy.WithOrigins([
                         "http://localhost:5000", "https://localhost:5001", "http://localhost:8080",
-                        "https://localhost:5173", "http://localhost:5173",
+                        "https://localhost:5173",
                         "http://run.plnkr.co", "http://null.jsbin.com",
+                        "https://techstacks.io", "https://techstacks.page",
                     ])
                     .AllowCredentials()
                     .WithHeaders(["Content-Type", "Allow", "Authorization"])

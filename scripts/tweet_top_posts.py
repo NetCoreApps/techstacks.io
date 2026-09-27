@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# Tweet recently imported techstacks.io posts that scored well on their source,
-# linking back to their techstacks.io post page.
+# Tweet recently imported techstacks.page posts that scored well on their source,
+# linking back to their techstacks.page post page.
 #
 # Usage:
 #   python tweet_top_posts.py [--min-points 200] [--hours 24] [--limit 5] [--dry-run]
@@ -101,7 +101,7 @@ def select_posts(posts: list[dict], hours: int, limit: int) -> list[dict]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Tweet top techstacks.io posts")
+    parser = argparse.ArgumentParser(description="Tweet top techstacks.page posts")
     parser.add_argument("--min-points", type=int, default=MIN_POINTS,
                         help=f"Minimum source points (default: {MIN_POINTS})")
     parser.add_argument("--hours", type=int, default=DEFAULT_HOURS,

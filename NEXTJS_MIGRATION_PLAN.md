@@ -110,7 +110,7 @@ import * as gateway from '@/lib/api/gateway';
 
 // 3. Call C# API - no alternative data sources
 export async function loadTechnology(slug: string) {
-  // This calls: https://techstacks.io/api/GetTechnology?slug=typescript
+  // This calls: https://techstacks.page/api/GetTechnology?slug=typescript
   const response = await gateway.getTechnology(slug);
   return response.result; // Data comes directly from C# API
 }
@@ -2160,7 +2160,7 @@ NEXT_PUBLIC_API_URL=https://localhost:5001
 INTERNAL_API_URL=https://localhost:5001
 
 # Production (set in deployment environment)
-# NEXT_PUBLIC_API_URL=https://techstacks.io
+# NEXT_PUBLIC_API_URL=https://techstacks.page
 ```
 
 **Usage in code:**

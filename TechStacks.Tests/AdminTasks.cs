@@ -88,7 +88,7 @@ public class AdminTasks
             Config.GetString("WebStacks.AccessToken"),
             Config.GetString("WebStacks.AccessSecret"));
 
-        twitter.Tweet("Test for http:techstacks.io");
+        twitter.Tweet("Test for http:techstacks.page");
     }
 
     [Test]

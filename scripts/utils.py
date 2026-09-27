@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 import requests
 
-TECHSTACKS_BASE = "https://techstacks.io"
-# News user https://techstacks.io
+TECHSTACKS_BASE = "https://techstacks.page"
+# News user https://techstacks.page
 COOKIES = {
     ".AspNetCore.Identity.Application": os.getenv("TECHSTACKS_IDENTITY"),
 }

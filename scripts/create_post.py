@@ -2,7 +2,7 @@
 
 # Scan Hacker News for top technology news about programming languages,
 # developer technologies and frameworks, then generate CreatePost entries
-# for techstacks.io with matched technology IDs.
+# for techstacks.page with matched technology IDs.
 # Usage: python create_post.py [--model MODEL] [--dry-run] [--limit N]
 
 import argparse
@@ -18,7 +18,7 @@ from yarl import URL
 
 from utils import SCRIPT_DIR, LLMS_SH, LLMS_MODEL, COOKIES, parse_json_response
 
-TECHSTACKS_BASE = "https://techstacks.io"
+TECHSTACKS_BASE = "https://techstacks.page"
 SEARCH_TECH_URL = f"{TECHSTACKS_BASE}/api/QueryTechnology"
 CREATE_POST_URL = f"{TECHSTACKS_BASE}/api/CreatePost"
 HN_TOP_STORIES = "https://hacker-news.firebaseio.com/v0/topstories.json"
@@ -92,7 +92,7 @@ async def fetch_hn_item(session: aiohttp.ClientSession, item_id: int) -> dict:
 
 
 async def search_technology(session: aiohttp.ClientSession, name: str) -> list:
-    """Search techstacks.io for a technology by name."""
+    """Search techstacks.page for a technology by name."""
     params = {"nameContains": name}
     async with session.get(SEARCH_TECH_URL, params=params) as resp:
         data = await resp.json()
@@ -100,7 +100,7 @@ async def search_technology(session: aiohttp.ClientSession, name: str) -> list:
 
 
 async def resolve_technology_ids(session: aiohttp.ClientSession, names: list[str]) -> list[int]:
-    """Look up technology IDs on techstacks.io for a list of technology names."""
+    """Look up technology IDs on techstacks.page for a list of technology names."""
     ids = []
     for name in names:
         results = await search_technology(session, name)
@@ -204,7 +204,7 @@ Return a JSON object with a "posts" array. If no stories match the criteria, ret
 
 
 async def create_post(session: aiohttp.ClientSession, post: dict) -> dict:
-    """POST a single post to techstacks.io."""
+    """POST a single post to techstacks.page."""
     async with session.post(CREATE_POST_URL, json=post) as resp:
         body = await resp.text()
         if resp.status not in (200, 201):
@@ -214,13 +214,13 @@ async def create_post(session: aiohttp.ClientSession, post: dict) -> dict:
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Scan HN for dev technology news and create posts on techstacks.io")
+    parser = argparse.ArgumentParser(description="Scan HN for dev technology news and create posts on techstacks.page")
     parser.add_argument("--model", default=LLMS_MODEL, help=f"LLM model to use (default: {LLMS_MODEL})")
     parser.add_argument("--dry-run", action="store_true", help="Generate posts but don't create them")
     parser.add_argument("--limit", type=int, default=30, help="Number of HN stories to fetch (default: 30)")
     args = parser.parse_args()
 
-    # Create session with techstacks.io auth cookies
+    # Create session with techstacks.page auth cookies
     cookie_jar = aiohttp.CookieJar()
     for name, value in COOKIES.items():
         cookie_jar.update_cookies({name: value}, URL(TECHSTACKS_BASE))
@@ -263,8 +263,8 @@ async def main():
             print("\n(dry-run mode — not creating posts)")
             sys.exit(0)
 
-        # Step 5: Create posts on techstacks.io
-        print(f"\nCreating {len(posts)} posts on techstacks.io...")
+        # Step 5: Create posts on techstacks.page
+        print(f"\nCreating {len(posts)} posts on techstacks.page...")
         for i, post in enumerate(posts, 1):
             print(f"  [{i}/{len(posts)}] Creating: {post['title']}")
             result = await create_post(session, post)

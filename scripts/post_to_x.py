@@ -2,7 +2,7 @@
 
 # Post a link to x.com from the account the API credentials belong to.
 #
-# Either share an existing techstacks.io post (title + link to its post page,
+# Either share an existing techstacks.page post (title + link to its post page,
 # same text the "Share on X" icon on the post page produces):
 #   python post_to_x.py --post-id 1234
 #
@@ -33,7 +33,7 @@ from urllib.parse import urlencode
 import requests
 from requests_oauthlib import OAuth1Session
 
-TECHSTACKS_BASE = "https://techstacks.io"
+TECHSTACKS_BASE = "https://techstacks.page"
 GET_POST_URL = f"{TECHSTACKS_BASE}/api/GetPost"
 QUERY_TECHNOLOGY_URL = f"{TECHSTACKS_BASE}/api/QueryTechnology"
 CREATE_TWEET_URL = "https://api.x.com/2/tweets"
@@ -68,7 +68,7 @@ def x_session() -> OAuth1Session:
 
 
 def fetch_post(post_id: int) -> dict:
-    """Fetch a techstacks.io post by ID."""
+    """Fetch a techstacks.page post by ID."""
     resp = requests.get(GET_POST_URL, params={"id": post_id})
     if resp.status_code != 200:
         print(f"Error fetching post {post_id} ({resp.status_code}): {resp.text[:200]}", file=sys.stderr)
@@ -81,7 +81,7 @@ def fetch_post(post_id: int) -> dict:
 
 
 def post_page_url(post: dict) -> str:
-    """Canonical techstacks.io page for a post, matching the site's /posts/{id}/{slug} route."""
+    """Canonical techstacks.page page for a post, matching the site's /posts/{id}/{slug} route."""
     return f"{TECHSTACKS_BASE}/posts/{post['id']}/{post['slug']}"
 
 
@@ -179,7 +179,7 @@ def create_tweet(session: OAuth1Session, tweet: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="Post a link to x.com")
-    parser.add_argument("--post-id", type=int, help="techstacks.io post ID to share")
+    parser.add_argument("--post-id", type=int, help="techstacks.page post ID to share")
     parser.add_argument("--url", help="URL to post (instead of --post-id)")
     parser.add_argument("--text", help="Text to post before the URL (defaults to the post title)")
     parser.add_argument("--dry-run", action="store_true", help="Print the tweet but don't post it")

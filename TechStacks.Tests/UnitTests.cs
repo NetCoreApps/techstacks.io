@@ -80,7 +80,7 @@ public class PostCardTests
         var post = new Post { Id = 1, Title = "Test Post Title", Tags = new[] { "dotnet", "c#" } };
         var svg = PostCardRenderer.RenderSvg(post);
         Assert.That(svg, Is.Not.Null.And.Not.Empty);
-        Assert.That(svg, Does.Contain("techstacks.io"));
+        Assert.That(svg, Does.Contain("techstacks.page"));
         Assert.That(svg, Does.Contain("text-anchor=\"end\""));
 
         var png = PostCardRenderer.RenderPng(post);

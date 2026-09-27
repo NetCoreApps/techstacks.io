@@ -19,7 +19,7 @@ Instead of calling APIs at build time in GitHub Actions, we pre-generate static 
 **Before:**
 ```typescript
 // Page called API at build time
-const buildClient = new JsonServiceClient('https://react.techstacks.io');
+const buildClient = new JsonServiceClient('https://react.techstacks.page');
 const response = await buildClient.get(new QueryPosts({...}));
 ```
 
@@ -69,7 +69,7 @@ To regenerate the static data files:
 npm run generate-data
 ```
 
-This fetches fresh data from the API (default: `https://react.techstacks.io`) and updates the JSON files.
+This fetches fresh data from the API (default: `https://react.techstacks.page`) and updates the JSON files.
 
 **With custom API URL:**
 ```bash
@@ -108,7 +108,7 @@ If you want to generate fresh data during CI/CD, uncomment this step in `.github
   if: steps.check_client.outputs.client_exists == 'true'
   working-directory: ./TechStacks.Client
   env:
-    API_URL: https://react.techstacks.io
+    API_URL: https://react.techstacks.page
   run: npm run generate-data
 ```
 
@@ -167,7 +167,7 @@ npm run generate-data
 
 Check the API URL is accessible:
 ```bash
-curl https://react.techstacks.io/api/QueryPosts?take=1
+curl https://react.techstacks.page/api/QueryPosts?take=1
 ```
 
 Or use a different API:
